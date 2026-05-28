@@ -113,8 +113,9 @@ def _optimal_fsspec_block_size(file_size: int) -> int:
 
     Uses `blockcache` for all files with block sizes adjusted by file size:
 
-    - <100MB: 4MB
-    - >100MB: 4-16MB
+    - <100MB:         4MB
+    - >=100MB, <1GB:  8MB
+    - >=1GB:         16MB
 
     Parameters:
         file_size (int): Size of the file in bytes.
