@@ -28,6 +28,17 @@ We can use `earthaccess` to do impactful science, faster:
 
 `earthaccess` is an open-source community effort under an [MIT license](LICENSE.txt).  We welcome contributions to improve `earthaccess`.  Please see the [Contributing Guide](contributor/index.md) to learn how to get involved.
 
+# Get help
+
+Have a question about working with NASA Earthdata, or run into something unexpected? Both users and contributors are welcome to reach out:
+
+- **[Zulip chat](https://earthaccess.zulipchat.com)**: ask questions and chat with users, developers, and maintainers.
+- **[Q&A Discussions](https://github.com/earthaccess-dev/earthaccess/discussions/categories/q-a)**: ask a question or share insights about Earth data access.
+- **[GitHub Issues](https://github.com/earthaccess-dev/earthaccess/issues)**: report a bug, unexpected behavior, or a stumbling block in the documentation.
+- **[Collaboration Café](calendar.md)**: join a regular community call to get help on, or give help with, anything related to Earth data access.
+
+If you're not sure where to start, just pick whichever fits best, and the community will help you out.
+
 # Supported by
 
 `earthaccess` is supported by [NASA](https://www.nasa.gov/), [Openscapes](https://openscapes.org/), [NSIDC](https://nsidc.org/), and other organizations. [See all supporters](supported-by.md).
