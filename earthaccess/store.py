@@ -236,7 +236,7 @@ def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
 class Store:
     """Store class to access granules on-prem or in the cloud."""
 
-    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:
+    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002
         """Store is the class to access data.
 
         Parameters:
@@ -269,7 +269,7 @@ class Store:
         return ""
 
     def _derive_daac_provider(self, daac: str) -> str | None:
-        return find_provider(daac, True)
+        return find_provider(daac, True)  # noqa: FBT003
 
     def _is_cloud_collection(self, concept_id: list[str]) -> bool:
         collection = DataCollections(self.auth).concept_id(concept_id).get()
@@ -755,7 +755,7 @@ class Store:
         s3_fs: fsspec.AbstractFileSystem,
         file: str,
         local_path: Path,
-        force: bool = False,
+        force: bool = False,  # noqa: FBT001, FBT002
     ) -> Path:
         file_name = local_path / Path(file).name
         if file_name.exists() and not force:
@@ -900,7 +900,7 @@ class Store:
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type(Exception),
     )
-    def _download_file(self, url: str, directory: Path, force: bool = False) -> Path:
+    def _download_file(self, url: str, directory: Path, force: bool = False) -> Path:  # noqa: FBT001, FBT002
         """Download a single file using a bearer token.
 
         Parameters:

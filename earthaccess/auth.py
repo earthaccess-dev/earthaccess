@@ -111,7 +111,7 @@ class Auth:
     def login(
         self,
         strategy: str = "netrc",
-        persist: bool = False,
+        persist: bool = False,  # noqa: FBT001, FBT002
         system: System | None = None,
     ) -> Any:
         """Authenticate with Earthdata login.
@@ -241,7 +241,7 @@ class Auth:
 
     def _interactive(
         self,
-        persist_credentials: bool = False,
+        persist_credentials: bool = False,  # noqa: FBT001, FBT002
     ) -> bool:
         username = input("Enter your Earthdata Login username: ")
         password = getpass.getpass(prompt="Enter your Earthdata password: ")

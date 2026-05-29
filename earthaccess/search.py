@@ -275,7 +275,7 @@ class DataCollections(CollectionQuery):
         self._fields = fields
         return self
 
-    def debug(self, debug: bool = True) -> Self:
+    def debug(self, debug: bool = True) -> Self:  # noqa: FBT001, FBT002
         """If True, prints the actual query to CMR. Note that the pagination happens in
         the headers.
 
@@ -288,7 +288,7 @@ class DataCollections(CollectionQuery):
         self._debug = debug
         return self
 
-    def has_granules(self, has_granules: bool | None = True) -> Self:
+    def has_granules(self, has_granules: bool | None = True) -> Self:  # noqa: FBT001, FBT002
         """Match only collections with granules, without granules, or either.
 
         Parameters:
@@ -311,7 +311,7 @@ class DataCollections(CollectionQuery):
 
         return self
 
-    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:
+    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:  # noqa: FBT001, FBT002
         """Only match granules that are hosted in the cloud. This is valid for public
         collections.
 
@@ -595,7 +595,7 @@ class DataGranules(GranuleQuery):
         """
         return super().orbit_number(orbit1, orbit2)
 
-    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:
+    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:  # noqa: FBT001, FBT002
         """Only match granules that are hosted in the cloud.
         This is valid for public collections and when using the short_name parameter.
         Concept-Id is unambiguous.
@@ -772,7 +772,7 @@ class DataGranules(GranuleQuery):
         """
         return super().short_name(short_name)
 
-    def debug(self, debug: bool = True) -> Self:
+    def debug(self, debug: bool = True) -> Self:  # noqa: FBT001, FBT002
         """If True, prints the actual query to CMR, notice that the pagination happens
         in the headers.
 

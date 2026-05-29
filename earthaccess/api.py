@@ -25,7 +25,7 @@ from .utils import _validation as validate
 logger = logging.getLogger(__name__)
 
 
-def status(system: System = PROD, raise_on_outage: bool = False) -> dict[str, str]:
+def status(system: System = PROD, raise_on_outage: bool = False) -> dict[str, str]:  # noqa: FBT001, FBT002
     """Get the statuses of NASA's Earthdata services.
 
     Parameters:
@@ -310,7 +310,7 @@ def search_services(count: int = -1, **kwargs: Any) -> list[Any]:
 
 def login(
     strategy: str = "all",
-    persist: bool = False,
+    persist: bool = False,  # noqa: FBT001, FBT002
     system: System = PROD,
 ) -> Auth:
     """Authenticate with Earthdata login (https://urs.earthdata.nasa.gov/).
