@@ -3,7 +3,7 @@ nav:
       - "What is earthaccess?": "index.md"
       - "Community calendar": "calendar.md"
       - "External resources": "resources.md"
-      - "About Us": "about-us.md"
+      - "About us": "about-us.md"
       - "Supported by": "supported-by.md"
       - Governance:
           - Decisions: "governance/decisions/"
@@ -12,12 +12,12 @@ nav:
       - Search and Access: "api/index.md"
       - Modules:
           - Collections:
-              - "Collection Queries": "api/collections/collections-query.md"
-              - "Collection Results": "api/collections/collections.md"
-              - "Collection Services": "api/collections/collections-services.md"
+              - "Collection queries": "api/collections/collections-query.md"
+              - "Collection results": "api/collections/collections.md"
+              - "Collection services": "api/collections/collections-services.md"
           - Granules:
-              - "Granule Queries": "api/granules/granules-query.md"
-              - "Granule Results": "api/granules/granules.md"
+              - "Granule queries": "api/granules/granules-query.md"
+              - "Granule results": "api/granules/granules.md"
           - Store:
               - "Store": "api/store/store.md"
           - Auth:
@@ -26,11 +26,12 @@ nav:
   - User guide:
       - "user/index.md"
       - "Quick start": "user/quick-start.md"
-      - "Authentication": "user/authenticate.md"
-      - "Status": "user/status.md"
-      - "Search": "user/search.md"
-      - "Access": "user/access.md"
-      - "Backwards Compatibility": "user/backwards-compatibility.md"
+      - Explanation:
+          - "Authentication": "user/authenticate.md"
+          - "Status": "user/status.md"
+          - "Search": "user/search.md"
+          - "Access": "user/access.md"
+          - "Backwards compatibility": "user/backwards-compatibility.md"
       - How-tos:
           - "Authenticate with Earthdata Login": "user/howto/authenticate.md"
           - "Search NASA datasets using filters": "user/howto/search-collections.md"
@@ -50,16 +51,19 @@ nav:
           - "Cloud optimized access to TEMPO air quality data with earthaccess and virtualizarr": "user/tutorials/virtual_dataset_tutorial_with_TEMPO_Level3.ipynb"
       - Reference:
           - Glossary:
-              - "NASA Glossary": "user/reference/glossary/nasa-glossary.md"
-              - "Cloud Computing Terminology": "user/reference/glossary/cloud-glossary.md"
+              - "NASA glossary": "user/reference/glossary/nasa-glossary.md"
+              - "Cloud computing terminology": "user/reference/glossary/cloud-glossary.md"
   - Contributor guide:
       - "contributor/index.md" # << Link target of the parent node
-      - "Development Guide": "contributor/development.md"
-      - "Pull Request (PR) Guide": "contributor/pr-guide.md"
-      - "Releasing Guide": "contributor/releasing.md"
-      - "Maintainers Guide": "contributor/maintainers-guide.md"
-      - "Triaging Guide": "contributor/triaging.md"
-      - "Code of Conduct": "contributor/code-of-conduct.md"
-      - "Topics":
-          - "Naming conventions": "contributor/naming-convention.md"
+      - "Code of conduct": "contributor/code-of-conduct.md"
+      - Explanation:
           - "Integration tests": "contributor/integration-tests.md"
+      - How-tos:
+          - "Development guide": "contributor/development.md"
+          - "Pull Request (PR) guide": "contributor/pr-guide.md"
+          - "Releasing guide": "contributor/releasing.md"
+          - "Maintainers guide": "contributor/maintainers-guide.md"
+          - "Triaging guide": "contributor/triaging.md"
+      - Reference:
+          - "Naming conventions": "contributor/naming-convention.md"
+          
