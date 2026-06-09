@@ -187,28 +187,7 @@ flowchart TD
 ```
 
 
-## Discussions vs Issues
-TODO Move to https://earthaccess.readthedocs.io/en/latest/contributor/ ?
-
-This section would cover the guidelines for when to use discussions versus issues, and how to migrate between them.
-
-###  What are Discussions?
-
-Discussions are used for:
-
-- Brainstorming and idea generation.
-- Project feedback.
-- General questions and topics.
-
-###  What are Issues?
-
-Issues are used for:
-
-- Reporting bugs and errors.
-- Tracking progress on specific tasks or projects.
-- Requesting changes or improvements.
-
-### When to Migrate
+## Migrating between Discussions vs Issues
 
 Use your best judgement when migrating between issues and discussions. Sometimes it makes more sense to open a new issue or discussion instead of migrating, for example when there are many things being discussed, but we want to create an issue or task out of just one of those things.
 
