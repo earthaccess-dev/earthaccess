@@ -9,7 +9,6 @@ from typing import (
     override,
 )
 
-
 import requests
 
 from cmr import CollectionQuery, GranuleQuery
