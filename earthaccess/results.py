@@ -683,8 +683,7 @@ class GranuleResults(Results):
         *,
         query: DataGranules,  # TODO: DataGranules is a bad name! Should be DataGranuleQuery.
     ) -> None:
-        super().__init__(items)
-        self._query = query
+        super().__init__(items, query=query)
 
     def to_gdf(self) -> GeoDataFrame:
         # TODO: Allow user to receive the raw normalized gdf and rename columns?
@@ -710,5 +709,4 @@ class CollectionResults(Results):
         *,
         query: DataCollections,
     ) -> None:
-        super().__init__(items)
-        self._query = query
+        super().__init__(items, query=query)
