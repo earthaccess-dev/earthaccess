@@ -26,13 +26,7 @@ nav:
   - User guide:
       - "user/index.md"
       - "Quick start": "user/quick-start.md"
-      - Explanation:
-          - "Authentication": "user/authenticate.md"
-          - "Status": "user/status.md"
-          - "Search": "user/search.md"
-          - "Access": "user/access.md"
-          - "Backwards compatibility": "user/backwards-compatibility.md"
-      - How-tos:
+      - How-to:
           - "Authenticate with Earthdata Login": "user/howto/authenticate.md"
           - "Search NASA datasets using filters": "user/howto/search-collections.md"
           - "Search for data using filters": "user/howto/search-granules.md"
@@ -43,6 +37,12 @@ nav:
           - "Download data from on-prem location": "user/howto/onprem.md"
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
+      - Explanation:
+          - "Authentication": "user/authenticate.md"
+          - "Status": "user/status.md"
+          - "Search": "user/search.md"
+          - "Access": "user/access.md"
+          - "Backwards compatibility": "user/backwards-compatibility.md"
       - Tutorials:
           - "Accessing remote NASA data with fsspec": "user/tutorials/file-access.ipynb"
           - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
@@ -56,14 +56,14 @@ nav:
   - Contributor guide:
       - "contributor/index.md" # << Link target of the parent node
       - "Code of conduct": "contributor/code-of-conduct.md"
-      - Explanation:
-          - "Integration tests": "contributor/integration-tests.md"
-      - How-tos:
+      - How-to:
           - "Development guide": "contributor/development.md"
           - "Pull Request (PR) guide": "contributor/pr-guide.md"
           - "Releasing guide": "contributor/releasing.md"
           - "Maintainers guide": "contributor/maintainers-guide.md"
           - "Triaging guide": "contributor/triaging.md"
+      - Explanation:
+          - "Integration tests": "contributor/integration-tests.md"
       - Reference:
           - "Naming conventions": "contributor/naming-convention.md"
           
