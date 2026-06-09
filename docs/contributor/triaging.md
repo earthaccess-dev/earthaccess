@@ -7,12 +7,12 @@ This document outlines our approach to triaging issues on GitHub, including guid
 ## Issue Lifecycle
 
 1. A [new issue](https://github.com/earthaccess-dev/earthaccess/issues/new/choose) is created, either using a pre-existing template, or as a blank issue.
-2. The issue is triaged by a community member in order to: 
-   * Determine whether the issue should be worked or not. If yes, move to "Backlog" status, otherwise close as not planned.
-   * Add or adjust issue labels.
-   * Add an issue prioritization. 
-   * Respond and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
-3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
+2. Issue triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
+   * Determining whether the issue should be worked or not. If yes, move to "Backlog" status, otherwise close as not planned.
+   * Adding or adjusting issue labels.
+   * Adding an issue prioritization. 
+   * Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
+3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
 4. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
    * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
    * Update status to `In Progress`.
