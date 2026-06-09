@@ -627,10 +627,11 @@ class Results:
     #       items are never consumed.
     def __init__(
         self,
-        items: list[DataGranule | DataCollection],
+        items: list[DataGranule] | list[DataCollection],
         *,
         query: DataGranules | DataCollections,
     ) -> None:
+        self._items = items
         self._query = query
 
     def __repr__(self) -> str:
