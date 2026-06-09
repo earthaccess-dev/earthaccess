@@ -111,7 +111,7 @@ def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac):
         try:
             # We are testing this method
             store.get(granules_to_download, local_path=path)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(e)
 
         # test that we downloaded the mb reported by CMR

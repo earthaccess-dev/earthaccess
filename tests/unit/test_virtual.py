@@ -16,6 +16,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from earthaccess.results import DataCollection, DataGranule
+from earthaccess.virtual._credentials import (
+    get_granule_credentials_endpoint_and_region,
+)
+from earthaccess.virtual._parser import (
+    SUPPORTED_PARSERS,
+    get_urls_for_parser,
+    resolve_parser,
+)
+from earthaccess.virtual.core import virtualize
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -62,28 +71,24 @@ def _patch_internals(mock_vds: MagicMock | None = None):
 
 def test_virtualize_empty_granules_raises() -> None:
     """virtualize() raises ValueError when granules list is empty."""
-    from earthaccess.virtual.core import virtualize
-
     with pytest.raises(ValueError, match=r"[Nn]o granules"):
         virtualize([])
 
 
 def test_virtualize_multi_granule_no_concat_dim_raises() -> None:
     """virtualize() raises ValueError for >1 granule without concat_dim."""
-    from earthaccess.virtual.core import virtualize
-
-    with patch(
-        "earthaccess.virtual.core.build_obstore_registry",
-        return_value=MagicMock(),
+    with (
+        patch(
+            "earthaccess.virtual.core.build_obstore_registry",
+            return_value=MagicMock(),
+        ),
+        pytest.raises(ValueError, match="concat_dim"),
     ):
-        with pytest.raises(ValueError, match="concat_dim"):
-            virtualize(_make_granules(2))
+        virtualize(_make_granules(2))
 
 
 def test_virtualize_invalid_parser_string_raises() -> None:
     """virtualize() raises ValueError for an unrecognised parser string."""
-    from earthaccess.virtual.core import virtualize
-
     with pytest.raises(ValueError, match="BadParser"):
         virtualize(_make_granules(1), parser="BadParser")
 
@@ -95,13 +100,14 @@ def test_virtualize_invalid_parser_string_raises() -> None:
 
 def test_virtualize_load_false_returns_virtual_dataset() -> None:
     """virtualize(load=False) returns the raw virtual dataset without calling kerchunk."""
-    from earthaccess.virtual.core import virtualize
-
     mock_vds = MagicMock()
     reg_patch, open_patch = _patch_internals(mock_vds)
-    with reg_patch, open_patch:
-        with patch("earthaccess.virtual.core._load_via_kerchunk") as mock_load:
-            result = virtualize(_make_granules(1), load=False)
+    with (
+        reg_patch,
+        open_patch,
+        patch("earthaccess.virtual.core._load_via_kerchunk") as mock_load,
+    ):
+        result = virtualize(_make_granules(1), load=False)
 
     assert result is mock_vds
     mock_load.assert_not_called()
@@ -109,20 +115,21 @@ def test_virtualize_load_false_returns_virtual_dataset() -> None:
 
 def test_virtualize_load_true_delegates_to_kerchunk(tmp_path) -> None:
     """virtualize(load=True) calls _load_via_kerchunk and returns its result."""
-    from earthaccess.virtual.core import virtualize
-
     expected_ds = MagicMock()
     reg_patch, open_patch = _patch_internals()
-    with reg_patch, open_patch:
-        with patch(
+    with (
+        reg_patch,
+        open_patch,
+        patch(
             "earthaccess.virtual.core._load_via_kerchunk",
             return_value=expected_ds,
-        ) as mock_load:
-            result = virtualize(
-                _make_granules(1),
-                load=True,
-                reference_dir=str(tmp_path),
-            )
+        ) as mock_load,
+    ):
+        result = virtualize(
+            _make_granules(1),
+            load=True,
+            reference_dir=str(tmp_path),
+        )
 
     mock_load.assert_called_once()
     assert result is expected_ds
@@ -135,27 +142,28 @@ def test_virtualize_load_true_delegates_to_kerchunk(tmp_path) -> None:
 
 def test_virtualize_dmrpp_fallback_emits_user_warning() -> None:
     """When DMR++ sidecars are missing, virtualize() warns and retries with HDFParser."""
-    from earthaccess.virtual.core import virtualize
-
     mock_vds_hdf = MagicMock()
     call_count = {"n": 0}
 
-    def side_effect(*args, **kwargs):
+    def side_effect(*args, **kwargs):  # noqa: ARG001
         call_count["n"] += 1
         if call_count["n"] == 1:
-            raise FileNotFoundError("no .dmrpp sidecar")
+            msg = "no .dmrpp sidecar"
+            raise FileNotFoundError(msg)
         return mock_vds_hdf
 
-    with patch(
-        "earthaccess.virtual.core.build_obstore_registry",
-        return_value=MagicMock(),
-    ):
-        with patch(
+    with (
+        patch(
+            "earthaccess.virtual.core.build_obstore_registry",
+            return_value=MagicMock(),
+        ),
+        patch(
             "earthaccess.virtual.core._open_virtual_mfdataset",
             side_effect=side_effect,
-        ):
-            with pytest.warns(UserWarning, match="HDFParser"):
-                result = virtualize(_make_granules(1), parser="DMRPPParser")
+        ),
+        pytest.warns(UserWarning, match="HDFParser"),
+    ):
+        result = virtualize(_make_granules(1), parser="DMRPPParser")
 
     assert result is mock_vds_hdf
     assert call_count["n"] == 2
@@ -168,8 +176,6 @@ def test_virtualize_dmrpp_fallback_emits_user_warning() -> None:
 
 def test_supported_parsers_contains_canonical_names() -> None:
     """SUPPORTED_PARSERS includes the three canonical parser names."""
-    from earthaccess.virtual._parser import SUPPORTED_PARSERS
-
     assert isinstance(SUPPORTED_PARSERS, frozenset)
     assert {"DMRPPParser", "HDFParser", "NetCDF3Parser"} <= SUPPORTED_PARSERS
 
@@ -181,15 +187,11 @@ def test_supported_parsers_contains_canonical_names() -> None:
 
 def test_resolve_parser_dmrpp_returns_instance() -> None:
     """resolve_parser('DMRPPParser') returns a DMRPPParser instance."""
-    from earthaccess.virtual._parser import resolve_parser
-
     assert type(resolve_parser("DMRPPParser")).__name__ == "DMRPPParser"
 
 
 def test_resolve_parser_invalid_string_raises() -> None:
     """resolve_parser raises ValueError and lists valid names in the message."""
-    from earthaccess.virtual._parser import resolve_parser
-
     with pytest.raises(ValueError, match="DMRPPParser"):
         resolve_parser("UnknownParser")
 
@@ -201,8 +203,6 @@ def test_resolve_parser_invalid_string_raises() -> None:
 
 def test_get_urls_dmrpp_appends_dmrpp_suffix() -> None:
     """get_urls_for_parser with DMRPPParser appends '.dmrpp' to each URL."""
-    from earthaccess.virtual._parser import get_urls_for_parser, resolve_parser
-
     granule = cast("DataGranule", MagicMock())
     granule.data_links.return_value = ["s3://bucket/file.nc"]  # type: ignore[attr-defined]
     urls = get_urls_for_parser(
@@ -215,8 +215,6 @@ def test_get_urls_dmrpp_appends_dmrpp_suffix() -> None:
 
 def test_get_urls_passes_access_to_data_links() -> None:
     """get_urls_for_parser forwards the access argument to granule.data_links."""
-    from earthaccess.virtual._parser import get_urls_for_parser, resolve_parser
-
     mock = MagicMock()
     mock.data_links.return_value = ["https://example.com/file.h5"]
     granule = cast("DataGranule", mock)
@@ -245,10 +243,6 @@ _granule_no_endpoint = DataGranule(
 @patch("earthaccess.search_datasets")
 def test_credentials_endpoint_from_granule(mock_search_datasets) -> None:
     """Endpoint embedded in the granule UMM-G record is used directly."""
-    from earthaccess.virtual._credentials import (
-        get_granule_credentials_endpoint_and_region,
-    )
-
     endpoint_url = "https://archive.daac.earthdata.nasa.gov/s3credentials"
     granule = DataGranule(
         {
@@ -280,10 +274,6 @@ def test_credentials_endpoint_from_granule(mock_search_datasets) -> None:
 @patch("earthaccess.search_datasets")
 def test_credentials_endpoint_from_collection(mock_search_datasets) -> None:
     """Falls back to the collection record when the granule has no endpoint."""
-    from earthaccess.virtual._credentials import (
-        get_granule_credentials_endpoint_and_region,
-    )
-
     coll_endpoint = "https://archive.other-daac.earthdata.nasa.gov/s3credentials"
     coll_region = "us-east-1"
     mock_search_datasets.return_value = [
@@ -312,10 +302,6 @@ def test_credentials_collection_missing_region_defaults_to_us_west_2(
     mock_search_datasets,
 ) -> None:
     """Region defaults to us-west-2 when the collection record omits it."""
-    from earthaccess.virtual._credentials import (
-        get_granule_credentials_endpoint_and_region,
-    )
-
     coll_endpoint = "https://archive.other-daac.earthdata.nasa.gov/s3credentials"
     mock_search_datasets.return_value = [
         DataCollection(
@@ -337,10 +323,6 @@ def test_credentials_collection_missing_region_defaults_to_us_west_2(
 @patch("earthaccess.search_datasets")
 def test_credentials_raises_when_no_endpoint_anywhere(mock_search_datasets) -> None:
     """ValueError raised when neither granule nor collection has an endpoint."""
-    from earthaccess.virtual._credentials import (
-        get_granule_credentials_endpoint_and_region,
-    )
-
     mock_search_datasets.return_value = [
         DataCollection(
             {

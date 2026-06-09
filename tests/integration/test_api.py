@@ -224,8 +224,9 @@ def test_force_download(tmp_path, force: bool, cmp: Callable[[float, float], boo
     )
 
 
-def fail_to_download_file(*args, **kwargs):
-    raise OSError("Download failed")
+def fail_to_download_file(*args, **kwargs):  # noqa: ARG001
+    msg = "Download failed"
+    raise OSError(msg)
 
 
 def test_download_immediate_failure(tmp_path: Path):
@@ -236,12 +237,14 @@ def test_download_immediate_failure(tmp_path: Path):
         count=3,
     )
 
-    with patch.object(earthaccess.__store__, "_download_file", fail_to_download_file):
-        with pytest.raises(IOError, match="Download failed"):
-            # By default, we set pqdm exception_behavior to "immediate" so that
-            # it simply propagates the first download error it encounters, halting
-            # any further downloads.
-            earthaccess.download(results, tmp_path, pqdm_kwargs=dict(disable=True))
+    with (
+        patch.object(earthaccess.__store__, "_download_file", fail_to_download_file),
+        pytest.raises(IOError, match="Download failed"),
+    ):
+        # By default, we set pqdm exception_behavior to "immediate" so that
+        # it simply propagates the first download error it encounters, halting
+        # any further downloads.
+        earthaccess.download(results, tmp_path, pqdm_kwargs={"disable": True})
 
 
 def test_download_deferred_failure(tmp_path: Path):
@@ -253,16 +256,18 @@ def test_download_deferred_failure(tmp_path: Path):
         count=count,
     )
 
-    with patch.object(earthaccess.__store__, "_download_file", fail_to_download_file):
+    with (
+        patch.object(earthaccess.__store__, "_download_file", fail_to_download_file),
         # With "deferred" exceptions, pqdm catches all exceptions, then at the end
         # raises a single generic Exception, passing the sequence of caught exceptions
         # as arguments to the Exception constructor.
-        with pytest.raises(Exception) as exc_info:
-            earthaccess.download(
-                results,
-                tmp_path,
-                pqdm_kwargs=dict(exception_behaviour="deferred", disable=True),
-            )
+        pytest.raises(Exception) as exc_info,
+    ):
+        earthaccess.download(
+            results,
+            tmp_path,
+            pqdm_kwargs={"exception_behaviour": "deferred", "disable": True},
+        )
 
     errors = exc_info.value.args
     assert len(errors) == count

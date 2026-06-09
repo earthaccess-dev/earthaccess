@@ -105,6 +105,6 @@ Two key parameters control the efficiency of file access; cache type and block-s
 
 | File Size |  | Block Size |
 |---------|--|----------|
-| Small | < 1000 MB | 4 MB |
+| Small | < 100 MB | 4 MB |
 | Medium | < 1 GB | 8 MB |
 | Large | > 1 GB | 16 MB |
