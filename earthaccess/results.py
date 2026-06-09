@@ -691,10 +691,11 @@ class GranuleResults(Results):
         #       give them more reader-friendly names. Avoid future breaking changes
         #       that might arise from selecting too many columns.
         try:
-            import pandas as pd
-            from geopandas import GeoDataFrame
+            import pandas as pd  # noqa: PLC0415
+            from geopandas import GeoDataFrame  # noqa: PLC0415
         except ImportError as e:
-            raise ImportError("GeoPandas must be installed") from e
+            msg = "GeoPandas must be installed"
+            raise ImportError(msg) from e
         return GeoDataFrame(
             pd.json_normalize(self),
             geometry=self,
