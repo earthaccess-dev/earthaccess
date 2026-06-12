@@ -1018,6 +1018,7 @@ docs = [
     { name = "xarray" },
 ]
 test = [
+    { name = "aiohttp" },
     { name = "dask", extra = ["distributed"] },
     { name = "geopandas" },
     { name = "h5netcdf" },
@@ -1117,6 +1118,7 @@ docs = [
     { name = "xarray" },
 ]
 test = [
+    { name = "aiohttp", specifier = "<3.14.0" },
     { name = "dask", extras = ["distributed"], specifier = ">=2025.7.0" },
     { name = "geopandas" },
     { name = "h5netcdf" },
