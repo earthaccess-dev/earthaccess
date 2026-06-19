@@ -249,7 +249,7 @@ science data access. Concrete evidence of its impact includes:
 
 **Peer-reviewed publications.** `earthaccess` has been used in published research,
 including studies on multi-sensor drought observations in forested environments
-[@andreadis2024] and tidal bore detection using SWOT satellite data [@arildsen2025].
+[@andreadis2024] and tidal bore detection using SWOT satellite data [@arildsen2025]. Several other research studies and geospatial technology publications utilize libraries dependent on `earthaccess`, including [@Scheick2025], [@Xiahou2026], [@Widlansky2025].
 
 **Community adoption.** The library is a dependency of 230 public GitHub
 repositories (as of 5 March 2026), spanning data analysis workflows, Jupyter-based tutorials, and
