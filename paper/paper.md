@@ -83,7 +83,7 @@ affiliations:
  - name: "Booz Allen Hamilton, Inc., McLean, VA, USA"
    index: 8
    ror: 051rcp357
- - name: "University of Alaska Fairbanks, Fairbanks, AK, USA"
+ - name: "Alaska Satellite Facility, Geophysical Institute, University of Alaska Fairbanks, Fairbanks, AK, USA"
    index: 9
    ror: 01j7nq853
  - name: "Openscapes and National Center for Ecological Analysis and Synthesis (NCEAS), University of California Santa Barbara, Santa Barbara, CA, USA"
@@ -131,7 +131,7 @@ Earth observation data in the world, used by over ten million researchers, educa
 and decision-makers globally [@nasa_esds_data_metrics]. However, the complexity of the underlying data infrastructure
 presents a significant barrier to scientific productivity. A typical data access workflow
 requires a researcher to: (1) authenticate with NASA Earthdata Login; (2) discover
-relevant datasets and granules through the CMR API; (3) parse metadata to obtain download
+relevant datasets and granules through the CMR API; (3) parse metadata to obtain access
 URLs; (4) manage HTTP sessions with tokens and redirect handling; (5) determine whether
 data are hosted on-premises or in the Earthdata Cloud; and (6) obtain temporary AWS S3
 credentials when accessing cloud-hosted data. Each step introduces opportunities for
@@ -141,7 +141,7 @@ NASA's ongoing migration to the Earthdata Cloud adds further complexity, as rese
 must now contend with two possible access paradigms, traditional HTTPS downloads and S3-based
 access. These both may even occur within a single analysis workflow. During workshops organized by NASA
 Openscapes [@nasa_openscapes; @lowndes2019], the need for simpler tools became evident.
-`earthaccess` was created to address this gap: it provides uniform access to NASA
+`earthaccess` is a community project that was created to address this gap: it provides uniform access to NASA
 Earthdata regardless of data storage location and handles authentication, credentials, and tokening behind the scenes, enabling researchers to focus more on scientific interpretation and discovery.
 The target audience spans Earth system science — from atmospheric scientists and oceanographers to ecologists and land surface modelers — as well as operational communities such as weather forecasters and disaster response practitioners. It also serves remote sensing researchers, application developers, educators, and decision-makers who work with NASA Earth science data. The library is designed to be approachable for those new to Python -- with a
 three-step workflow of `login()`, `search_data()`, and `download()` -- while offering
@@ -206,7 +206,7 @@ component of the data access workflow:
 
 3. **Access**: Attempts to detect at runtime whether the process is running within AWS `us-west-2`
    and automatically selects the optimal access path -- direct S3 reads for in-region
-   access or HTTPS downloads otherwise. Users can manually specify an access path if needed.  Files can be opened as `fsspec`-compatible
+   access or HTTPS access otherwise. Users can manually specify an access path if needed.  Files can be opened as `fsspec`-compatible
    file-like objects for streaming into libraries such as xarray [@xarray], or
    downloaded to disk with parallel, fault-tolerant transfers.
 
