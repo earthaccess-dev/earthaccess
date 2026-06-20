@@ -108,8 +108,7 @@ test = [
   "types-requests >=0.1",
   "types-setuptools >=0.1",
   "types-geopandas",
-  "vcrpy >=7.0.0",
-  "aiohttp >=3.0.0,<3.14.0",  # Temporary pin of transitive dep. See https://github.com/earthaccess-dev/earthaccess/issues/1366
+  "vcrpy >=8.2.0",
   "dask[distributed]>=2025.7.0",
   "xarray",
   "h5netcdf",
