@@ -37,18 +37,18 @@ nav:
           - "Download data from on-prem location": "user/howto/onprem.md"
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
-      - Explanation:
-          - "Authentication": "user/authenticate.md"
-          - "Status": "user/status.md"
-          - "Search": "user/search.md"
-          - "Access": "user/access.md"
-          - "Backwards compatibility": "user/backwards-compatibility.md"
       - Tutorials:
           - "Accessing remote NASA data with fsspec": "user/tutorials/file-access.ipynb"
           - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
           - "Accessing and visualizing EMIT data with a few lines of code": "user/tutorials/emit-earthaccess.ipynb"
           - "Cloud optimized access to TEMPO air quality data with earthaccess and virtualizarr": "user/tutorials/virtual_dataset_tutorial_with_TEMPO_Level3.ipynb"
+      - Explanation:
+          - "Authentication": "user/explanation/authenticate.md"
+          - "Status": "user/explanation/status.md"
+          - "Search": "user/explanation/search.md"
+          - "Access": "user/explanation/access.md"
+          - "Backwards compatibility": "user/explanation/backwards-compatibility.md"
       - Reference:
           - Glossary:
               - "NASA glossary": "user/reference/glossary/nasa-glossary.md"
@@ -57,12 +57,12 @@ nav:
       - "contributor/index.md" # << Link target of the parent node
       - "Code of conduct": "contributor/code-of-conduct.md"
       - How-to:
-          - "Development guide": "contributor/development.md"
-          - "Pull Request (PR) guide": "contributor/pr-guide.md"
-          - "Releasing guide": "contributor/releasing.md"
-          - "Maintainers guide": "contributor/maintainers-guide.md"
-          - "Triaging guide": "contributor/triaging.md"
+          - "Setup dev environment": "contributor/howto/development.md"
+          - "Create a Pull Request (PR)": "contributor/howto/pr-guide.md"
+          - "Release a version": "contributor/howto/releasing.md"
+          - "Be a maintainer": "contributor/howto/maintainers-guide.md"
+          - "Triage issues": "contributor/howto/triaging.md"
       - Explanation:
-          - "Integration tests": "contributor/integration-tests.md"
+          - "Integration tests": "contributor/explanation/integration-tests.md"
       - Reference:
-          - "Naming conventions": "contributor/naming-convention.md"
+          - "Naming conventions": "contributor/reference/naming-convention.md"
