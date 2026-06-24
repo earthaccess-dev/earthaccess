@@ -2,23 +2,25 @@
 
 !!! note "This documentation follows the Diátaxis framework:"
 
-    - **How-to guides** — goal-oriented instructions for specific tasks.
+    - **How-to guides** — shorter, goal-oriented instructions for specific tasks.
+    - **Tutorials** — longer, guided learning-oriented lessons.
     - **Explanation** — understanding-oriented discussions of concepts.
-    - **Tutorials** — guided learning-oriented lessons.
     - **Reference** — information-oriented technical details.
     
     Learn more about Diátaxis at <https://diataxis.fr/>.
 
 **`earthaccess` enables authentication, search, and access for NASA Earth science data.**
 
-The package enables users to find, download, or stream data archived both at NASA DAACs and in the AWS-hosted Earthdata Cloud. The User guide contains How-to guides, Tutorials, Explanations, and Reference content to help users learn about and use `earthaccess`.
+This user guide contains different forms of content for various user needs. Use the **How-to** guides to find short solutions for your workflows. **Tutorials** provide longer-form examples of typical end-to-end workflows. **Explanations** give more in-depth descriptions of the main functions.
 
 Navigate to [Quick Start](./quick-start.md) to get working with `earthaccess` as quickly as possible. 
 
 **To learn more about the primary functions:**
 
-The [Authentication](./authenticate.md) section shows how `earthaccess` can be used to manage Earthdata Login and Earthdata Cloud credentials.
+The [Authentication](./explanation/authenticate.md) section shows how `earthaccess` can be used to manage Earthdata Login and Earthdata Cloud credentials.
 
-The [Search](./search.md) section introduces how to search for NASA datasets (collections) and specific data granules.
+The [Search](./explanation/search.md) section introduces how to search for NASA datasets (collections) and specific data granules.
 
-The [Access](./access.md) section introduces how to use `earthaccess` to download data to a local machine or stream data by opening it directly in memory.
+The [Access](./explanation/access.md) section introduces how to use `earthaccess` to download data to a local machine or stream data by opening it directly in memory.
+
+For those unfamiliar, the [NASA glossary](./reference/glossary/nasa-glossary.md) and [cloud computing terminology](./reference/glossary/cloud-glossary.md) pages provide helpful vocabulary for working with NASA Earth science data. 
