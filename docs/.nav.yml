@@ -3,7 +3,7 @@ nav:
       - "What is earthaccess?": "index.md"
       - "Community calendar": "calendar.md"
       - "External resources": "resources.md"
-      - "About Us": "about-us.md"
+      - "About us": "about-us.md"
       - "Supported by": "supported-by.md"
       - Governance:
           - Decisions: "governance/decisions/"
@@ -12,12 +12,12 @@ nav:
       - Search and Access: "api/index.md"
       - Modules:
           - Collections:
-              - "Collection Queries": "api/collections/collections-query.md"
-              - "Collection Results": "api/collections/collections.md"
-              - "Collection Services": "api/collections/collections-services.md"
+              - "Collection queries": "api/collections/collections-query.md"
+              - "Collection results": "api/collections/collections.md"
+              - "Collection services": "api/collections/collections-services.md"
           - Granules:
-              - "Granule Queries": "api/granules/granules-query.md"
-              - "Granule Results": "api/granules/granules.md"
+              - "Granule queries": "api/granules/granules-query.md"
+              - "Granule results": "api/granules/granules.md"
           - Store:
               - "Store": "api/store/store.md"
           - Auth:
@@ -26,12 +26,7 @@ nav:
   - User guide:
       - "user/index.md"
       - "Quick start": "user/quick-start.md"
-      - "Authentication": "user/authenticate.md"
-      - "Status": "user/status.md"
-      - "Search": "user/search.md"
-      - "Access": "user/access.md"
-      - "Backwards Compatibility": "user/backwards-compatibility.md"
-      - How-tos:
+      - How-to:
           - "Authenticate with Earthdata Login": "user/howto/authenticate.md"
           - "Search NASA datasets using filters": "user/howto/search-collections.md"
           - "Search for data using filters": "user/howto/search-granules.md"
@@ -48,18 +43,26 @@ nav:
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
           - "Accessing and visualizing EMIT data with a few lines of code": "user/tutorials/emit-earthaccess.ipynb"
           - "Cloud optimized access to TEMPO air quality data with earthaccess and virtualizarr": "user/tutorials/virtual_dataset_tutorial_with_TEMPO_Level3.ipynb"
+      - Explanation:
+          - "Authentication": "user/explanation/authenticate.md"
+          - "Status": "user/explanation/status.md"
+          - "Search": "user/explanation/search.md"
+          - "Access": "user/explanation/access.md"
+          - "Backwards compatibility": "user/explanation/backwards-compatibility.md"
       - Reference:
           - Glossary:
-              - "NASA Glossary": "user/reference/glossary/nasa-glossary.md"
-              - "Cloud Computing Terminology": "user/reference/glossary/cloud-glossary.md"
+              - "NASA glossary": "user/reference/glossary/nasa-glossary.md"
+              - "Cloud computing terminology": "user/reference/glossary/cloud-glossary.md"
   - Contributor guide:
       - "contributor/index.md" # << Link target of the parent node
-      - "Development Guide": "contributor/development.md"
-      - "Pull Request (PR) Guide": "contributor/pr-guide.md"
-      - "Releasing Guide": "contributor/releasing.md"
-      - "Maintainers Guide": "contributor/maintainers-guide.md"
-      - "Triaging Guide": "contributor/triaging.md"
-      - "Code of Conduct": "contributor/code-of-conduct.md"
-      - "Topics":
-          - "Naming conventions": "contributor/naming-convention.md"
-          - "Integration tests": "contributor/integration-tests.md"
+      - "Code of conduct": "contributor/code-of-conduct.md"
+      - How-to:
+          - "Setup dev environment": "contributor/howto/development.md"
+          - "Create a Pull Request (PR)": "contributor/howto/pr-guide.md"
+          - "Release a version": "contributor/howto/releasing.md"
+          - "Be a maintainer": "contributor/howto/maintainers-guide.md"
+          - "Triage issues": "contributor/howto/triaging.md"
+      - Explanation:
+          - "Integration tests": "contributor/explanation/integration-tests.md"
+      - Reference:
+          - "Naming conventions": "contributor/reference/naming-convention.md"

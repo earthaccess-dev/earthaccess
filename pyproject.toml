@@ -108,7 +108,7 @@ test = [
   "types-requests >=0.1",
   "types-setuptools >=0.1",
   "types-geopandas",
-  "vcrpy >=7.0.0",
+  "vcrpy >=8.2.0",
   "dask[distributed]>=2025.7.0",
   "xarray",
   "h5netcdf",
