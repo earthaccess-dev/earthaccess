@@ -1,5 +1,9 @@
 # User guide
 
+**`earthaccess` enables authentication, search, and access for NASA Earth science data.**
+
+This user guide contains different forms of content for various user needs. Navigate to [Quick Start](./quick-start.md) to get working with `earthaccess` as quickly as possible. 
+
 !!! note "This documentation follows the Diátaxis framework:"
 
     - **How-to guides** — shorter, goal-oriented instructions for specific tasks.
@@ -8,12 +12,6 @@
     - **Reference** — information-oriented technical details.
     
     Learn more about Diátaxis at <https://diataxis.fr/>.
-
-**`earthaccess` enables authentication, search, and access for NASA Earth science data.**
-
-This user guide contains different forms of content for various user needs. Use the **How-to** guides to find short solutions for your workflows. **Tutorials** provide longer-form examples of typical end-to-end workflows. **Explanations** give more in-depth descriptions of the main functions.
-
-Navigate to [Quick Start](./quick-start.md) to get working with `earthaccess` as quickly as possible. 
 
 **To learn more about the primary functions:**
 
