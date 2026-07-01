@@ -1,6 +1,6 @@
 # Issue Triaging and Prioritization Guide
 
-This document outlines our approach to triaging issues on GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+This document outlines our approach to triaging issues in GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
 
 **We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
 
@@ -62,22 +62,11 @@ Impact labels describe what portion of the project they affect. Impact labels ar
 
 Refer to the [Labels](https://github.com/earthaccess-dev/earthaccess/labels) page for details on label types and descriptions. 
 
+##### Linking Labels in GitHub Markdown
 
-## Linking Labels in GitHub Markdown
+When referencing a label in a GitHub issue or discussion, it is useful to link to the label page to provide additional context and help other members to quickly understand the issue's category.
 
-When referencing a label in a GitHub issue or discussion, it will be  useful to link to the label page to provide additional context and help other members to quickly understand the issue's category.
-
-### Syntax
-
-To link to a label in GitHub Markdown, copy-and-paste the URL to the label by right-clicking [any label](https://github.com/earthaccess-dev/earthaccess/labels) and selecting "Copy Link". Then, paste that label in a GitHub issue, PR, discussion, or Markdown document:
-
-```
-https://github.com/username/repository/labels/label-name
-```
-
-### Example
-
-For example, to link to the "good first issue" label in the earthaccess-dev/earthaccess repository, you would use the URL:
+To link to a label in GitHub Markdown, copy-and-paste the URL to the label by right-clicking [any label](https://github.com/earthaccess-dev/earthaccess/labels) and selecting "Copy Link". Then, paste that label in a GitHub issue, PR, discussion, or Markdown document. For example, to link to the "good first issue" label in the earthaccess-dev/earthaccess repository, you would use the URL:
 
 ```
 https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
@@ -85,39 +74,9 @@ https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 
 ### The issue is groomed
 
+Issues are groomed periodically to organize and prioritize the backlog. Issue priorities are surfaced within the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views. When triaging a new issue, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
 
-
-### The issue is worked as a new pull request
-
-    * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
-
-    * Update status to `In Progress`.
-
-    * Link the issue to the related PR with a comment "Resolves #N" (`N` is the issue number). The issue will auto-close when the PR is merged.
-
-    * If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
-
-
-
-### Project status
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Issue Prioritization
-
-Issue priorities are surfaced within the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views. When triaging a new issue, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
-
-### Priority: `1 - Critical`
+#### Priority: `1 - Critical`
 
 The issue has significant, immediate impact on users and/or major components of the `earthaccess` library. 
 
@@ -129,7 +88,7 @@ The issue has significant, immediate impact on users and/or major components of 
 
 *Documentation example:* Content is incorrect or missing in a way that would immediately block or mislead a user.
 
-### Priority: `2 - Important`
+#### Priority: `2 - Important`
 
 The issue has real impact but is not immediately blocking a majority of users.
 
@@ -141,7 +100,7 @@ The issue has real impact but is not immediately blocking a majority of users.
 
 *Documentation example:* A Tutorial or secondary documentation is broken or unclear; contributing docs with significant usability issues.
 
-### Priority: `3 - Nice to have` 
+#### Priority: `3 - Nice to have` 
 
 The issue is a real improvement but not urgent.
 
@@ -153,11 +112,20 @@ The issue is a real improvement but not urgent.
 
 *Documentation example:* Minor inconsistencies, typos, or style issues; improvements to contributing or developer-facing docs with no impact on end-user workflows.
 
-### Notes for Triagers
+#### Notes for Triagers
 
 - **When in doubt, start at Medium** and adjust based on community feedback or additional context.
 - The [User Guide](https://earthaccess.readthedocs.io/en/stable/user/) and [API Reference](https://earthaccess.readthedocs.io/en/stable/api/) generally warrant higher priority than contributing or developer docs when impact is otherwise similar.
 - Priority reflects *impact and urgency*, not effort — a quick fix can still be High priority.
+
+
+### The issue is worked as a new pull request
+
+- [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
+- Update status to `In Progress`.
+- Link the issue to the related PR with a comment "Resolves #N" (`N` is the issue number). The issue will auto-close when the PR is merged.
+- If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
+
 
 ## Issue Triaging Workflow
 
