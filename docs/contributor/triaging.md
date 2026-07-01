@@ -7,7 +7,17 @@ This document outlines our approach to triaging issues on GitHub, including guid
 ## Issue Lifecycle
 
 1. A [new issue](https://github.com/earthaccess-dev/earthaccess/issues/new/choose) is created, either using a pre-existing template, or as a blank issue.
-2. Issue triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
+2. An issue is triaged to initially assess the reported issue and determine its priority.  
+3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+4. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
+
+Details on each of these workflow steps are provided below. 
+
+### A new issue is created
+
+### An issue is triaged
+
+Triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
 
     * Determining whether the issue should be worked or not. If yes, move to "Backlog" status, otherwise close as not planned.
 
@@ -17,8 +27,9 @@ This document outlines our approach to triaging issues on GitHub, including guid
 
     * Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
 
-3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
-4. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
+### An issue is groomed
+
+### An issue is worked as a new pull request
 
     * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
 
@@ -28,10 +39,10 @@ This document outlines our approach to triaging issues on GitHub, including guid
 
     * If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
 
-Details on each of these workflow steps are provided below. 
 
 
-## Moving an issue to Backlog status
+
+### Moving an issue to Backlog status
 
 
 
