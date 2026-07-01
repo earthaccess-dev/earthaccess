@@ -2,7 +2,7 @@
 
 This document outlines our approach to triaging issues on GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
 
-**We hope that this guide will help empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
+**We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
 
 ## Issue Lifecycle
 
@@ -16,8 +16,9 @@ This document outlines our approach to triaging issues on GitHub, including guid
     * Adding an issue prioritization.
 
     * Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
-4. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
-5. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
+
+3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+4. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
 
     * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
 
