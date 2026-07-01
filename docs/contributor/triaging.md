@@ -55,43 +55,13 @@ When closing an issue as not planned:
 
 #### Labeling issues
 
-When labeling an issue, choose the label(s) that best describes the issue. Using labels consistently and accurately ensures that issues are trackable and searchable.
+When labeling an issue, choose the [label(s)](https://github.com/earthaccess-dev/earthaccess/labels) that best describes the issue. Using labels consistently and accurately ensures that issues are trackable and searchable. 
+
+Labels are mainly categorized by the prefix `type:`, `impact:`, or `needs:`. 
+Impact labels describe what portion of the project they affect. Impact labels are also used to help group related issues based on a particular feature or topic. For example, **impact: virtual-datasets** is used to categorize Issues or Discussions related to virtualizarr integration and support. These labels may evolve over time as new features are worked. 
 
 Refer to the [Labels](https://github.com/earthaccess-dev/earthaccess/labels) page for details on label types and descriptions. 
 
-### Issue Types
-
-- **type: bug**: Use for issues that identify bugs causing incorrect or unexpected behavior. This label is applied automatically if the [Bug template](https://github.com/earthaccess-dev/earthaccess/issues/new?template=bug.yml) is used.
-- **type: decision record**: Use this label for issues and PR's that address a new decision record document (e.g. https://github.com/earthaccess-dev/earthaccess/pull/1047).   
-- **type: duplicate**: Use this label for issues that are duplicates of existing ones.
-- **type: enhancement**: Use this label for requests for new features or improvements to existing functionalities.
-- **type: experience report**: Use this label for issues that describe a firsthand usability experience. 
-- **type: metrics**: This label is automatically applied upon creation of the Monthly metrics issue. See the [Monthly issue metrics](https://github.com/earthaccess-dev/earthaccess/blob/main/.github/workflows/issue-metrics.yml) action for more details.  
-- **type: will not do**: Use this label for issues that won’t be addressed or fixed.
-
-### Impact labels
-
-These labels describe what portion of the project they affect:
-
-- **impact: breaking**: Issues that break our public API.
-- **impact: core**: Issues that affect the core Python codebase.
-- **impact: dependencies**: Use this label for issues concerning dependencies.
-- **impact: documentation**: Use this label for issues related to documentation.
-- **impact: automation**: Use this label for issues related to the CI/CD pipeline or automation.
-- **impact: governance**: Issues that impact the project's governance or decision-making process.
-
-Impact labels are also used to help group related issues based on a particular feature or topic. For example, **impact: virtual-datasets** is used to categorize Issues or Discussions related to virtualizarr integration and support. These labels may evolve over time as new features are worked. 
-
-### Needs labels
-
-- **needs: decision**: We're struggling to decide what to do and the decision committee needs to help.
-- **needs: feedback**:  Use this label for issues where feedback is requested from the team or our community.
-- **needs: help**: Use this label for issues where additional help or contributions are needed.
-- **needs: triage**: Use this label for new issues that require additional information to determine whether it should move to the backlog, or close as not planned. 
-
-### Special labels
-
-- **good first issue**: Use this label for issues that are suitable for new contributors. These issues are designed to be approachable and not overly complex, making them an ideal starting point for those looking to contribute to the project.
 
 ## Linking Labels in GitHub Markdown
 
