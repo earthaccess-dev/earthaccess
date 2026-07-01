@@ -7,46 +7,24 @@ This document outlines our approach to triaging issues on GitHub, including guid
 ## Issue Lifecycle
 
 1. A [new issue](https://github.com/earthaccess-dev/earthaccess/issues/new/choose) is created, either using a pre-existing template, or as a blank issue.
-2. An issue is triaged to initially assess the reported issue and determine its priority.  
-3. Issues are reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
-4. An issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
+2. The issue is triaged to initially assess the reported issue and determine its priority.  
+3. The issue is reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+4. The issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
 
 Details on each of these workflow steps are provided below. 
 
 ### A new issue is created
 
-### An issue is triaged
+
+
+### The issue is triaged
 
 Triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
 
-    * Determining whether the issue should be worked or not. If yes, move to "Backlog" status, otherwise close as not planned.
-
-    * Adding or adjusting issue labels.
-
-    * Adding an issue prioritization.
-
-    * Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
-
-### An issue is groomed
-
-### An issue is worked as a new pull request
-
-    * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
-
-    * Update status to `In Progress`.
-
-    * Link the issue to the related PR with a comment "Resolves #N" (`N` is the issue number). The issue will auto-close when the PR is merged.
-
-    * If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
-
-
-
-
-### Moving an issue to Backlog status
-
-
-
-### Project status
+- Determining whether the issue should be worked or not. If yes, move to "Backlog" status, otherwise close as not planned.
+- Adding or adjusting issue labels.
+- Adding an issue prioritization.
+- Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
 
 By default, all new issues are created without a project status. Issues without a status are listed in the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view. Statuses include:
 
@@ -55,10 +33,11 @@ By default, all new issues are created without a project status. Issues without 
 - In Review
 - Done
 
-When triaging a new issue, review the information and provide a response or follow up with question(s) if needed. Providing gratitude for the submission as a text or emoji response is highly encouraged. Move the issue to the Backlog unless it ought to be closed as "not planned", as outlined below. If you are unsure, add the **needs: triage** label. On the righthand side of the issue page, the "Projects" section contains an `earthaccess` project box. Click "no status" to select the status options. Select "Backlog". This will move the project out of the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view into its relevant backlog view depending on issue type. See below for more details on these other project views. 
+#### Moving an issue to backlog status
 
+When triaging a new issue, review the information and provide a response or follow up with question(s) if needed. Provide gratitude for the submission as a text or emoji response. Move the issue to the Backlog unless it ought to be closed as "not planned", as outlined below. If you are unsure, add the **needs: triage** label. On the righthand side of the issue page, the "Projects" section contains an `earthaccess` project box. Click "no status" to select the status options. Select "Backlog". This will move the project out of the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view into its relevant backlog view depending on issue type. See below for more details on these other project views. 
 
-### When to "Close as not planned"?
+#### When to "Close as not planned"?
 
 Close issues as "not planned" when:
 
@@ -71,13 +50,12 @@ When closing an issue as not planned:
 - Provide a clear explanation as to why the issue is not planned or feasible.
 - Offer alternative solutions or workarounds, if possible.
 - Link to relevant documentation or resources, if applicable.
-- Add the **type: will not do** label.
 
-
-## Labeling Issues
+#### Labeling issues
 
 When labeling an issue, choose the label(s) that best describes the issue. Using labels consistently and accurately ensures that issues are trackable and searchable.
 
+Refer to the [Labels](https://github.com/earthaccess-dev/earthaccess/labels) page for details on label types and descriptions. 
 
 ### Issue Types
 
@@ -132,6 +110,36 @@ For example, to link to the "good first issue" label in the earthaccess-dev/eart
 ```
 https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 ```
+
+### The issue is groomed
+
+
+
+### The issue is worked as a new pull request
+
+    * [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
+
+    * Update status to `In Progress`.
+
+    * Link the issue to the related PR with a comment "Resolves #N" (`N` is the issue number). The issue will auto-close when the PR is merged.
+
+    * If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
+
+
+
+### Project status
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Issue Prioritization
 
