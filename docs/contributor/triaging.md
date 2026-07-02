@@ -141,7 +141,7 @@ flowchart TD
   start == YES ==> dupe{Is duplicate?}
   dupe == YES ==> close2[Close and point to duplicate]
   dupe == NO ==> repro{Has proper reproduction?}
-  repro == NO ==> close3[Label: 'needs reproduction' bot will auto close if no update has been made in 3 days]
+  repro == NO ==> close3[Ask for details from reporter or close as not planned]
   repro == YES ==> real{Is actually a bug?}
   real == NO ==> intended{Is the intended behaviour?}
   intended == YES ==> explain[Explain and close point to docs if needed]
