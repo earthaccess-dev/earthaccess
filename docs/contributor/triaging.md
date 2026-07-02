@@ -13,13 +13,13 @@ This document outlines our approach to triaging issues in GitHub, including guid
 
 Details on each of these workflow steps are provided below. 
 
-### A new issue is created
+## A new issue is created
 
 Issues are created using one of several templates or as a blank issue. See the issue template choices [here](https://github.com/earthaccess-dev/earthaccess/issues/new/choose). When an issue is first created, provide initial acknowledgement and gratitude for the submission as a text or emoji response. 
 
 By default, all new issues are created without a project status. Issues without a status are listed in the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view. 
 
-### The issue is triaged
+## The issue is triaged
 
 Triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
 
@@ -28,7 +28,7 @@ Triaging is led by the `earthaccess` community manager, though any community mem
 - Adding an issue prioritization.
 - Responding and follow up as needed (i.e. tagging relevant earthaccess maintainers for further support).
 
-#### Moving an issue to backlog status
+### Moving an issue to backlog status
 
 When triaging a new issue, review the information and provide a response or follow up with question(s) if needed. Move the issue to the Backlog unless it ought to be closed as "not planned", as outlined below. If you are unsure, add the **needs: triage** label. On the righthand side of the issue page, the "Projects" section contains an `earthaccess` project box. Click "no status" to select the status options. Statuses include:
 
@@ -39,7 +39,7 @@ When triaging a new issue, review the information and provide a response or foll
 
 Select "Backlog". This will move the project out of the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view into its relevant backlog view depending on issue type. See below for more details on these other project views. 
 
-#### When to "Close as not planned"?
+### When to "Close as not planned"?
 
 Close issues as "not planned" when:
 
@@ -53,7 +53,7 @@ When closing an issue as not planned:
 - Offer alternative solutions or workarounds, if possible.
 - Link to relevant documentation or resources, if applicable.
 
-#### Labeling issues
+### Labeling issues
 
 When labeling an issue, choose the [label(s)](https://github.com/earthaccess-dev/earthaccess/labels) that best describes the issue. Using labels consistently and accurately ensures that issues are trackable and searchable. 
 
@@ -62,7 +62,7 @@ Impact labels describe what portion of the project they affect. Impact labels ar
 
 Refer to the [Labels](https://github.com/earthaccess-dev/earthaccess/labels) page for details on label types and descriptions. 
 
-##### Linking Labels in GitHub Markdown
+#### Linking Labels in GitHub Markdown
 
 When referencing a label in a GitHub issue or discussion, it is useful to link to the label page to provide additional context and help other members to quickly understand the issue's category.
 
@@ -72,11 +72,11 @@ To link to a label in GitHub Markdown, copy-and-paste the URL to the label by ri
 https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 ```
 
-### The issue is groomed
+## The issue is groomed
 
 Issues are groomed periodically to organize and prioritize the backlog. Issue priorities are surfaced within the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views. When triaging a new issue, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
 
-#### Priority: `1 - Critical`
+### Priority: `1 - Critical`
 
 The issue has significant, immediate impact on users and/or major components of the `earthaccess` library. 
 
@@ -88,7 +88,7 @@ The issue has significant, immediate impact on users and/or major components of 
 
 *Documentation example:* Content is incorrect or missing in a way that would immediately block or mislead a user.
 
-#### Priority: `2 - Important`
+### Priority: `2 - Important`
 
 The issue has real impact but is not immediately blocking a majority of users.
 
@@ -100,7 +100,7 @@ The issue has real impact but is not immediately blocking a majority of users.
 
 *Documentation example:* A Tutorial or secondary documentation is broken or unclear; contributing docs with significant usability issues.
 
-#### Priority: `3 - Nice to have` 
+### Priority: `3 - Nice to have` 
 
 The issue is a real improvement but not urgent.
 
@@ -112,14 +112,14 @@ The issue is a real improvement but not urgent.
 
 *Documentation example:* Minor inconsistencies, typos, or style issues; improvements to contributing or developer-facing docs with no impact on end-user workflows.
 
-#### Notes for Triagers
+### Notes for Triagers
 
 - **When in doubt, start at Medium** and adjust based on community feedback or additional context.
 - The [User Guide](https://earthaccess.readthedocs.io/en/stable/user/) and [API Reference](https://earthaccess.readthedocs.io/en/stable/api/) generally warrant higher priority than contributing or developer docs when impact is otherwise similar.
 - Priority reflects *impact and urgency*, not effort — a quick fix can still be High priority.
 
 
-### The issue is worked as a new pull request
+## The issue is worked as a new pull request
 
 - [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
 - Update status to `In Progress`.
