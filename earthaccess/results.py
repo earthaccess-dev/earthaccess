@@ -11,6 +11,14 @@ import earthaccess
 from .formatters import _repr_granule_html
 from .services import DataServices
 
+# Per RFC 7946, GeoJSON coordinates (and therefore the geometry returned by
+# ``DataGranule.__geo_interface__``) are always expressed in WGS84 longitude /
+# latitude, i.e. CRS84 / EPSG:4326.  This is the CRS of the *footprint* metadata
+# CMR stores for a granule; it is **not** necessarily the CRS in which the
+# granule's data variables are gridded (which is frequently a projected CRS such
+# as Sinusoidal, Polar Stereographic, or UTM).
+_GEO_INTERFACE_CRS = "EPSG:4326"
+
 
 @cache
 def _citation(*, doi: str, format_: str, language: str) -> str:
@@ -493,6 +501,39 @@ class DataGranule(CustomDict):
         return self._filter_related_links("GET RELATED VISUALIZATION")
 
     @property
+    def crs(self) -> str | None:
+        """The coordinate reference system (CRS) of this granule's footprint.
+
+        This is the CRS of the geometry returned by
+        [`__geo_interface__`][earthaccess.results.DataGranule.__geo_interface__].
+        Because CMR stores granule footprints as WGS84 longitude/latitude and
+        GeoJSON (RFC 7946) mandates that CRS, this returns `"EPSG:4326"` whenever
+        the granule has a horizontal spatial footprint, and `None` when it has
+        none (for example, orbit-only granules that expose no geometry).
+
+        !!! warning "Footprint CRS is not the data CRS"
+
+            The value returned here describes the *footprint metadata only*. It
+            is **not** necessarily the CRS in which the granule's data variables
+            are gridded. Many NASA products are distributed in a projected CRS
+            (e.g. MODIS Sinusoidal, Polar Stereographic `EPSG:3413`/`EPSG:3031`,
+            or UTM), while their CMR footprint is always geographic
+            longitude/latitude. Do not assume that overlaying this footprint on
+            the opened data will align without reprojection. Determine the data's
+            native CRS from the file itself (e.g. via `rioxarray`'s `.rio.crs`)
+            or request a reprojection through a NASA transformation service.
+
+        Returns:
+            `"EPSG:4326"` if the granule has a horizontal spatial footprint,
+            otherwise `None`.
+        """
+        try:
+            self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]
+        except (KeyError, TypeError):
+            return None
+        return _GEO_INTERFACE_CRS
+
+    @property
     def __geo_interface__(self) -> dict[str, object]:
         """A GeoJSON representation of this granule.
 
@@ -508,6 +549,12 @@ class DataGranule(CustomDict):
         |`"Points"`            |`"MultiPoint"`            |
         |`"BoundingRectangles"`|`"MultiPolygon"`          |
         |`"GPolygons"`         |`"MultiPolygon"`          |
+
+        The returned coordinates are in WGS84 longitude/latitude (CRS84 /
+        `EPSG:4326`), per RFC 7946. This is the CRS of the granule *footprint*
+        and is not guaranteed to match the CRS in which the granule's data are
+        gridded; see
+        [`crs`][earthaccess.results.DataGranule.crs] for details.
 
         Raises:
             ValueError: If this granule does not contain a value at the path

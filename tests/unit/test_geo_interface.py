@@ -279,3 +279,26 @@ def test_missing_horizontal_spatial_domain_raises():
 
     with pytest.raises(ValueError):
         _ = granule.__geo_interface__
+
+
+@pytest.mark.parametrize("test_case", TEST_CASES.values(), ids=TEST_CASES.keys())
+def test_crs_is_epsg_4326_when_footprint_present(test_case: dict[str, object]):
+    geometry = test_case["geometry"]
+    granule = DataGranule(
+        {"umm": {"SpatialExtent": {"HorizontalSpatialDomain": {"Geometry": geometry}}}},
+    )
+
+    assert granule.crs == "EPSG:4326"
+
+
+def test_crs_is_none_without_horizontal_spatial_domain():
+    # Orbit-only granules expose no footprint geometry.
+    granule = DataGranule({"umm": {"SpatialExtent": {"Orbit": {}}}})
+
+    assert granule.crs is None
+
+
+def test_crs_is_none_when_spatial_extent_missing():
+    granule = DataGranule({"umm": {}})
+
+    assert granule.crs is None
