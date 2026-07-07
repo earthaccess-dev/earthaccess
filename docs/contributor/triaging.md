@@ -1,8 +1,10 @@
 # Issue Triaging and Prioritization Guide
 
-This document outlines our approach to triaging issues in GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+This document outlines our approach to triaging issues in GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker. 
 
 **We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
+
+See {ref}`issue-grooming` below for details on how to prioritize `earthaccess` issues and browse these via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
 
 ## Issue Lifecycle
 
@@ -72,7 +74,10 @@ To link to a label in GitHub Markdown, copy-and-paste the URL to the label by ri
 https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 ```
 
+(issue-grooming)=
 ## The issue is groomed
+
+TODO: Under the groomed section, have more of an intro or sub section on prioritizing issues. Then we can introduce the project views and how they are used, thinking about the contributor audience in addition to triager.
 
 Issues are groomed periodically to organize and prioritize the backlog. Issue priorities are surfaced within the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views. When triaging a new issue, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
 
