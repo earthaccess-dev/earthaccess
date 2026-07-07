@@ -4,7 +4,7 @@ This document outlines our approach to triaging issues in GitHub, including guid
 
 **We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
 
-See [Jump to it](#issue-grooming) below for details on how to prioritize `earthaccess` issues and browse these via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
+See [The issue is groomed](#issue-grooming) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
 
 
 ## Issue Lifecycle
