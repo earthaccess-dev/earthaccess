@@ -4,7 +4,7 @@ This document outlines our approach to triaging issues in GitHub, including guid
 
 **We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
 
-See [The issue is groomed](#issue-grooming) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
+See the [Issue grooming](#issue-grooming) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
 
 
 ## Issue Lifecycle
@@ -16,13 +16,13 @@ See [The issue is groomed](#issue-grooming) section below for details on how to 
 
 Details on each of these workflow steps are provided below. 
 
-## A new issue is created
+## Issue creation
 
 Issues are created using one of several templates or as a blank issue. See the issue template choices [here](https://github.com/earthaccess-dev/earthaccess/issues/new/choose). When an issue is first created, provide initial acknowledgement and gratitude for the submission as a text or emoji response. 
 
 By default, all new issues are created without a project status. Issues without a status are listed in the [Needs Triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3) project view. 
 
-## The issue is triaged
+## Issue triaging
 
 Triaging is led by the `earthaccess` community manager, though any community member is welcome and encouraged to contribute. Triaging involves:
 
@@ -76,11 +76,20 @@ https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 ```
 
 <a name="issue-grooming"></a>
-## The issue is groomed
+## Issue grooming
 
-TODO: Under the groomed section, have more of an intro or sub section on prioritizing issues. Then we can introduce the project views and how they are used, thinking about the contributor audience in addition to triager.
+Issues are groomed periodically to organize and prioritize the backlog. This issue management occurs within the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). Several views exist to serve various use cases, including:
 
-Issues are groomed periodically to organize and prioritize the backlog. Issue priorities are surfaced within the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views. When triaging a new issue, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
+- [Needs triage](https://github.com/orgs/earthaccess-dev/projects/1/views/3): All issues without a status, awaiting triaging.
+- [Backlog](https://github.com/orgs/earthaccess-dev/projects/1/views/1): All issues with a `Backlog` status: These issues were triaged and are ready to be addressed.
+- [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4): All open, triaged issues with a `Bug` label.
+- [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6): All open issues with a `impact: documentation` label.
+- [Decisions](https://github.com/orgs/earthaccess-dev/projects/1/views/2): All issues with a `needs: decision` label. This is a "Board" type allowing us to see the status of all decisions.
+- [Roadmap](https://github.com/orgs/earthaccess-dev/projects/1/views/5): All issues linked and grouped by [Milestones](https://github.com/earthaccess-dev/earthaccess/milestones).
+
+If you're interested in contributing but aren't sure what needs attention, head to the [Bug Priority](https://github.com/orgs/earthaccess-dev/projects/1/views/4) and [Docs](https://github.com/orgs/earthaccess-dev/projects/1/views/6) project views to identify high-priority issues to address. 
+
+For triagers, select a priority based on the user impact and urgency. The following guidelines apply broadly across issue types, with additional notes for bugs and documentation issues.
 
 ### Priority: `1 - Critical`
 
@@ -125,7 +134,7 @@ The issue is a real improvement but not urgent.
 - Priority reflects *impact and urgency*, not effort — a quick fix can still be High priority.
 
 
-## The issue is worked as a new pull request
+## Working issues
 
 - [Assign](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users) the issue to the implementer.
 - Update status to `In Progress`.
@@ -150,8 +159,8 @@ flowchart TD
   repro == NO ==> close3[Ask for details from reporter or close as not planned]
   repro == YES ==> real{Is actually a bug?}
   real == NO ==> intended{Is the intended behaviour?}
-  intended == YES ==> explain[Explain and close point to docs if needed]
-  intended == NO ==> open[Keep open for discussion Remove 'pending triage' label]
+  intended == YES ==> explain[Explain and close; point to docs if needed]
+  intended == NO ==> open[Keep open for discussion; Remove 'needs: triage' label]
   real == YES ==> real2["Confirm that 'Bug' label was automatically added as part of the Bug Issue template, otherwise add 'Bug' label."]
 
 
