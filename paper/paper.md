@@ -168,6 +168,8 @@ slice of the workflow:
   DAAC-aware provider resolution, cloud-hosting filters, and rich result objects that
   encapsulate metadata. However, `python-cmr` does not handle authentication, data
   download, or cloud access -- the areas where researchers face many workflow difficulties.
+  
+- **asf_search** [@asf_search] sits between `python-cmr` and `earthaccess`: it focuses on search and discovery but also handles authentication and access. It emerged around the same time as `earthaccess`, from similar access challenges. Unlike `earthaccess`, which is mission- and domain-agnostic, `asf_search` is tailored to synthetic aperture radar (SAR) data, adding domain-specific tooling and functionality.
 
 - **harmony-py** [@harmony_py] is NASA Earthdata's client for the Harmony data transformation
   service, which provides, for example, server-side subsetting, reformatting, and reprojection services.
