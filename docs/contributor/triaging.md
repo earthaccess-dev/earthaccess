@@ -2,16 +2,16 @@
 
 This document outlines our approach to triaging issues in GitHub, including guidelines for labeling and resolving issues, and best practices for maintaining a well-organized, prioritized, and up-to-date issue tracker. 
 
-**We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"**
+!!! info
 
-See the [Issue grooming](#issue-grooming) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
-
+    We hope that this guide will empower anyone to contribute to issue triaging, and address a common question for contributors: "I'm interested in working on the highest priority issues that will solve important problems facing the `earthaccess` community. Where do I begin?"
+    See the [Issue prioritization](#issue-prioritization) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
 
 ## Issue lifecycle
 
 1. A [new issue](https://github.com/earthaccess-dev/earthaccess/issues/new/choose) is created, either using a pre-existing template, or as a blank issue.
-2. The issue is triaged to initially assess the reported issue and determine its priority.  
-3. The issue is reviewed and groomed by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
+2. The issue is triaged to initially assess the reported issue as a backlog candidate. 
+3. The issue is reviewed and prioritized by the `earthaccess` community manager using the `earthaccess` [GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). 
 4. The issue is worked following the [Pull Request (PR) Guide](./pr-guide.md).
 
 Details on each of these workflow steps are provided below. 
@@ -75,8 +75,8 @@ To link to a label in GitHub Markdown, copy-and-paste the URL to the label by ri
 https://github.com/earthaccess-dev/earthaccess/labels/good%20first%20issue
 ```
 
-<a name="issue-grooming"></a>
-## Issue grooming
+<a name="issue-prioritization"></a>
+## Issue prioritization
 
 Issues are groomed periodically to organize and prioritize the backlog. This issue management occurs within the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1). Several views exist to serve various use cases, including:
 
