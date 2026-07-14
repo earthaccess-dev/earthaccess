@@ -7,7 +7,7 @@ This document outlines our approach to triaging issues in GitHub, including guid
 See the [Issue grooming](#issue-grooming) section below for details on how to identify and browse prioritized issues via the [`earthaccess` GitHub Project](https://github.com/orgs/earthaccess-dev/projects/1).
 
 
-## Issue Lifecycle
+## Issue lifecycle
 
 1. A [new issue](https://github.com/earthaccess-dev/earthaccess/issues/new/choose) is created, either using a pre-existing template, or as a blank issue.
 2. The issue is triaged to initially assess the reported issue and determine its priority.  
