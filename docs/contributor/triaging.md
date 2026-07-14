@@ -142,7 +142,7 @@ The issue is a real improvement but not urgent.
 - If the previous step is missed, [link any related PRs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) before manually closing an issue.
 
 
-## Issue Triaging Workflow
+## Issue triaging workflow
 
 ``` mermaid
 
