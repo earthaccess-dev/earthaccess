@@ -7,6 +7,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+
+- `DataGranule.crs` property that reports the CRS of a granule's footprint
+  (`"EPSG:4326"`, or `None` when the granule has no horizontal footprint), and
+  documentation clarifying that this footprint CRS is not necessarily the CRS in
+  which the granule's data are gridded.
+
 ### Fixed
 
 - `search_services` now respects the authenticated system (UAT vs PROD) instead

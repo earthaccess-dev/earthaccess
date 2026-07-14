@@ -293,6 +293,18 @@ All the methods described here require coordinates to be in geodetic coordinates
 
 In each case, matching granules or datasets are returned if their geometries intersect with the geometries passed to `earthaccess`.
 
+!!! warning "Footprint CRS is not the data CRS"
+
+    The spatial footprints CMR returns for granules — including the GeoJSON
+    produced by `DataGranule.__geo_interface__` — are always expressed in WGS84
+    longitude/latitude (`EPSG:4326`), and `DataGranule.crs` reports this. This is
+    the CRS of the *footprint metadata only*; it is **not** necessarily the CRS
+    in which the data variables are gridded. Many NASA products are distributed
+    in a projected CRS (e.g. MODIS Sinusoidal, Polar Stereographic, or UTM) even
+    though their footprint is geographic. Determine the data's native CRS from
+    the file itself (e.g. `rioxarray`'s `.rio.crs`) rather than assuming it
+    matches the footprint, and reproject as needed.
+
 ### Bounding box
 
 A bounding box is defined by lower left longitude, lower left latitude, upper right longitude, upper right latitude.  This is passed to the `bounding_box` keywords as a Python tuple of floats.
