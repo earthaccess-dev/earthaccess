@@ -65,7 +65,7 @@ Impact labels describe what portion of the project they affect. Impact labels ar
 
 Refer to the [Labels](https://github.com/earthaccess-dev/earthaccess/labels) page for details on label types and descriptions. 
 
-#### Linking Labels in GitHub Markdown
+#### Linking labels in GitHub Markdown
 
 When referencing a label in a GitHub issue or discussion, it is useful to link to the label page to provide additional context and help other members to quickly understand the issue's category.
 
