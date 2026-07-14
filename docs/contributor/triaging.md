@@ -129,7 +129,7 @@ The issue is a real improvement but not urgent.
 
 ### Notes for Triagers
 
-- **When in doubt, start at Medium** and adjust based on community feedback or additional context.
+- **When in doubt, start at Important** and adjust based on community feedback or additional context.
 - The [User Guide](https://earthaccess.readthedocs.io/en/stable/user/) and [API Reference](https://earthaccess.readthedocs.io/en/stable/api/) generally warrant higher priority than contributing or developer docs when impact is otherwise similar.
 - Priority reflects *impact and urgency*, not effort — a quick fix can still be High priority.
 
