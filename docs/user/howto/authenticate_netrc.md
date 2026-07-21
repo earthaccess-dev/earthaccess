@@ -1,0 +1,1 @@
+# How do I authenticate with Earthdata Login using a `.netrc`

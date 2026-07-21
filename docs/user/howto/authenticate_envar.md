@@ -1,0 +1,1 @@
+# How do I authenticate Earthdata Login using Environment Variables
