@@ -10,8 +10,8 @@ I would like to authenticate my NASA Earthdata Login account using `earthaccess`
 >>> import earthaccess
 
 >>> auth = earthaccess.login()
-Enter your Earthdata Login username: your_username
-Enter your Earthdata password:
+Enter your Earthdata Login username: <your_username>
+Enter your Earthdata password: <your_password>
 ```
 
 ## Discussion
