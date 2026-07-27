@@ -22,6 +22,8 @@ nav:
               - "Store": "api/store/store.md"
           - Auth:
               - "Auth": "api/auth/auth.md"
+          - Virtual:
+              - "Virtual": "api/virtual/virtual.md"
 
   - User guide:
       - "user/index.md"

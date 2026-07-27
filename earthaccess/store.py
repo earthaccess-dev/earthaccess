@@ -49,7 +49,7 @@ def _is_interactive() -> bool:
     Interactive sessions include Jupyter Notebooks, IPython REPL, and default Python REPL.
     """
     try:
-        from IPython import (  # type: ignore[import-not-found]  # noqa: PLC0415
+        from IPython import (  # type: ignore[import-not-found]
             get_ipython,
         )
 
