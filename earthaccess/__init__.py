@@ -60,7 +60,7 @@ __all__ = [
     "search_services",
     "status",
     # virtual
-    "virtualize",
+    "virtualize"
 ]
 
 try:
@@ -74,8 +74,7 @@ _auth = Auth()
 _store: Store | None = None
 _lock = threading.Lock()
 
-
-def __getattr__(name):  # type: ignore[no-untyped-def]
+def __getattr__(name: str):  # type: ignore # noqa: ANN202
     """Module-level getattr to handle automatic authentication when accessing
     `earthaccess.__auth__` and `earthaccess.__store__`.
 

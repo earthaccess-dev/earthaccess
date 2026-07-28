@@ -4,13 +4,14 @@ import sys
 import tempfile
 import threading
 import traceback
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from pickle import dumps, loads
-from typing import Any
+from turtle import _AnyColor
+from typing import Any, SupportsIndex
 from uuid import uuid4
 
 import fsspec
@@ -87,7 +88,7 @@ class EarthAccessFile:
         self.f = f
         self.granule = granule
 
-    def __getattribute__(self, name: str) -> Any:
+    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
         # use super().__getattribute__ to avoid infinite recursion
         if (name in EarthAccessFile.__dict__) or (name in self.__dict__):
             # accessing our attributes
@@ -96,7 +97,10 @@ class EarthAccessFile:
         proxy = super().__getattribute__("f")
         return getattr(proxy, name)
 
-    def __reduce_ex__(self, protocol: Any) -> Any:
+    def __reduce_ex__(self, protocol: SupportsIndex) -> tuple[
+        Callable[[type["EarthAccessFile"], DataGranule, Auth, bytes], "EarthAccessFile"],
+        tuple[type["EarthAccessFile"], DataGranule, Auth, bytes],
+    ]:
         return make_instance, (
             self.__class__,
             self.granule,
@@ -165,10 +169,10 @@ def _open_files(
 
 
 def make_instance(
-    cls: Any,
+    cls: type[fsspec.spec.AbstractBufferedFile],
     granule: DataGranule,
     auth: Auth,
-    data: Any,
+    data: bytes
 ) -> EarthAccessFile:
     # Attempt to re-authenticate
     if not earthaccess.__auth__.authenticated:
@@ -238,7 +242,7 @@ def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
 class Store:
     """Store class to access granules on-prem or in the cloud."""
 
-    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002
+    def __init__(self, auth: Auth, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002, ANN401
         """Store is the class to access data.
 
         Parameters:

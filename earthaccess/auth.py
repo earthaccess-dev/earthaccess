@@ -57,7 +57,7 @@ class BasicAuthResponseHook:
         self.hostname = hostname
         self.auth = auth
 
-    def __call__(self, r: requests.Response, **kwargs: Any) -> requests.Response:
+    def __call__(self, r: requests.Response, **kwargs: Any) -> requests.Response:  # noqa: ANN401
 
         # If the response's URL is not for the EDL system we're authenticating
         # against, then simply return the response unchanged.  Otherwise, we'll
@@ -113,7 +113,7 @@ class Auth:
         strategy: str = "netrc",
         persist: bool = False,  # noqa: FBT001, FBT002
         system: System | None = None,
-    ) -> Any:
+    ) -> Auth:
         """Authenticate with Earthdata login.
 
         Parameters:

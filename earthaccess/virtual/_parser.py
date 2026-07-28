@@ -43,7 +43,7 @@ _ALIASES: dict[str, str] = {
 def resolve_parser(
     parser: ParserType,
     group: str | None = None,
-) -> Any:
+) -> Any:  # noqa: ANN401
     """Resolve a parser name or instance to a VirtualiZarr parser object.
 
     If ``parser`` is already an instance (i.e. not a ``str``) it is returned
@@ -106,7 +106,7 @@ def resolve_parser(
 
 def get_urls_for_parser(
     granules: list[earthaccess.DataGranule],
-    parser: Any,
+    parser: Any,  # noqa: ANN401
     access: AccessType,
 ) -> list[str]:
     """Return one data URL per granule, formatted for the given parser.

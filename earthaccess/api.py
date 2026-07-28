@@ -88,7 +88,7 @@ def _normalize_location(location: str | None) -> str | None:
     return location
 
 
-def search_datasets(count: int = -1, **kwargs: Any) -> list[DataCollection]:
+def search_datasets(count: int = -1, **kwargs: Any) -> list[DataCollection]:  # noqa: ANN401
     """Search datasets (collections) using NASA's CMR.
 
     [https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html)
@@ -186,7 +186,7 @@ def search_datasets(count: int = -1, **kwargs: Any) -> list[DataCollection]:
     return query.get_all()
 
 
-def search_data(count: int = -1, **kwargs: Any) -> list[DataGranule]:
+def search_data(count: int = -1, **kwargs: Any) -> list[DataGranule]:  # noqa: ANN401
     """Search for dataset files (granules) using NASA's CMR.
 
     [https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html)
@@ -280,7 +280,7 @@ def search_data(count: int = -1, **kwargs: Any) -> list[DataGranule]:
     return query.get_all()
 
 
-def search_services(count: int = -1, **kwargs: Any) -> list[Any]:
+def search_services(count: int = -1, **kwargs: Any) -> list[Any]:  # noqa: ANN401
     """Search the NASA CMR for Services matching criteria.
 
     See <https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#service>.

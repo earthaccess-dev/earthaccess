@@ -1,7 +1,10 @@
-from typing import Any
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import importlib_resources
+
+if TYPE_CHECKING:
+    from earthaccess.results import DataGranule
 
 STATIC_FILES = ["iso_bootstrap4.0.0min.css", "styles.css"]
 
@@ -18,7 +21,7 @@ def _repr_collection_html() -> str:
     return "<div></div>"
 
 
-def _repr_granule_html(granule: Any) -> str:
+def _repr_granule_html(granule: "DataGranule") -> str:
     css_styles = _load_static_files()
     css_inline = f"""<div id="{uuid4()}" style="height: 0px; display: none">
             {"".join([f"<style>{style}</style>" for style in css_styles])}

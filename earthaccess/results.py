@@ -31,7 +31,7 @@ class CustomDict(dict):
         collection: dict[str, Any],
         fields: list[str] | None = None,
         cloud_hosted: bool = False,  # noqa: FBT001, FBT002
-    ):
+    ) -> None:
         super().__init__(collection)
         self.cloud_hosted = cloud_hosted
         self.uuid = str(uuid.uuid4())
@@ -341,7 +341,7 @@ class DataGranule(CustomDict):
         collection: dict[str, Any],
         fields: list[str] | None = None,
         cloud_hosted: bool = False,  # noqa: FBT001, FBT002
-    ):
+    ) -> None:
         super().__init__(collection)
         self.cloud_hosted = cloud_hosted
         # TODO: maybe add area, start date and all that as an instance value

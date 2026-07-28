@@ -16,7 +16,7 @@ class DataServices(ServiceQuery):
 
     _format = "umm_json"
 
-    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         """Build an instance of DataService to query CMR.
 
         auth is an optional parameter for queries that need authentication,

@@ -36,7 +36,7 @@ class DataCollections(CollectionQuery):
     _fields: list[str] | None = None
     _format = "umm_json"
 
-    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         """Builds an instance of DataCollections to query the CMR.
 
         Parameters:
@@ -426,7 +426,7 @@ class DataGranules(GranuleQuery):
 
     _format = "umm_json"
 
-    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
 
         self.session = (
@@ -749,7 +749,7 @@ class DataGranules(GranuleQuery):
             key in self.params for key in collection_keys
         )
 
-    def _is_cloud_hosted(self, granule: Any) -> bool:
+    def _is_cloud_hosted(self, granule: DataGranule) -> bool:
         """Check if a granule record, from CMR, advertises "direct access"."""
         if "RelatedUrls" not in granule["umm"]:
             return False
