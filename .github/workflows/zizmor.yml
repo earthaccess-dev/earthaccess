@@ -6,9 +6,11 @@ on:
       - "main"
     paths:
       - ".github/workflows/*"
+      - ".github/actions/*"
   pull_request:
     paths:
       - ".github/workflows/*"
+      - ".github/actions/*"
 
 permissions: {}
 
