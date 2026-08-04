@@ -1,3 +1,4 @@
+from html import escape
 from typing import Any
 from uuid import uuid4
 
@@ -26,14 +27,14 @@ def _repr_granule_html(granule: Any) -> str:
     style = "max-height: 120px;"
     dataviz_img = "".join(
         [
-            f'<a href="{link}"><img style="{style}" src="{link}" alt="Data Preview"/></a>'
+            f'<a href="{escape(link)}"><img style="{style}" src="{escape(link)}" alt="Data Preview"/></a>'
             for link in granule.dataviz_links()[:2]
             if link.startswith("http")
         ],
     )
     data_links = "".join(
         [
-            f'<a href="{link}" target="_blank" class="btn btn-secondary btn-sm">{link.split("/")[-1]}</a>'
+            f'<a href="{escape(link)}" target="_blank" class="btn btn-secondary btn-sm">{escape(link.split("/")[-1])}</a>'
             for link in granule.data_links()
         ],
     )
