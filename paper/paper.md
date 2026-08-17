@@ -171,14 +171,8 @@ slice of the workflow:
   
 - **asf_search** [@asf_search] sits between `python-cmr` and `earthaccess`: it focuses on search and discovery but also handles authentication and access. It emerged around the same time as `earthaccess`, from similar access challenges. Unlike `earthaccess`, which is mission- and domain-agnostic, `asf_search` is tailored to synthetic aperture radar (SAR) data, adding domain-specific tooling and functionality.
 
-- **harmony-py** [@harmony_py] is NASA Earthdata's client for the Harmony data transformation
-  service, which provides, for example, server-side subsetting, reformatting, and reprojection services.
-  It addresses a complementary use case; `earthaccess` focuses on direct data access
-  and client-side analysis.
 
-- **icepyx** [@icepyx] provides specialized tools for ICESat-2 data, including
-  subsetting and variable selection. It is mission-specific by design, whereas
-  `earthaccess` is mission-agnostic and supports all EOSDIS data holdings.
+- **icepyx** [@icepyx] provides a mission-specific solution to the general problem solved by earthaccess: search, discovery, authentication, and access to ICESat-2 [@icesat2] data products. Established about a year before earthaccess, it now leverages earthaccess via a mixin to provide authentication and tokening when users perform an action that requires logging in.
 
 - **earthdatalogin** [@earthdatalogin_r] provides similar authentication and access
   functionality for the R programming ecosystem. The two projects share a common motivation and
