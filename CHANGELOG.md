@@ -7,6 +7,28 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Change many methods to `@property` methods.
+  Now, for example, you'll get the size of a granule with `granule.size` instead of
+  `granule.size()`.
+  If you use the old syntax, you'll receive `TypeError: 'NoneType' object is not callable`.
+  The following methods were changed:
+  - `DataCollection.summary`
+  - `DataCollection.doi`
+  - `DataCollection.concept_id`
+  - `DataCollection.data_type`
+  - `DataCollection.version`
+  - `DataCollection.landing_page`
+  - `DataCollection.s3_bucket`
+  - `DataCollection.services`
+  - `DataGranule.size`
+- Rename `DataCollection.get_links` to `DataCollection.data_links` and make it a
+  `@property`.
+  The link name was changed because the links are called "GET DATA" in the CMR API, and
+  the old method name, while it matches the property name in the API, can be read as a
+  verb, when it's really an attribute.
+
 ### Fixed
 
 - `search_services` now respects the authenticated system (UAT vs PROD) instead
