@@ -99,13 +99,13 @@ class DataCollection(CustomDict):
         summary_dict: dict[str, Any]
         summary_dict = {
             "short-name": self.get_umm("ShortName"),
-            "concept-id": self.concept_id(),
-            "version": self.version(),
-            "file-type": self.data_type(),
-            "get-data": self.get_data(),
+            "concept-id": self.concept_id,
+            "version": self.version,
+            "file-type": self.data_type,
+            "get-data": self.data_links,
         }
-        if "Region" in self.s3_bucket():
-            summary_dict["cloud-info"] = self.s3_bucket()
+        if "Region" in self.s3_bucket:
+            summary_dict["cloud-info"] = self.s3_bucket
 
         return summary_dict
 
@@ -149,7 +149,7 @@ class DataCollection(CustomDict):
         """
         return (
             None
-            if not (doi := self.doi())
+            if not (doi := self.doi)
             else _citation(doi=doi, format_=format, language=language)
         )
 
@@ -269,7 +269,7 @@ class DataGranule(CustomDict):
         super().__init__(collection)
         self.cloud_hosted = cloud_hosted
         # TODO: maybe add area, start date and all that as an instance value
-        self["size"] = self.size()
+        self["size"] = self.size
         self.uuid = str(uuid.uuid4())
         self.render_dict: Any
         if fields is None:
@@ -296,7 +296,7 @@ class DataGranule(CustomDict):
         Collection: {self["umm"]["CollectionReference"]}
         Spatial coverage: {self["umm"]["SpatialExtent"]}
         Temporal coverage: {self["umm"]["TemporalExtent"]}
-        Size(MB): {self.size()}
+        Size(MB): {self.size}
         Data: {data_links}\n\n
         """.strip().replace("  ", "")
 
