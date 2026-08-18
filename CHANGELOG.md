@@ -9,8 +9,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Breaking changes
 
-- Change many methods to `@property` methods.
-  Now, for example, you'll get the size of a granule with `granule.size` instead of
+- Many methods are now `@property` methods.
+  For example, you'll get the size of a granule with `granule.size` instead of
   `granule.size()`.
   If you use the old syntax, you'll receive `TypeError: 'NoneType' object is not callable`.
   The following methods were changed:
@@ -23,7 +23,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   - `DataCollection.s3_bucket`
   - `DataCollection.services`
   - `DataGranule.size`
-- Rename `DataCollection.get_links` to `DataCollection.data_links` and make it a
+- `DataCollection.get_links` is renamed to `DataCollection.data_links` and is now a
   `@property`.
   The link name was changed because the links are called "GET DATA" in the CMR API, and
   the old method name, while it matches the property name in the API, can be read as a
