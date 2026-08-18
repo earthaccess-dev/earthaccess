@@ -12,7 +12,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Many methods are now `@property` methods.
   For example, you'll get the size of a granule with `granule.size` instead of
   `granule.size()`.
-  If you use the old syntax, you'll receive `TypeError: 'NoneType' object is not callable`.
+  If you use the old syntax, you'll receive errors like `TypeError: 'NoneType' object is not callable`, `TypeError: 'str' object is not callable`, etc.
   The following methods were changed:
   - `DataCollection.summary`
   - `DataCollection.doi`
