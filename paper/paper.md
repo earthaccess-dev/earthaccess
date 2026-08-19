@@ -129,13 +129,7 @@ DMR++ metadata [@dmrpp], powered by VirtualiZarr [@virtualizarr] and kerchunk [@
 NASA's Earth science data archive is one of the largest and most diverse collections of
 Earth observation data in the world, used by over ten million researchers, educators,
 and decision-makers globally [@nasa_esds_data_metrics]. However, the complexity of the underlying data infrastructure
-presents a significant barrier to scientific productivity. A typical data access workflow
-requires a researcher to: (1) authenticate with NASA Earthdata Login; (2) discover
-relevant datasets and granules through the CMR API; (3) parse metadata to obtain access
-URLs; (4) manage HTTP sessions with tokens and redirect handling; (5) determine whether
-data are hosted on-premises or in the Earthdata Cloud; and (6) obtain temporary AWS S3
-credentials when accessing cloud-hosted data. Each step introduces opportunities for
-error, and DAAC-specific configurations further compound the challenge.
+presents a significant barrier to scientific productivity. A typical data access workflow requires a researcher to: (1) search the CMR API to discover relevant datasets and products; (2) parse the returned metadata to identify specific granules and extract the appropriate access URLs; (3) authenticate with NASA Earthdata Login and maintain authenticated sessions that handle tokens and cross-domain redirects; (4) for NASA Earth science data hosted in the same AWS region as the researcher's compute environment, obtain and periodically renew temporary AWS S3 credentials; and (5) retrieve the data by downloading it over HTTPS, streaming it directly from S3, or passing the information into a third-party package for customization services. Researchers must know enough about the technical implementation of multiple APIs to perform these steps accurately, each of which introduces opportunities for error. DAAC-specific configurations and NASA's ongoing migration to the Earthdata Cloud compound the challenge, as researchers contend with multiple access paradigms, often within a single analysis workflow.
 
 NASA's ongoing migration to the Earthdata Cloud adds further complexity, as researchers
 must now contend with two possible access paradigms, traditional HTTPS downloads and S3-based
