@@ -238,7 +238,7 @@ def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
 class Store:
     """Store class to access granules on-prem or in the cloud."""
 
-    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002
+    def __init__(self, auth: Auth, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002
         """Store is the class to access data.
 
         Parameters:
