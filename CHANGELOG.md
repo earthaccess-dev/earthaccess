@@ -18,16 +18,16 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   The following methods were changed to read-only fields of the same name,
   except where noted:
   
-  - `DataCollection.concept_id()`
-  - `DataCollection.data_type()`
-  - `DataCollection.doi()`
-  - `DataCollection.get_links()` (now `DataCollection.data_links`)
-  - `DataCollection.landing_page()`
-  - `DataCollection.s3_bucket()`
-  - `DataCollection.services()`
-  - `DataCollection.summary()`
-  - `DataCollection.version()`
-  - `DataGranule.size()`
+  - `DataCollection.concept_id()` -> `DataCollection.concept_id`
+  - `DataCollection.data_type()` -> `DataCollection.data_type`
+  - `DataCollection.doi()` -> `DataCollection.doi`
+  - `DataCollection.get_links()` -> `DataCollection.data_links` (note the name change, details below)
+  - `DataCollection.landing_page()` -> `DataCollection.landing_page`
+  - `DataCollection.s3_bucket()` -> `DataCollection.s3_bucket`
+  - `DataCollection.services()` -> `DataCollection.services`
+  - `DataCollection.summary()` -> `DataCollection.summary`
+  - `DataCollection.version()` -> `DataCollection.version`
+  - `DataGranule.size()` -> `DataGranule.size`
 
   **NOTE:** The method `DataCollection.get_links()` was replaced with the field
   `DataCollection.data_links`. The method name was `get_links` because in the
