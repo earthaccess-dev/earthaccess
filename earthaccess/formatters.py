@@ -27,7 +27,7 @@ def _repr_granule_html(granule: Any) -> str:
     dataviz_img = "".join(
         [
             f'<a href="{link}"><img style="{style}" src="{link}" alt="Data Preview"/></a>'
-            for link in granule.dataviz_links()[:2]
+            for link in granule.dataviz_links[:2]
             if link.startswith("http")
         ],
     )
