@@ -14,10 +14,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `granule.size` instead of `granule.size()`. If you use the old syntax, you'll
   receive errors like `TypeError: 'NoneType' object is not callable`,
   `TypeError: 'str' object is not callable`, etc.
-  
+
   The following methods were changed to read-only fields of the same name,
   except where noted:
-  
+
   - `DataCollection.concept_id()` -> `DataCollection.concept_id`
   - `DataCollection.data_type()` -> `DataCollection.data_type`
   - `DataCollection.doi()` -> `DataCollection.doi`
