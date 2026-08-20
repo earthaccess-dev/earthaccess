@@ -36,6 +36,8 @@ from .search import DataCollections
 
 logger = logging.getLogger(__name__)
 
+_PROGRAMMER_ERROR_MSG = "Programmer error. Please report this bug!"
+
 _HTTP_OK = 200
 _HTTP_SUCCESS_CODES = range(200, 300)
 _HTTP_CLIENT_ERROR_CODES = range(400, 500)
@@ -286,6 +288,9 @@ class Store:
         return None
 
     def _running_in_us_west_2(self) -> bool:
+        if self.auth is None:
+            raise RuntimeError(_PROGRAMMER_ERROR_MSG)
+
         session = self.auth.get_session()
         try:
             # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
@@ -316,6 +321,8 @@ class Store:
             method: HTTP method to test, default: "GET"
         """
         if not hasattr(self, "_http_session"):
+            if self.auth is None:
+                raise RuntimeError(_PROGRAMMER_ERROR_MSG)
             self._http_session = self.auth.get_session()
 
         resp = self._http_session.request(method, url, allow_redirects=True)
@@ -433,6 +440,9 @@ class Store:
         Returns:
             fsspec HTTPFileSystem (aiohttp client session)
         """
+        if self.auth is None or self.auth.token is None:
+            raise RuntimeError(_PROGRAMMER_ERROR_MSG)
+
         token = self.auth.token["access_token"]
         client_kwargs = {
             "headers": {"Authorization": f"Bearer {token}"},
@@ -892,6 +902,9 @@ class Store:
             None
         """
         if not hasattr(self.thread_locals, "local_thread_session"):
+            if self.auth is None:
+                raise RuntimeError(_PROGRAMMER_ERROR_MSG)
+
             local_thread_session = self.auth.get_session()
             local_thread_session.headers.update(original_session.headers)
             local_thread_session.cookies.update(original_session.cookies)
