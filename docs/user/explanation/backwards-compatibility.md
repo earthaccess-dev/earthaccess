@@ -81,9 +81,9 @@ Our project follows the [SPEC0](https://scientific-python.org/specs/spec-0000/) 
 * `earthaccess.login()` will now raise an exception if Earthdata Login rejects credentials.
   If you want to ignore errors, which we do not recommend, use a `try` block:
 
-  ```python
-  try:
-      earthaccess.login()
-  except Exception:
-      pass
-  ```
+    ```python
+    try:
+        earthaccess.login()
+    except Exception:
+        pass
+    ```
