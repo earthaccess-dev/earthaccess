@@ -401,6 +401,7 @@ class DataGranule(CustomDict):
         # we are not in us-west-2, even cloud collections have HTTPS links
         return https_links
 
+    @property
     def dataviz_links(self) -> list[str]:
         """Return related visualization links for the granule.
 
