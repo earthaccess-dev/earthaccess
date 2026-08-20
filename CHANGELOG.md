@@ -9,25 +9,33 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Breaking changes
 
-- Many methods are now `@property` methods.
-  For example, you'll get the size of a granule with `granule.size` instead of
-  `granule.size()`.
-  If you use the old syntax, you'll receive errors like `TypeError: 'NoneType' object is not callable`, `TypeError: 'str' object is not callable`, etc.
-  The following methods were changed:
-  - `DataCollection.summary`
-  - `DataCollection.doi`
-  - `DataCollection.concept_id`
-  - `DataCollection.data_type`
-  - `DataCollection.version`
-  - `DataCollection.landing_page`
-  - `DataCollection.s3_bucket`
-  - `DataCollection.services`
-  - `DataGranule.size`
-- `DataCollection.get_links` is renamed to `DataCollection.data_links` and is now a
-  `@property`.
-  The link name was changed because the links are called "GET DATA" in the CMR API, and
-  the old method name, while it matches the property name in the API, can be read as a
-  verb, when it's really an attribute.
+- Many `DataCollection` and `DataGranule` methods are now read-only fields.
+  For example, you'll get the size of a `DataGranule` named `granule` via
+  `granule.size` instead of `granule.size()`. If you use the old syntax, you'll
+  receive errors like `TypeError: 'NoneType' object is not callable`,
+  `TypeError: 'str' object is not callable`, etc.
+  
+  The following methods were changed to read-only fields of the same name,
+  except where noted:
+  
+  - `DataCollection.concept_id()`
+  - `DataCollection.data_type()`
+  - `DataCollection.doi()`
+  - `DataCollection.get_links()` (now `DataCollection.data_links`)
+  - `DataCollection.landing_page()`
+  - `DataCollection.s3_bucket()`
+  - `DataCollection.services()`
+  - `DataCollection.summary()`
+  - `DataCollection.version()`
+  - `DataGranule.size()`
+
+  **NOTE:** The method `DataCollection.get_links()` was replaced with the field
+  `DataCollection.data_links`. The method name was `get_links` because in the
+  CMR API, the links are described as links of type "GET DATA".  However, while
+  the old method name matches the name of the link type in the CMR API, it can
+  be read as a verb ("get" the links, rather than links of _type_ "get"), when
+  it's an attribute (noun).  Thus, the name `data_links` was chosen to avoid
+  confusion (noun instead of verb).
 
 ### Fixed
 
