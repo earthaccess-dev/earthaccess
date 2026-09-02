@@ -163,7 +163,8 @@ class DataCollections(CollectionQuery):
             TypeError: `doi` is not of type `str`.
         """
         if not isinstance(doi, str):
-            raise TypeError("doi must be of type str")
+            msg = "doi must be of type str"
+            raise TypeError(msg)
 
         self.params["doi"] = doi
         return self
@@ -185,7 +186,8 @@ class DataCollections(CollectionQuery):
             TypeError: `instrument` is not of type `str`.
         """
         if not isinstance(instrument, str):
-            raise TypeError("instrument must be of type str")
+            msg = "instrument must be of type str"
+            raise TypeError(msg)
 
         self.params["instrument"] = instrument
         return self
@@ -208,7 +210,8 @@ class DataCollections(CollectionQuery):
             TypeError: `project` is not of type `str`.
         """
         if not isinstance(project, str):
-            raise TypeError("project must be of type str")
+            msg = "project must be of type str"
+            raise TypeError(msg)
 
         self.params["project"] = project
         return self
@@ -240,7 +243,8 @@ class DataCollections(CollectionQuery):
         for key, val in kwargs.items():
             # verify the key matches one of our methods
             if key not in methods:
-                raise ValueError(f"Unknown key {key}")
+                msg = f"Unknown key {key}"
+                raise ValueError(msg)
 
             # call the method
             if isinstance(val, tuple):
@@ -271,7 +275,7 @@ class DataCollections(CollectionQuery):
         self._fields = fields
         return self
 
-    def debug(self, debug: bool = True) -> Self:
+    def debug(self, debug: bool = True) -> Self:  # noqa: FBT001, FBT002
         """If True, prints the actual query to CMR. Note that the pagination happens in
         the headers.
 
@@ -284,7 +288,7 @@ class DataCollections(CollectionQuery):
         self._debug = debug
         return self
 
-    def has_granules(self, has_granules: bool | None = True) -> Self:
+    def has_granules(self, has_granules: bool | None = True) -> Self:  # noqa: FBT001, FBT002
         """Match only collections with granules, without granules, or either.
 
         Parameters:
@@ -297,7 +301,8 @@ class DataCollections(CollectionQuery):
             self
         """
         if has_granules is not None and not isinstance(has_granules, bool):
-            raise TypeError("has_granules must be of type bool or None")
+            msg = "has_granules must be of type bool or None"
+            raise TypeError(msg)
 
         if has_granules is not None:
             self.params["has_granules"] = has_granules
@@ -306,7 +311,7 @@ class DataCollections(CollectionQuery):
 
         return self
 
-    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:
+    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:  # noqa: FBT001, FBT002
         """Only match granules that are hosted in the cloud. This is valid for public
         collections.
 
@@ -324,7 +329,8 @@ class DataCollections(CollectionQuery):
             TypeError: `cloud_hosted` is not of type `bool`.
         """
         if not isinstance(cloud_hosted, bool):
-            raise TypeError("cloud_hosted must be of type bool")
+            msg = "cloud_hosted must be of type bool"
+            raise TypeError(msg)
 
         self.params["cloud_hosted"] = cloud_hosted
         if hasattr(self, "DAAC"):
@@ -508,14 +514,13 @@ class DataGranules(GranuleQuery):
             TypeError: The value of a keyword argument is not an argument or tuple
                 of arguments matching the number and type(s) of the method's parameters.
         """
-        methods = {}
-        for name, func in getmembers(self, predicate=ismethod):
-            methods[name] = func
+        methods = dict(getmembers(self, predicate=ismethod))
 
         for key, val in kwargs.items():
             # verify the key matches one of our methods
             if key not in methods:
-                raise ValueError(f"Unknown key {key}")
+                msg = f"Unknown key {key}"
+                raise ValueError(msg)
 
             # call the method
             if isinstance(val, tuple):
@@ -590,7 +595,7 @@ class DataGranules(GranuleQuery):
         """
         return super().orbit_number(orbit1, orbit2)
 
-    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:
+    def cloud_hosted(self, cloud_hosted: bool = True) -> Self:  # noqa: FBT001, FBT002
         """Only match granules that are hosted in the cloud.
         This is valid for public collections and when using the short_name parameter.
         Concept-Id is unambiguous.
@@ -609,7 +614,8 @@ class DataGranules(GranuleQuery):
             TypeError: `cloud_hosted` is not of type `bool`.
         """
         if not isinstance(cloud_hosted, bool):
-            raise TypeError("cloud_hosted must be of type bool")
+            msg = "cloud_hosted must be of type bool"
+            raise TypeError(msg)
 
         if "short_name" in self.params:
             provider = find_provider_by_shortname(
@@ -638,9 +644,8 @@ class DataGranules(GranuleQuery):
             TypeError: if `granule_name` is not of type `str` or `Iterable[str]`.
         """
         if not isinstance(granule_name, Iterable):
-            raise TypeError(
-                "granule_name must be of type string or Iterable of strings",
-            )
+            msg = "granule_name must be of type string or Iterable of strings"
+            raise TypeError(msg)
         if not isinstance(granule_name, str):
             # Convert iterable to list of strings. Since str is also Iterable, make
             # sure we don't do this when granule_name is a string, otherwise
@@ -740,13 +745,9 @@ class DataGranules(GranuleQuery):
         # spatial params must be paired with a collection limiting parameter
         spatial_keys = ["point", "polygon", "bounding_box", "line"]
         collection_keys = ["short_name", "entry_title", "concept_id"]
-
-        if any(key in self.params for key in spatial_keys):
-            if not any(key in self.params for key in collection_keys):
-                return False
-
-        # all good then
-        return True
+        return not any(key in self.params for key in spatial_keys) or any(
+            key in self.params for key in collection_keys
+        )
 
     def _is_cloud_hosted(self, granule: Any) -> bool:
         """Check if a granule record, from CMR, advertises "direct access"."""
@@ -771,7 +772,7 @@ class DataGranules(GranuleQuery):
         """
         return super().short_name(short_name)
 
-    def debug(self, debug: bool = True) -> Self:
+    def debug(self, debug: bool = True) -> Self:  # noqa: FBT001, FBT002
         """If True, prints the actual query to CMR, notice that the pagination happens
         in the headers.
 
@@ -949,7 +950,7 @@ class DataGranules(GranuleQuery):
         # TODO consider raising an exception when there are multiple collections, since
         # we can't know which one the user wants, and choosing one is arbitrary.
         if len(collection) > 0:
-            concept_id = collection[0].concept_id()
+            concept_id = collection[0].concept_id
             self.params["concept_id"] = concept_id
         else:
             # TODO consider removing this print statement since we don't print such

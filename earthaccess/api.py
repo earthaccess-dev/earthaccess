@@ -25,7 +25,7 @@ from .utils import _validation as validate
 logger = logging.getLogger(__name__)
 
 
-def status(system: System = PROD, raise_on_outage: bool = False) -> dict[str, str]:
+def status(system: System = PROD, raise_on_outage: bool = False) -> dict[str, str]:  # noqa: FBT001, FBT002
     """Get the statuses of NASA's Earthdata services.
 
     Parameters:
@@ -310,7 +310,7 @@ def search_services(count: int = -1, **kwargs: Any) -> list[Any]:
 
 def login(
     strategy: str = "all",
-    persist: bool = False,
+    persist: bool = False,  # noqa: FBT001, FBT002
     system: System = PROD,
 ) -> Auth:
     """Authenticate with Earthdata login (https://urs.earthdata.nasa.gov/).
@@ -348,7 +348,7 @@ def login(
     """
     # Set the underlying Auth object's earthdata system,
     # before triggering the getattr function for `__auth__`.
-    earthaccess._auth._set_earthdata_system(system)
+    earthaccess._auth._set_earthdata_system(system)  # noqa: SLF001
 
     if strategy == "all":
         for strategy_name in ["environment", "netrc", "interactive"]:
@@ -377,7 +377,7 @@ def login(
     return earthaccess.__auth__
 
 
-def download(
+def download(  # noqa: PLR0913
     granules: DataGranule | list[DataGranule] | str | list[str],
     local_path: Path | str | None = None,
     provider: str | None = None,
@@ -420,7 +420,9 @@ def download(
     """
     provider = _normalize_location(str(provider))
 
-    if isinstance(granules, DataGranule):
+    # Separate `isinstance` checks enable the typechecker to resolve `granules` as
+    # `list[DataGranule] | list[str]` instead of `list[DataGranule | str]`.
+    if isinstance(granules, DataGranule):  # noqa: SIM114
         granules = [granules]
     elif isinstance(granules, str):
         granules = [granules]
@@ -443,7 +445,7 @@ def download(
     return []
 
 
-def open(
+def open(  # noqa: A001, PLR0913
     granules: list[str] | list[DataGranule],
     provider: str | None = None,
     *,
@@ -621,16 +623,18 @@ def get_s3_filesystem(
         if endpoint:
             session = earthaccess.__store__.get_s3_filesystem(endpoint=endpoint)
         else:
-            raise ValueError("No s3 credentials specified in the given DataGranule")
+            msg = "No s3 credentials specified in the given DataGranule"
+            raise ValueError(msg)
     elif endpoint:
         session = earthaccess.__store__.get_s3_filesystem(endpoint=endpoint)
     elif daac or provider:
         session = earthaccess.__store__.get_s3_filesystem(daac=daac, provider=provider)
     else:
-        raise ValueError(
+        msg = (
             "Invalid set of input arguments given. Please provide either "
-            "a valid result, an endpoint, a daac, or a provider.",
+            "a valid result, an endpoint, a daac, or a provider."
         )
+        raise ValueError(msg)
     return session
 
 
@@ -646,7 +650,6 @@ def get_edl_token() -> str:
 def auth_environ() -> dict[str, str]:
     auth = earthaccess.__auth__
     if not auth.authenticated:
-        raise RuntimeError(
-            "`auth_environ()` requires you to first authenticate with `earthaccess.login()`",
-        )
+        msg = "`auth_environ()` requires you to first authenticate with `earthaccess.login()`"
+        raise RuntimeError(msg)
     return {"EARTHDATA_USERNAME": auth.username, "EARTHDATA_PASSWORD": auth.password}

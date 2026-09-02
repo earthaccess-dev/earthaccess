@@ -6,7 +6,7 @@ from vcr.unittest import VCRTestCase  # type: ignore[import-untyped]
 
 
 class TestServices(VCRTestCase):
-    def scrub_access_token(self, string, replacement=""):
+    def scrub_access_token(self, string, replacement=""):  # noqa: ARG002
         def before_record_response(response):
             body_string = str(response["body"]["string"])
             if "access_token" in body_string:
@@ -51,7 +51,7 @@ class TestServices(VCRTestCase):
         earthaccess._auth.authenticated = False
 
         assert len(datasets) > 0
-        results = datasets[0].services()
+        results = datasets[0].services
 
         self.assertTrue(
             results["S2004184019-POCLOUD"][0]["meta"]["provider-id"] == "POCLOUD",

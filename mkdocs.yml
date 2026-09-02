@@ -68,7 +68,7 @@ plugins:
         - "user/tutorials/dmrpp-virtualizarr.ipynb"
         - "user/tutorials/dask.ipynb"
         - "user/howto/edl.ipynb"
-        - "user/howto/fsspec.ipynb"
+        - "user/explanation/fsspec.ipynb"
       ignore:
         - "**/.ipynb_checkpoints/*"
 

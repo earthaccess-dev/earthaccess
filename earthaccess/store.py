@@ -1,5 +1,6 @@
 import datetime
 import logging
+import sys
 import tempfile
 import threading
 import traceback
@@ -48,15 +49,15 @@ def _is_interactive() -> bool:
     Interactive sessions include Jupyter Notebooks, IPython REPL, and default Python REPL.
     """
     try:
-        from IPython import get_ipython  # type: ignore
+        from IPython import (  # type: ignore[import-not-found]  # noqa: PLC0415
+            get_ipython,
+        )
 
         # IPython Notebook or REPL:
         if get_ipython() is not None:
             return True
     except ImportError:
         pass
-
-    import sys
 
     # Python REPL
     return hasattr(sys, "ps1")
@@ -114,8 +115,9 @@ def _optimal_fsspec_block_size(file_size: int) -> int:
 
     Uses `blockcache` for all files with block sizes adjusted by file size:
 
-    - <100MB: 4MB
-    - >100MB: 4–16MB
+    - <100MB:         4MB
+    - >=100MB, <1GB:  8MB
+    - >=1GB:         16MB
 
     Parameters:
         file_size (int): Size of the file in bytes.
@@ -152,7 +154,7 @@ def _open_files(
         open_kw.setdefault("block_size", default_block_size)
 
         f = fs.open(url, **open_kw)
-        return EarthAccessFile(f, granule)  # type: ignore
+        return EarthAccessFile(f, granule)  # type: ignore[arg-type]
 
     # this {#n_jobs} is for the unittests as this method is not public and pqdm will have values at this point
     return pqdm(
@@ -181,7 +183,7 @@ def make_instance(
         # NOTE: This uses the first data_link listed in the granule. That's not
         #       guaranteed to be the right one.
         return earthaccess.open([granule])[0]
-    return EarthAccessFile(loads(data), granule)
+    return EarthAccessFile(loads(data), granule)  # noqa: S301
 
 
 def _get_url_granule_mapping(
@@ -208,7 +210,7 @@ def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
     # directory if it does not already exist.  Others succeed due to exist_ok.
     sibling.parent.mkdir(parents=True, exist_ok=True)
 
-    temp_fh = tempfile.NamedTemporaryFile(
+    temp_fh = tempfile.NamedTemporaryFile(  # noqa: SIM115
         dir=sibling.parent,
         prefix="partial_",  # In case auto-delete fails, make it obvious to users
         delete=False,
@@ -236,7 +238,7 @@ def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
 class Store:
     """Store class to access granules on-prem or in the cloud."""
 
-    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:
+    def __init__(self, auth: Any, pre_authorize: bool = False) -> None:  # noqa: FBT001, FBT002
         """Store is the class to access data.
 
         Parameters:
@@ -269,13 +271,11 @@ class Store:
         return ""
 
     def _derive_daac_provider(self, daac: str) -> str | None:
-        return find_provider(daac, True)
+        return find_provider(daac, True)  # noqa: FBT003
 
     def _is_cloud_collection(self, concept_id: list[str]) -> bool:
         collection = DataCollections(self.auth).concept_id(concept_id).get()
-        if len(collection) > 0 and "s3-links" in collection[0]["meta"]:
-            return True
-        return False
+        return len(collection) > 0 and "s3-links" in collection[0]["meta"]
 
     def _own_s3_credentials(self, links: list[dict[str, Any]]) -> str | None:
         for link in links:
@@ -297,13 +297,10 @@ class Store:
                 timeout=1,
                 headers={"X-aws-ec2-metadata-token": token_.text},
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             return False
 
-        if resp.status_code == _HTTP_OK and resp.content == b"us-west-2":
-            # On AWS, in region us-west-2
-            return True
-        return False
+        return resp.status_code == _HTTP_OK and resp.content == b"us-west-2"
 
     def set_requests_session(self, url: str, method: str = "get") -> None:
         """Sets up a `requests` session with bearer tokens that are used by CMR.
@@ -358,7 +355,7 @@ class Store:
         """
         return self.get_s3_filesystem(daac, concept_id, provider, endpoint)
 
-    def get_s3_filesystem(
+    def get_s3_filesystem(  # noqa: C901
         self,
         daac: str | None = None,
         concept_id: str | None = None,
@@ -376,14 +373,14 @@ class Store:
             a s3fs file instance
         """
         if self.auth is None:
-            raise ValueError(
-                "A valid Earthdata login instance is required to retrieve S3 credentials",
-            )
+            msg = "A valid Earthdata login instance is required to retrieve S3 credentials"
+            raise ValueError(msg)
         if not any([concept_id, daac, provider, endpoint]):
-            raise ValueError(
+            msg = (
                 "At least one of the concept_id, daac, provider or endpoint"
-                "parameters must be specified. ",
+                "parameters must be specified. "
             )
+            raise ValueError(msg)
 
         if concept_id is not None:
             provider = self._derive_concept_provider(concept_id)
@@ -401,14 +398,14 @@ class Store:
             need_new_creds = True
         else:
             # If cached credentials are expired, invalidate the cache
-            delta = datetime.datetime.now() - dt_init
+            delta = datetime.datetime.now(tz=datetime.UTC) - dt_init
             if round(delta.seconds / 60, 2) > _S3_CREDENTIALS_EXPIRY_MINUTES:
                 need_new_creds = True
                 self._s3_credentials.pop(location)
 
         if need_new_creds:
             # Don't have existing valid S3 credentials, so get new ones
-            now = datetime.datetime.now()
+            now = datetime.datetime.now(tz=datetime.UTC)
             if endpoint is not None:
                 creds = self.auth.get_s3_credentials(endpoint=endpoint)
             elif daac is not None:
@@ -424,7 +421,7 @@ class Store:
             token=creds["sessionToken"],
         )
 
-    @lru_cache
+    @lru_cache  # noqa:B019
     def get_fsspec_session(self) -> fsspec.AbstractFileSystem:
         """Returns a fsspec HTTPS session with bearer tokens that are used by CMR.
 
@@ -454,9 +451,10 @@ class Store:
         """
         if hasattr(self, "_http_session"):
             return self._http_session
-        raise AttributeError("The requests session hasn't been set up yet.")
+        msg = "The requests session hasn't been set up yet."
+        raise AttributeError(msg)
 
-    def open(
+    def open(  # noqa: PLR0913
         self,
         granules: list[str] | list[DataGranule],
         provider: str | None = None,
@@ -513,7 +511,8 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
-        raise NotImplementedError("granules should be a list of DataGranule or URLs")
+        msg = "granules should be a list of DataGranule or URLs"
+        raise NotImplementedError(msg)
 
     @_open.register
     def _open_granules(
@@ -525,7 +524,7 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
-        total_size = round(sum([granule.size() for granule in granules]) / 1024, 2)
+        total_size = round(sum([granule._size for granule in granules]) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Opening %s granules, approx size: %s GB",
             len(granules),
@@ -533,10 +532,8 @@ class Store:
         )
 
         if self.auth is None:
-            raise ValueError(
-                "A valid Earthdata login instance is required to retrieve credentials",
-            )
-
+            msg = "A valid Earthdata login instance is required to retrieve credentials"
+            raise ValueError(msg)
         if self.in_region:
             if granules[0].cloud_hosted:
                 access = "direct"
@@ -564,11 +561,12 @@ class Store:
                         open_kwargs=open_kwargs,
                     )
                 except Exception as e:
-                    raise RuntimeError(
+                    msg = (
                         "An exception occurred while trying to access remote files on S3. "
                         "This may be caused by trying to access the data outside the us-west-2 region."
-                        f"Exception: {traceback.format_exc()}",
-                    ) from e
+                        f"Exception: {traceback.format_exc()}"
+                    )
+                    raise RuntimeError(msg) from e
             else:
                 return self._open_urls_https(
                     url_mapping,
@@ -594,19 +592,18 @@ class Store:
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
         s3_fs = None
-        if isinstance(granules[0], str) and (
+        if not isinstance(granules[0], str) or not (
             granules[0].startswith("s3") or granules[0].startswith("http")
         ):
+            msg = (
+                f"Schema for {granules[0]} is not recognized, must be an HTTP or S3 URL"
+            )
+            raise ValueError(msg)
             # TODO: method to derive the DAAC from url?
-            provider = provider
-        else:
-            raise ValueError(
-                f"Schema for {granules[0]} is not recognized, must be an HTTP or S3 URL",
-            )
+
         if self.auth is None:
-            raise ValueError(
-                "A valid Earthdata login instance is required to retrieve S3 credentials",
-            )
+            msg = "A valid Earthdata login instance is required to retrieve S3 credentials"
+            raise ValueError(msg)
 
         url_mapping: Mapping[str, None] = dict.fromkeys(granules)
         if self.in_region and granules[0].startswith("s3"):
@@ -623,11 +620,12 @@ class Store:
                         open_kwargs=open_kwargs,
                     )
                 except Exception as e:
-                    raise RuntimeError(
+                    msg = (
                         "An exception occurred while trying to access remote files on S3. "
                         "This may be caused by trying to access the data outside the us-west-2 region. "
-                        f"Exception: {traceback.format_exc()}",
-                    ) from e
+                        f"Exception: {traceback.format_exc()}"
+                    )
+                    raise RuntimeError(msg) from e
 
             logger.error(
                 "An error occurred while trying to retrieve the cloud credentials for provider: %s. endpoint: %s",
@@ -636,15 +634,14 @@ class Store:
             )
             return []
         if granules[0].startswith("s3"):
-            raise ValueError(
-                "We cannot open S3 links when we are not in-region, try using HTTPS links",
-            )
+            msg = "We cannot open S3 links when we are not in-region, try using HTTPS links"
+            raise ValueError(msg)
         return self._open_urls_https(
             url_mapping,
             pqdm_kwargs=pqdm_kwargs,
         )
 
-    def get(
+    def get(  # noqa: PLR0913
         self,
         granules: list[DataGranule] | list[str],
         local_path: Path | str | None = None,
@@ -687,10 +684,11 @@ class Store:
             List of downloaded files
         """
         if not granules:
-            raise ValueError("List of URLs or DataGranule instances expected")
+            msg = "List of URLs or DataGranule instances expected"
+            raise ValueError(msg)
 
         if local_path is None:
-            today = datetime.datetime.now().strftime("%Y-%m-%d")
+            today = datetime.datetime.now(tz=datetime.UTC).strftime("%Y-%m-%d")
             uuid = uuid4().hex[:6]
             local_path = Path.cwd() / "data" / f"{today}-{uuid}"
 
@@ -714,7 +712,7 @@ class Store:
         )
 
     @singledispatchmethod
-    def _get(
+    def _get(  # noqa: PLR0913
         self,
         granules: list[DataGranule] | list[str],
         local_path: Path,
@@ -745,7 +743,8 @@ class Store:
         Returns:
             None
         """
-        raise NotImplementedError(f"Cannot _get {granules}")
+        msg = f"Cannot _get {granules}"
+        raise NotImplementedError(msg)
 
     @retry(
         reraise=True,
@@ -753,24 +752,24 @@ class Store:
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type(Exception),
     )
-    def download_cloud_file(
+    def _download_cloud_file(
         self,
         s3_fs: fsspec.AbstractFileSystem,
         file: str,
         local_path: Path,
-        force: bool = False,
+        force: bool = False,  # noqa: FBT001, FBT002
     ) -> Path:
         file_name = local_path / Path(file).name
         if file_name.exists() and not force:
             return file_name  # Skip if already exists and not forcing re-download
 
         with _sibling_tempfile(file_name) as temp_name:
-            s3_fs.get([file], str(temp_name), recursive=False)
+            s3_fs.get_file(file, str(temp_name))
         logger.info("Downloading: %s", file_name)
         return file_name
 
     @_get.register
-    def _get_urls(
+    def _get_urls(  # noqa: PLR0913
         self,
         granules: list[str],
         local_path: Path,
@@ -788,10 +787,11 @@ class Store:
             and self.in_region
             and "cumulus" in data_links[0]
         ):
-            raise ValueError(
+            msg = (
                 "earthaccess can't yet guess the provider for cloud collections, "
-                "we need to use one from `earthaccess.list_cloud_providers()` or if known the S3 credential endpoint",
+                "we need to use one from `earthaccess.list_cloud_providers()` or if known the S3 credential endpoint"
             )
+            raise ValueError(msg)
         if self.in_region and data_links[0].startswith("s3"):
             if credentials_endpoint is not None:
                 logger.info(
@@ -804,7 +804,7 @@ class Store:
                 s3_fs = self.get_s3_filesystem(provider=provider)
 
             def _download(file: str) -> Path | None:
-                return self.download_cloud_file(s3_fs, file, local_path, force=force)
+                return self._download_cloud_file(s3_fs, file, local_path, force=force)
 
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
@@ -818,13 +818,13 @@ class Store:
         )
 
     @_get.register
-    def _get_granules(
+    def _get_granules(  # noqa: PLR0913
         self,
         granules: list[DataGranule],
         local_path: Path,
         provider: str | None = None,
         *,
-        credentials_endpoint: str | None = None,
+        credentials_endpoint: str | None = None,  # noqa: ARG002
         pqdm_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
     ) -> list[Path]:
@@ -840,7 +840,7 @@ class Store:
                 for granule in granules
             ),
         )
-        total_size = round(sum(granule.size() for granule in granules) / 1024, 2)
+        total_size = round(sum(granule._size for granule in granules) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Getting %s granules, approx download size: %s GB",
             len(granules),
@@ -860,7 +860,7 @@ class Store:
             local_path.mkdir(parents=True, exist_ok=True)
 
             def _download(file: str) -> Path | None:
-                return self.download_cloud_file(s3_fs, file, local_path, force=force)
+                return self._download_cloud_file(s3_fs, file, local_path, force=force)
 
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
@@ -890,7 +890,7 @@ class Store:
             None
         """
         if not hasattr(self.thread_locals, "local_thread_session"):
-            local_thread_session = self.auth.get_session()  # type: ignore
+            local_thread_session = self.auth.get_session()
             local_thread_session.headers.update(original_session.headers)
             local_thread_session.cookies.update(original_session.cookies)
             local_thread_session.auth = original_session.auth
@@ -902,7 +902,7 @@ class Store:
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type(Exception),
     )
-    def _download_file(self, url: str, directory: Path, force: bool = False) -> Path:
+    def _download_file(self, url: str, directory: Path, force: bool = False) -> Path:  # noqa: FBT001, FBT002
         """Download a single file using a bearer token.
 
         Parameters:
@@ -928,11 +928,11 @@ class Store:
                 if r.status_code in _HTTP_NO_AUTH_CODES:
                     text = (r.text or "").lower()
                     if "eula" in text:
-                        raise EulaNotAccepted(f"Eula Acceptance Failure for {url}")
+                        msg = f"Eula Acceptance Failure for {url}"
+                        raise EulaNotAccepted(msg)
                 if not r.ok:
-                    raise DownloadFailure(
-                        f"Download failed for {url}. Status code: {r.status_code}",
-                    )
+                    msg = f"Download failed for {url}. Status code: {r.status_code}"
+                    raise DownloadFailure(msg)
 
                 with (
                     _sibling_tempfile(path) as temp_path,
@@ -967,11 +967,13 @@ class Store:
             A list of local filepaths to which the files were downloaded.
         """
         if urls is None:
-            raise ValueError("The granules didn't provide a valid GET DATA link")
+            msg = "The granules didn't provide a valid GET DATA link"
+            raise ValueError(msg)
         if self.auth is None:
-            raise ValueError(
-                "We need to be logged into NASA EDL in order to download data granules",
+            msg = (
+                "We need to be logged into NASA EDL in order to download data granules"
             )
+            raise ValueError(msg)
         directory.mkdir(parents=True, exist_ok=True)
 
         arguments = [(url, directory, force) for url in urls]

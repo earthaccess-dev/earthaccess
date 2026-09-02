@@ -278,4 +278,4 @@ def test_missing_horizontal_spatial_domain_raises():
     granule = DataGranule({"umm": {"SpatialExtent": {"Orbit": {}}}})
 
     with pytest.raises(ValueError):
-        granule.__geo_interface__
+        _ = granule.__geo_interface__

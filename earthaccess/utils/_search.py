@@ -27,7 +27,7 @@ def get_results(
         RuntimeError: The CMR query failed.
     """
     page_size = min(limit, 2000)
-    url = query._build_url()
+    url = query._build_url()  # noqa: SLF001
 
     results: list[Any] = []
     more_results = True
@@ -48,6 +48,6 @@ def get_results(
 
         results.extend(latest)
 
-        more_results = page_size <= len(latest) and len(results) < limit
+        more_results = len(latest) > 0 and len(results) < limit
 
     return results

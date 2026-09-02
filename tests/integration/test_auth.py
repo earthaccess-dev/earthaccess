@@ -20,12 +20,12 @@ def test_auth_can_read_earthdata_env_variables():
     assert earthaccess.__auth__.authenticated
 
 
-def test_auth_can_read_from_netrc_file(mock_netrc):
+def test_auth_can_read_from_netrc_file(mock_netrc):  # noqa: ARG001
     auth = earthaccess.login(strategy="netrc")
     assert auth.authenticated
 
 
-def test_auth_strategy_unavailable_netrc_is_not_present(mock_missing_netrc):
+def test_auth_strategy_unavailable_netrc_is_not_present(mock_missing_netrc):  # noqa: ARG001
     with pytest.raises(LoginStrategyUnavailable):
         earthaccess.login(strategy="netrc")
 
@@ -40,7 +40,7 @@ def test_auth_populates_attrs():
 def test_auth_can_create_authenticated_requests_sessions():
     session = earthaccess.get_requests_https_session()
     assert "Authorization" in session.headers
-    assert "Bearer" in session.headers["Authorization"]  # type: ignore
+    assert "Bearer" in session.headers["Authorization"]  # type: ignore[unsupported-operation]
 
 
 @pytest.mark.parametrize(

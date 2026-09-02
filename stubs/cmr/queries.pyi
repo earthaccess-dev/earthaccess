@@ -1,7 +1,6 @@
-import sys
 from collections.abc import MutableMapping, Sequence
 from datetime import date, datetime
-from typing import Any, Self, SupportsFloat, TypeAlias
+from typing import Any, Self, SupportsFloat
 
 CMR_OPS: str
 CMR_UAT: str

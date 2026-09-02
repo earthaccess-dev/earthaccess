@@ -67,11 +67,11 @@ class BasicAuthResponseHook:
 
         # Consume content and release the original connection to allow our new
         # request to reuse the same one.
-        r.content
+        r.raw.drain_conn()
         r.close()
 
         prepared_request = r.request.copy()
-        cookies: CookieJar = prepared_request._cookies  # type: ignore
+        cookies: CookieJar = prepared_request._cookies  # type: ignore[attr-defined] # noqa: SLF001
         requests.cookies.extract_cookies_to_jar(cookies, r.request, r.raw)
         prepared_request.prepare_cookies(cookies)
         prepared_request.prepare_auth(self.auth)
@@ -111,7 +111,7 @@ class Auth:
     def login(
         self,
         strategy: str = "netrc",
-        persist: bool = False,
+        persist: bool = False,  # noqa: FBT001, FBT002
         system: System | None = None,
     ) -> Any:
         """Authenticate with Earthdata login.
@@ -241,7 +241,7 @@ class Auth:
 
     def _interactive(
         self,
-        persist_credentials: bool = False,
+        persist_credentials: bool = False,  # noqa: FBT001, FBT002
     ) -> bool:
         username = input("Enter your Earthdata Login username: ")
         password = getpass.getpass(prompt="Enter your Earthdata password: ")
@@ -258,29 +258,28 @@ class Auth:
         try:
             my_netrc = Netrc(str(netrc_loc))
         except FileNotFoundError as err:
-            raise LoginStrategyUnavailable(f"No .netrc found at {netrc_loc}") from err
+            msg = (f"No .netrc found at {netrc_loc}",)
+            raise LoginStrategyUnavailable(msg) from err
         except NetrcParseError as err:
-            raise LoginStrategyUnavailable(
-                f"Unable to parse .netrc file {netrc_loc}",
-            ) from err
+            msg = (f"Unable to parse .netrc file {netrc_loc}",)
+            raise LoginStrategyUnavailable(msg) from err
 
         creds = my_netrc[self.system.edl_hostname]
         if creds is None:
-            raise LoginStrategyUnavailable(
+            msg = (
                 f"Earthdata Login hostname {self.system.edl_hostname} not found in .netrc file {netrc_loc}",
             )
+            raise LoginStrategyUnavailable(msg)
 
         username = creds["login"]
         password = creds["password"]
 
         if username is None:
-            raise LoginStrategyUnavailable(
-                f"Username not found in .netrc file {netrc_loc}",
-            )
+            msg = (f"Username not found in .netrc file {netrc_loc}",)
+            raise LoginStrategyUnavailable(msg)
         if password is None:
-            raise LoginStrategyUnavailable(
-                f"Password not found in .netrc file {netrc_loc}",
-            )
+            msg = (f"Password not found in .netrc file {netrc_loc}",)
+            raise LoginStrategyUnavailable(msg)
 
         authenticated = self._get_credentials(username, password, None)
 
@@ -295,11 +294,12 @@ class Auth:
         token = os.getenv("EARTHDATA_TOKEN")
 
         if (not username or not password) and not token:
-            raise LoginStrategyUnavailable(
+            msg = (
                 "Either the environment variables EARTHDATA_USERNAME and "
                 "EARTHDATA_PASSWORD must both be set, or EARTHDATA_TOKEN must be set for "
                 "the 'environment' login strategy.",
             )
+            raise LoginStrategyUnavailable(msg)
 
         logger.debug("Using environment variables for EDL")
         return self._get_credentials(username, password, token)
@@ -318,7 +318,7 @@ class Auth:
             self.password = password
             token_resp = self._find_or_create_token()
 
-            if not (token_resp.ok):  # type: ignore
+            if not (token_resp.ok):
                 msg = f"Authentication with Earthdata Login failed with:\n{token_resp.text}"
                 logger.exception(msg)
                 raise LoginAttemptFailure(msg)
