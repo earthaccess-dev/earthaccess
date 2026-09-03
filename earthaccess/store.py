@@ -536,7 +536,7 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
-        total_size = round(sum([granule.size() for granule in granules]) / 1024, 2)
+        total_size = round(sum([granule._size for granule in granules]) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Opening %s granules, approx size: %s GB",
             len(granules),
@@ -852,7 +852,7 @@ class Store:
                 for granule in granules
             ),
         )
-        total_size = round(sum(granule.size() for granule in granules) / 1024, 2)
+        total_size = round(sum(granule._size for granule in granules) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Getting %s granules, approx download size: %s GB",
             len(granules),

@@ -49,6 +49,12 @@ contributions.
       `closes #1`.
       See more in [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 
+### Disclose AI tool usage
+
+If you used generative AI tools on your contribution, say so in the disclosure
+section of the PR description: which tool(s) and version(s), how you used them, and
+which parts are AI-generated. See our [AI policy](/contributor/ai-policy.md) for what we
+ask and why.
 
 ### Update documentation
 

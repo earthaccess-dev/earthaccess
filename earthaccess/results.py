@@ -1,6 +1,5 @@
 import json
 import uuid
-import warnings
 from functools import cache
 from typing import Any, ClassVar
 
@@ -89,6 +88,7 @@ class DataCollection(CustomDict):
         "DirectDistributionInformation",
     ]
 
+    @property
     def summary(self) -> dict[str, Any]:
         """Summary containing short_name, concept-id, file-type, and cloud-info (if cloud-hosted).
 
@@ -96,29 +96,16 @@ class DataCollection(CustomDict):
             A summary of the collection metadata.
         """
         # we can print only the concept-id
-
-        warnings.warn(
-            "As of version 1.0, `DataCollection.summary` will be accessed as an "
-            "attribute; e.g. use `DataCollection.summary` **not** "
-            "`DataCollection.summary()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
-        # Only issue a single FutureWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=FutureWarning)
-
-            summary_dict: dict[str, Any]
-            summary_dict = {
-                "short-name": self.get_umm("ShortName"),
-                "concept-id": self.concept_id(),
-                "version": self.version(),
-                "file-type": self.data_type(),
-                "get-data": self.get_data(),
-            }
-            if "Region" in self.s3_bucket():
-                summary_dict["cloud-info"] = self.s3_bucket()
+        summary_dict: dict[str, Any]
+        summary_dict = {
+            "short-name": self.get_umm("ShortName"),
+            "concept-id": self.concept_id,
+            "version": self.version,
+            "file-type": self.data_type,
+            "get-data": self.data_links,
+        }
+        if "Region" in self.s3_bucket:
+            summary_dict["cloud-info"] = self.s3_bucket
 
         return summary_dict
 
@@ -133,20 +120,13 @@ class DataCollection(CustomDict):
         """
         return self["umm"].get(umm_field, "")
 
+    @property
     def doi(self) -> str | None:
         """Retrieve the Digital Object Identifier (DOI) for this collection.
 
         Returns:
             This collection's DOI information, or `None`, if it has none.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.doi` will be accessed as an "
-            "attribute; e.g. use `DataCollection.doi` **not** "
-            "`DataCollection.doi()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         doi = self["umm"].get("DOI", {})
         if isinstance(doi, dict):
             return doi.get("DOI", None)
@@ -169,137 +149,81 @@ class DataCollection(CustomDict):
         """
         return (
             None
-            if not (doi := self.doi())
+            if not (doi := self.doi)
             else _citation(doi=doi, format_=format, language=language)
         )
 
+    @property
     def concept_id(self) -> str:
         """Return the collection concept ID.
 
         Returns:
             A collection's `concept_id`.This id is the most relevant search field on granule queries.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.concept_id` will be accessed as an "
-            "attribute; e.g. use `DataCollection.concept_id` **not** "
-            "`DataCollection.concept_id()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["meta"]["concept-id"]
 
+    @property
     def data_type(self) -> str:
         """Return the collection file distribution type.
 
         Returns:
             The collection data type, i.e. HDF5, CSV etc., if available.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.data_type` will be accessed as an "
-            "attribute; e.g. use `DataCollection.data_type` **not** "
-            "`DataCollection.data_type()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return str(
             self["umm"]
             .get("ArchiveAndDistributionInformation", {})
             .get("FileDistributionInformation", ""),
         )
 
+    @property
     def version(self) -> str:
         """Return the collection version.
 
         Returns:
             The collection's version.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.version` will be accessed as an "
-            "attribute; e.g. use `DataCollection.version` **not** "
-            "`DataCollection.version()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("Version", "")
 
+    @property
     def abstract(self) -> str:
         """Return the collection abstract.
 
         Returns:
             The abstract of a collection.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.abstract` will be accessed as an "
-            "attribute; e.g. use `DataCollection.abstract` **not** "
-            "`DataCollection.abstract()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("Abstract", "")
 
+    @property
     def landing_page(self) -> str:
         """Return the first landing page link for the collection.
 
         Returns:
             The first landing page for the collection (can be many), if available.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.landing_page` will be accessed as an "
-            "attribute; e.g. use `DataCollection.landing_page` **not** "
-            "`DataCollection.landing_page()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         links = self._filter_related_links("LANDING PAGE")
         return links[0] if len(links) > 0 else ""
 
-    def get_data(self) -> list[str]:
+    @property
+    def data_links(self) -> list[str]:
         """Return the collection GET DATA links.
 
         Returns:
             The GET DATA links (usually a landing page link, a DAAC portal, or an FTP location).
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.get_data` will be accessed as an "
-            "attribute; e.g. use `DataCollection.get_data` **not** "
-            "`DataCollection.get_data()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self._filter_related_links("GET DATA")
 
+    @property
     def s3_bucket(self) -> dict[str, Any]:
         """Return the collection direct distribution information.
 
         Returns:
             The S3 bucket information if the collection has it (**cloud hosted collections only**).
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.s3_bucket` will be accessed as an "
-            "attribute; e.g. use `DataCollection.s3_bucket` **not** "
-            "`DataCollection.s3_bucket()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("DirectDistributionInformation", {})
 
+    @property
     def services(self) -> dict[Any, list[dict[str, Any]]]:
         """Return list of services available for this collection."""
-        warnings.warn(
-            "As of version 1.0, `DataCollection.services` will be accessed as an "
-            "attribute; e.g. use `DataCollection.services` **not** "
-            "`DataCollection.services()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         services = self.get("meta", {}).get("associations", {}).get("services", [])
         queries = (
             DataServices(auth=earthaccess.__auth__).parameters(concept_id=service)
@@ -345,7 +269,7 @@ class DataGranule(CustomDict):
         super().__init__(collection)
         self.cloud_hosted = cloud_hosted
         # TODO: maybe add area, start date and all that as an instance value
-        self["size"] = self.size()
+        self["size"] = self._size
         self.uuid = str(uuid.uuid4())
         self.render_dict: Any
         if fields is None:
@@ -372,7 +296,7 @@ class DataGranule(CustomDict):
         Collection: {self["umm"]["CollectionReference"]}
         Spatial coverage: {self["umm"]["SpatialExtent"]}
         Temporal coverage: {self["umm"]["TemporalExtent"]}
-        Size(MB): {self.size()}
+        Size(MB): {self._size}
         Data: {data_links}\n\n
         """.strip().replace("  ", "")
 
@@ -393,20 +317,13 @@ class DataGranule(CustomDict):
                 return link["URL"]
         return None
 
-    def size(self) -> float:
+    @property
+    def _size(self) -> float:
         """Return the total granule size in MB.
 
         Returns:
             The total size for the granule in MB.
         """
-        warnings.warn(
-            "As of version 1.0, `DataGranule.size` will be accessed as an "
-            "attribute; e.g. use `DataCollection.size` **not** "
-            "`DataCollection.size()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         try:
             data_granule = self["umm"]["DataGranule"]
             total_size = sum(
@@ -429,6 +346,15 @@ class DataGranule(CustomDict):
             except Exception:  # noqa: BLE001
                 total_size = 0
         return total_size
+
+    @property
+    def size(self) -> float:
+        """Return the total granule size in MB.
+
+        Returns:
+            The total size for the granule in MB.
+        """
+        return self._size
 
     def _derive_s3_link(self, links: list[str]) -> list[str]:
         s3_links = []
@@ -484,6 +410,7 @@ class DataGranule(CustomDict):
         # we are not in us-west-2, even cloud collections have HTTPS links
         return https_links
 
+    @property
     def dataviz_links(self) -> list[str]:
         """Return related visualization links for the granule.
 

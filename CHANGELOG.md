@@ -7,6 +7,49 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Many `DataCollection` and `DataGranule` methods are now read-only fields.
+  For example, you'll get the size of a `DataGranule` named `granule` via
+  `granule.size` instead of `granule.size()`. If you use the old syntax, you'll
+  receive errors like `TypeError: 'NoneType' object is not callable`,
+  `TypeError: 'str' object is not callable`, etc.
+
+  The following methods were changed to read-only fields of the same name,
+  except where noted:
+
+  - `DataCollection.concept_id()` -> `DataCollection.concept_id`
+  - `DataCollection.data_type()` -> `DataCollection.data_type`
+  - `DataCollection.doi()` -> `DataCollection.doi`
+  - `DataCollection.get_links()` -> `DataCollection.data_links` (note the name change, details below)
+  - `DataCollection.landing_page()` -> `DataCollection.landing_page`
+  - `DataCollection.s3_bucket()` -> `DataCollection.s3_bucket`
+  - `DataCollection.services()` -> `DataCollection.services`
+  - `DataCollection.summary()` -> `DataCollection.summary`
+  - `DataCollection.version()` -> `DataCollection.version`
+  - `DataGranule.dataviz_links()` -> `DataGranule.dataviz_links`
+  - `DataGranule.size()` -> `DataGranule.size`
+
+  **NOTE:** The method `DataCollection.get_links()` was replaced with the field
+  `DataCollection.data_links`. The method name was previously `get_links` because in
+  the CMR API, the links are described as links of type "GET DATA". However, while the
+  old method name matches the name of the link type in the CMR API, it can be read as a
+  verb ("get" the links, rather than links of _type_ "get"), when it's an attribute
+  (noun). The name `data_links` was chosen to avoid confusion (noun instead of verb),
+  and for consistency with `DataGranule.data_links()` (SUBNOTE:
+  `DataGranule.data_links()` has arguments, so it was **not** changed to a property at
+  this time).
+
+### Added
+
+- Added an AI policy documenting expectations for AI-assisted contributions,
+  including disclosure, code quality, copyright, and communication, along with
+  an AI usage disclosure prompt in the pull request template.
+  ([#1419](https://github.com/earthaccess-dev/earthaccess/pull/1419))
+- Python 3.14 is now supported.
+  ([#1307](https://github.com/earthaccess-dev/earthaccess/issues/1307))
+  ([@danielfromearth](https://github.com/danielfromearth))
+
 ### Fixed
 
 - `search_services` now respects the authenticated system (UAT vs PROD) instead
@@ -16,6 +59,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   now derives each S3 link from its own HTTPS link instead of repeating the
   first one, so multi-file granules no longer drop their other files.
   ([#1373](https://github.com/earthaccess-dev/earthaccess/pull/1373))
+- `DataGranule.size` is now backed by a private `_size` field, so the
+  deprecated size accessor no longer emits a warning.
+  ([#1420](https://github.com/earthaccess-dev/earthaccess/pull/1420))
 
 ## [v0.18.0] - 2026-05-12
 

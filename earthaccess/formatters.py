@@ -28,7 +28,7 @@ def _repr_granule_html(granule: DataGranule) -> str:
     dataviz_img = "".join(
         [
             f'<a href="{link}"><img style="{style}" src="{link}" alt="Data Preview"/></a>'
-            for link in granule.dataviz_links()[:2]
+            for link in granule.dataviz_links[:2]
             if link.startswith("http")
         ],
     )
@@ -38,7 +38,7 @@ def _repr_granule_html(granule: DataGranule) -> str:
             for link in granule.data_links()
         ],
     )
-    granule_size = round(granule.size(), 2)
+    granule_size = round(granule._size, 2)  # noqa: SLF001
 
     # TODO: probably this needs to be integrated on a list data structure
     return f"""

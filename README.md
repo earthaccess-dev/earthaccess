@@ -30,14 +30,16 @@
     <img src='https://readthedocs.org/projects/earthaccess/badge/?version=latest' alt='Documentation Status' />
 </a>
 
+<a href="https://github.com/earthaccess-dev/earthaccess/actions/workflows/test.yml" target="_blank">
+    <img src="https://github.com/earthaccess-dev/earthaccess/actions/workflows/test.yml/badge.svg" alt="Unit Tests status" />
+</a>
+
 </p>
 
 
 `earthaccess` is a python library to **search for**, and **download** or **stream** NASA Earth science data with just a few lines of code.
 
 Visit [our documentation](https://earthaccess.readthedocs.io/en/latest) to learn more!
-
-Try it in your browser without installing anything! [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/earthaccess-dev/earthaccess/main)
 
 ## Why `earthaccess`
 
@@ -56,6 +58,13 @@ python -m pip install earthaccess
 
 
 ### How to access NASA Earth Science data
+
+**You'll need a free NASA Earthdata Login (EDL) account.** If you don't have one yet,
+[register here](https://urs.earthdata.nasa.gov/). `earthaccess.login()`
+prompts you for these credentials (or reads them from a `.netrc` file or environment
+variables). See
+[Authenticate with Earthdata Login](https://earthaccess.readthedocs.io/en/latest/user/howto/authenticate/)
+for details.
 
 With _earthaccess_, data is 3 steps away!
 
@@ -100,6 +109,55 @@ We'd love to see you there! :open_hands:
 ## Compatibility
 
 The _minimum_ supported Python version is **3.12**.
+
+
+## How `earthaccess` relates to other tools
+
+`earthaccess` ties search, authentication, and data access together into a single workflow, building on existing open-source tools rather than replacing
+them. Other tools in the NASA Earth science data ecosystem include:
+
+- **[VirtualiZarr](https://github.com/zarr-developers/VirtualiZarr)** — builds a virtual Zarr store interface over archival files (netCDF/HDF5) without duplicating data. `earthaccess` integrates it directly via `earthaccess.virtualize()`, turning a set of granules into a virtual xarray `Dataset`, which supports cloud-native access patterns without downloads required.
+
+- **[python-cmr](https://github.com/nasa/python_cmr)** — wraps NASA's Common Metadata
+  Repository (CMR) search API. `earthaccess` builds on it, adding provider-aware
+  resolution, cloud-hosting filters, and rich result objects.
+- **[asf_search](https://github.com/asfadmin/Discovery-asf_search)** — search and access
+  tailored to synthetic aperture radar (SAR) data, whereas `earthaccess` is mission- and
+  domain-agnostic.
+- **[icepyx](https://github.com/icesat2py/icepyx)** — ICESat-2-specific search and access
+  that uses `earthaccess` for authentication.
+- **[earthdatalogin](https://github.com/boettiger-lab/earthdatalogin)** — analogous
+  authentication and access tool for the R ecosystem.
+- **[fsspec](https://github.com/fsspec/filesystem_spec) / [s3fs](https://github.com/fsspec/s3fs)**
+  — general-purpose filesystem libraries that advanced users can compose manually;
+  `earthaccess` encapsulates the NASA-specific authentication and cloud-detection logic
+  on top of them.
+
+
+## Citing `earthaccess`
+
+If you use `earthaccess` in your work, please cite it. The version-specific
+citation can be generated from the "Cite this repository" button on the
+[GitHub repository](https://github.com/earthaccess-dev/earthaccess) (powered by
+`CITATION.cff`). For convenience, a general citation using the Zenodo DOI is:
+
+> Barrett, A., Battisto, C., Bourbeau, J., Carroll, I., Daniels, C., Fisher, M.,
+> Kaufman, D., Kennedy, J.H., Lopez, L., Lowndes, J., Scheick, J., Steiker, A., &
+> Varghese, S. _earthaccess_ [Computer software]. Zenodo.
+> https://doi.org/10.5281/zenodo.8365009
+
+```bibtex
+@software{earthaccess,
+  author    = {Barrett, Andrew and Battisto, Chris and Bourbeau, James and Carroll, Ian and Daniels, Chuck and Fisher, Matt and Kaufman, Daniel and Kennedy, Joseph H. and Lopez, Luis and Lowndes, Julia and Scheick, Jessica and Steiker, Amy and Varghese, Sherwin},
+  title     = {earthaccess},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.8365009},
+  url       = {https://doi.org/10.5281/zenodo.8365009}
+}
+```
+
+<!-- TODO: replace with the JOSS paper citation once the JOSS submission is published. -->
 
 
 ## How to Contribute to `earthaccess`
