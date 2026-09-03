@@ -173,7 +173,7 @@ the workflow, or addressing the full workflow for only a subset of NASA's data h
   serve as complementary tools for their respective language communities.
 
 - **Direct use of `fsspec`/`s3fs`** [@fsspec; @s3fs]: Advanced users can compose their
-  own access workflows using these general-purpose filesystem libraries. However, this
+  own access workflows (step 5) using these general-purpose filesystem libraries. However, this
   requires extensive knowledge of NASA's authentication flow, DAAC-specific credential
   endpoints, and the mapping between download versus cloud-streaming data access links.
 
