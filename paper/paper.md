@@ -154,22 +154,22 @@ NASA-specific domain knowledge (DAAC configurations, credential endpoints,
 authentication flows, cloud-detection logic) that binds them into a usable
 data access layer.
 
-Several tools exist for accessing NASA Earth science data, each only addressing a specific
-slice of the workflow:
+Several tools exist for accessing NASA Earth science data, each addressing only part of
+the workflow, or addressing the full workflow for only a subset of NASA's data holdings:
 
-- **python-cmr** [@python_cmr] provides a Python wrapper around the CMR API for dataset
+- **python-cmr** [@python_cmr] handles the search step (1) by providing a Python wrapper around the CMR API for dataset
   and granule queries. `earthaccess` builds on `python-cmr`, extending it with
   DAAC-aware provider resolution, cloud-hosting filters, and rich result objects that
-  encapsulate metadata. However, `python-cmr` does not handle authentication, data
-  download, or cloud access -- the areas where researchers face many workflow difficulties.
+  encapsulate metadata (step 2). However, `python-cmr` does not handle authentication, data
+  download, or cloud access (steps 3–5) -- the areas where researchers face many workflow difficulties.
   
-- **asf_search** [@asf_search] sits between `python-cmr` and `earthaccess`: it focuses on search and discovery but also handles authentication and access. It emerged around the same time as `earthaccess`, from similar access challenges. Unlike `earthaccess`, which is mission- and domain-agnostic, `asf_search` is tailored to synthetic aperture radar (SAR) data, adding domain-specific tooling and functionality.
+- **asf_search** [@asf_search] sits between `python-cmr` and `earthaccess`: it focuses on search and discovery but also handles authentication and access (workflow steps 1–5). It emerged around the same time as `earthaccess`, from similar access challenges. Unlike `earthaccess`, which is mission- and domain-agnostic, `asf_search` is tailored to synthetic aperture radar (SAR) data, adding domain-specific tooling and functionality.
 
 
-- **icepyx** [@icepyx] provides a mission-specific solution to the general problem solved by earthaccess: search, discovery, authentication, and access to ICESat-2 [@icesat2] data products. Established about a year before earthaccess, it now leverages earthaccess via a mixin to provide authentication and tokening when users perform an action that requires logging in.
+- **icepyx** [@icepyx] provides a mission-specific solution to the general problem solved by earthaccess: search, discovery, authentication, and access to ICESat-2 [@icesat2] data products. Established about a year before earthaccess, it handles workflow steps 1, 2, and 5 on its own and now leverages earthaccess via a mixin to provide authentication and tokening when users perform an action that requires logging in.
 
 - **earthdatalogin** [@earthdatalogin_r] provides similar authentication and access
-  functionality for the R programming ecosystem. The two projects share a common motivation and
+  functionality (steps 3–5) for the R programming ecosystem. The two projects share a common motivation and
   serve as complementary tools for their respective language communities.
 
 - **Direct use of `fsspec`/`s3fs`** [@fsspec; @s3fs]: Advanced users can compose their
