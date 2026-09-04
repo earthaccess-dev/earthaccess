@@ -264,7 +264,7 @@ providing reproducible entry points for researchers.
 
 # AI usage disclosure
 
-No generative AI tools were used in the development of the `earthaccess` software; all architectural and design decisions were made exclusively by the authors and contributors.
+The `earthaccess` project has adopted a contributor AI policy (<https://earthaccess.readthedocs.io/en/latest/contributor/ai-policy/>) that requires disclosure of AI assistance, holds contributors responsible for understanding and being able to explain any code they submit, and prohibits fully autonomous AI-generated pull requests. The version of `earthaccess` described here was developed without generative AI assistance; all architectural and design decisions were made by the authors and contributors. Subsequent development may use AI tools under the terms of that policy.
 
 Preparation of this manuscript was assisted by Claude [Sonnet 4.6 and Opus 4.6] (Anthropic), which was applied to the full manuscript using the repository source code, documentation, commit history, and project metadata as context. Assistance was used for manuscript drafting and editorial revision. All content was reviewed, revised, and verified for accuracy by the authors, who bear full responsibility for the submitted work.
 
