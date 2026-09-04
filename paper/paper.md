@@ -214,7 +214,20 @@ Several deliberate design decisions shape the library:
 open-source tools -- `python-cmr` for search, `fsspec` and `s3fs` for file I/O,
 VirtualiZarr and kerchunk for virtual datasets -- rather than reimplementing their
 functionality. The library's unique contribution is the NASA-specific integration
-layer that binds these tools together.
+layer that binds these tools together. For example, retrieving NASA's TEMPO Level-3
+ozone product [@tempo_o3tot_l3] directly from the Earthdata Cloud with `boto3`, `requests`, and `s3fs`
+requires about two dozen lines of code (excluding imports) to set up Earthdata Login
+authentication, request and periodically refresh temporary S3 credentials, and
+serially transfer each granule. The equivalent `earthaccess` workflow is about four
+lines (`login()`, `search_data()`, `open()`, and opening the result with `xarray`)
+and additionally handles CMR-based discovery. Because
+that integration also composes `fsspec` for byte-range access, streaming a single
+variable across 28 granules (6.7 GB) and computing a summary statistic completed in
+roughly 45 seconds end-to-end, compared with roughly 78 seconds to download the full
+files serially beforehand (medians of three runs on the NASA-Openscapes `us-west-2`
+JupyterHub). Constructing or reading virtual data stores over the same files with VirtualiZarr [@virtualizarr], which enables reading only the requested chunks, can reduce access time further. The same pattern applies to other
+granule-heavy products, such as ICESat-2 ATL06 land-ice height data [@icesat2], and is
+most pronounced where an analysis touches only a small portion of each file.
 
 **Contribute upstream, don't accumulate.** When community discussions surface
 features that belong in a dependency, the project contributes that work upstream
