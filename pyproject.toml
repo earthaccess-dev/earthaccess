@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling>=1.27.0,<1.28", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -242,7 +242,7 @@ combine-as-imports = true
 convention = "google"
 
 [tool.bumpversion]
-current_version = "0.18.0"
+current_version = "0.19.0"
 commit = false
 tag = true
 allow_dirty = false

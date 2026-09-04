@@ -7,6 +7,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [v0.19.0] - 2026-09-03
+
 ### Breaking changes
 
 - Many `DataCollection` and `DataGranule` methods are now read-only fields.
@@ -42,6 +44,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added an AI policy documenting expectations for AI-assisted contributions,
+  including disclosure, code quality, copyright, and communication, along with
+  an AI usage disclosure prompt in the pull request template.
+  ([#1419](https://github.com/earthaccess-dev/earthaccess/pull/1419))
 - Python 3.14 is now supported.
   ([#1307](https://github.com/earthaccess-dev/earthaccess/issues/1307))
   ([@danielfromearth](https://github.com/danielfromearth))
@@ -732,4 +738,5 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 [v0.16.0]: https://github.com/earthaccess-dev/earthaccess/releases/tag/v0.16.0
 [v0.17.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.16.0...v0.17.0
 [v0.18.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.17.0...v0.18.0
-[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v0.18.0...HEAD
+[v0.19.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.18.0...v0.19.0
+[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v0.19.0...HEAD
