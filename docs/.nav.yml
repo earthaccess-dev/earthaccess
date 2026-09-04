@@ -34,6 +34,7 @@ nav:
           # - "Download data from on-prem location": "user/howto/onprem.md"
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
+          - "Visualize granules": "user/howto/visualize-granules.ipynb"
       - Tutorials:
           - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
