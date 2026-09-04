@@ -97,7 +97,7 @@ affiliations:
  - name: "GESTAR II, University of Maryland Baltimore County, Baltimore, MD, USA"
    index: 13
    ror: 02qskvh78
-date: 05 March 2026
+date: 04 September 2026
 bibliography: paper.bib
 ---
 
@@ -162,7 +162,7 @@ the workflow, or addressing the full workflow for only a subset of NASA's data h
   DAAC-aware provider resolution, cloud-hosting filters, and rich result objects that
   encapsulate metadata (step 2). However, `python-cmr` does not handle authentication, data
   download, or cloud access (steps 3–5) -- the areas where researchers face many workflow difficulties.
-  
+
 - **asf_search** [@asf_search] sits between `python-cmr` and `earthaccess`: it focuses on search and discovery but also handles authentication and access (workflow steps 1–5). It emerged around the same time as `earthaccess`, from similar access challenges. Unlike `earthaccess`, which is mission- and domain-agnostic, `asf_search` is tailored to synthetic aperture radar (SAR) data, adding domain-specific tooling and functionality.
 
 
@@ -226,7 +226,7 @@ variable across 28 granules (6.7 GB) and computing a summary statistic completed
 roughly 45 seconds end-to-end, compared with roughly 78 seconds to download the full
 files serially beforehand (medians of three runs on the NASA-Openscapes `us-west-2`
 JupyterHub). Constructing or reading virtual data stores over the same files with VirtualiZarr [@virtualizarr], which enables reading only the requested chunks, can reduce access time further. The same pattern applies to other
-granule-heavy products, such as ICESat-2 ATL06 land-ice height data [@icesat2], and is
+granule-heavy products, such as ICESat-2 ATL06 land-ice height data [@atl06], and is
 most pronounced where an analysis touches only a small portion of each file.
 
 **Contribute upstream, don't accumulate.** When community discussions surface
@@ -258,8 +258,8 @@ science data access. Concrete evidence of its impact includes:
 including studies on multi-sensor drought observations in forested environments
 [@andreadis2024] and tidal bore detection using SWOT satellite data [@arildsen2025]. Several other research studies and geospatial technology publications utilize libraries dependent on `earthaccess`, including [@Scheick2025], [@Xiahou2026], [@Widlansky2025].
 
-**Community adoption.** The library is a dependency of 230 public GitHub
-repositories (as of 5 March 2026), spanning data analysis workflows, Jupyter-based tutorials, and
+**Community adoption.** The library is a dependency of 260 public GitHub
+repositories (as of 4 September 2026), spanning data analysis workflows, Jupyter-based tutorials, and
 downstream libraries. It is distributed through both PyPI and conda-forge, and has
 been installed and used in cloud-hosted Jupyter environments provided by NASA and
 partner organizations. As one example of downstream adoption, icepack -- a finite
