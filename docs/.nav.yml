@@ -35,7 +35,6 @@ nav:
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
       - Tutorials:
-          - "Accessing remote NASA data with fsspec": "user/tutorials/file-access.ipynb"
           - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
           - "Accessing and visualizing EMIT data with a few lines of code": "user/tutorials/emit-earthaccess.ipynb"

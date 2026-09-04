@@ -41,8 +41,6 @@
 
 Visit [our documentation](https://earthaccess.readthedocs.io/en/latest) to learn more!
 
-Try it in your browser without installing anything! [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/earthaccess-dev/earthaccess/main)
-
 ## Why `earthaccess`
 
 During several workshops organized by NASA Openscapes, the need to provide easy-to-use tools to our users became evident. Open science is a collaborative effort; it involves people from different technical backgrounds, and the data analysis to solve the pressing problems we face cannot be limited by the complexity of the underlying systems. Therefore, providing easy access to NASA Earthdata regardless of the data storage location (hosted within or outside of the cloud) is the main motivation behind this Python library.
