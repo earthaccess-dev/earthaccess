@@ -44,6 +44,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added documentation to user guide for `__geo_interface__`.
+  ([#305](https://github.com/earthaccess-dev/earthaccess/issues/305))
+  ([@s-kganz](https://github.com/s-kganz))
 - Added an AI policy documenting expectations for AI-assisted contributions,
   including disclosure, code quality, copyright, and communication, along with
   an AI usage disclosure prompt in the pull request template.
