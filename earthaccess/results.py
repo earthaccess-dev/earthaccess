@@ -1,7 +1,16 @@
+from __future__ import annotations
+
 import json
+import pprint
 import uuid
 from functools import cache
-from typing import Any, ClassVar
+from textwrap import dedent, indent
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
+
+    from .search import DataCollections, DataGranules
 
 import requests
 
@@ -536,3 +545,97 @@ class DataGranule(CustomDict):
 
         msg = f"Invalid Geometry in granule's horizontal spatial extent: {geometry}"
         raise ValueError(msg)
+
+
+class Results:
+    """An immutable iterable of search results with convenience methods."""
+
+    # TODO: Needs to support both a lazy generator approach and an in-memory approach where
+    #       items are never consumed.
+    def __init__(
+        self,
+        items: list[DataGranule] | list[DataCollection],
+        *,
+        query: DataGranules | DataCollections,
+    ) -> None:
+        self._items = items
+        self._query = query
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}<hits={self.query.hits},>"
+
+    def __str__(self) -> str:
+        return (
+            f"Hits: {self.query.hits()}\n"
+            f"Query parameters:\n"
+            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
+            f"Query parameter options:\n"
+            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
+        )
+
+    def _repr_html_(self) -> str:
+        return dedent(f"""
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Query Type</td>
+                    <td>{self.query.__class__.__name__}</td>
+                </tr>
+                <tr>
+                    <td>Hits</td>
+                    <td>{self.query.hits()}</td>
+                </tr>
+                <tr>
+                    <td>Query parameters</td>
+                    <td>{self.query.params}</td>
+                </tr>
+                <tr>
+                    <td>Query options</td>
+                    <td>{self.query.options}</td>
+                </tr>
+            </table>
+        """)
+
+    @property
+    def query(self) -> DataGranules | DataCollections:
+        return self._query
+
+
+class GranuleResults(Results):
+    def __init__(
+        self,
+        items: list[DataGranule],
+        *,
+        query: DataGranules,  # TODO: DataGranules is a bad name! Should be DataGranuleQuery.
+    ) -> None:
+        super().__init__(items, query=query)
+
+    def to_gdf(self) -> GeoDataFrame:
+        # TODO: Allow user to receive the raw normalized gdf and rename columns?
+        # TODO: Pre-massage the GDF to a small set of "known useful" columns and
+        #       give them more reader-friendly names. Avoid future breaking changes
+        #       that might arise from selecting too many columns.
+        try:
+            import pandas as pd  # noqa: PLC0415
+            from geopandas import GeoDataFrame  # noqa: PLC0415
+        except ImportError as e:
+            msg = "GeoPandas must be installed"
+            raise ImportError(msg) from e
+        return GeoDataFrame(
+            pd.json_normalize(self),
+            geometry=self,
+            crs="EPSG:4326",
+        )
+
+
+class CollectionResults(Results):
+    def __init__(
+        self,
+        items: list[DataCollection],
+        *,
+        query: DataCollections,
+    ) -> None:
+        super().__init__(items, query=query)
