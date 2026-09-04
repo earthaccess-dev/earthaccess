@@ -198,7 +198,11 @@ component of the data access workflow:
    and automatically selects the optimal access path -- direct S3 reads for in-region
    access or HTTPS access otherwise. Users can manually specify an access path if needed.  Files can be opened as `fsspec`-compatible
    file-like objects for streaming into libraries such as xarray [@xarray], or
-   downloaded to disk with parallel, fault-tolerant transfers.
+   downloaded to disk with parallel, fault-tolerant transfers. Because `earthaccess`
+   returns ordinary Python file-like objects and makes no assumptions about the
+   underlying file format, it interoperates directly with the wider scientific Python
+   ecosystem -- including the PyData and Pangeo tool stacks -- rather than requiring
+   format- or mission-specific readers.
 
 4. **Virtual datasets**: Leverages NASA's DMR++ sidecar metadata files [@dmrpp] to
    construct virtual Zarr stores via VirtualiZarr [@virtualizarr] or kerchunk
