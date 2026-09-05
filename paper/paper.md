@@ -116,9 +116,9 @@ experience.
 `earthaccess` provides a unified, high-level Python interface that reduces this
 workflow to just a few lines of code. The library handles authentication with NASA's
 Earthdata Login (EDL) service [@nasa_edl], exposes NASA's Common Metadata Repository
-(CMR) [@nasa_cmr] for data discovery, and transparently manages data retrieval via
-either HTTPS download or direct S3 access when running in the Amazon Web Services (AWS)
-`us-west-2` region -- where data within NASA's Earthdata Cloud reside. `earthaccess` also supports
+(CMR) [@nasa_cmr] for data discovery, and manages data retrieval through a single
+interface covering both HTTPS download and direct Amazon Web Services (AWS) S3 access
+to data in NASA's Earthdata Cloud. `earthaccess` also supports
 streaming data directly into analysis-ready formats using `fsspec` [@fsspec] and
 constructing virtual Zarr stores from archival formats (e.g., HDF5 and NetCDF4) using
 DMR++ metadata [@dmrpp], powered by VirtualiZarr [@virtualizarr] and kerchunk [@kerchunk], enabling drastic improvements in access performance.
@@ -151,8 +151,8 @@ of NASA Earthdata's infrastructure. No existing tool provides this end-to-end,
 provider-agnostic workflow. Rather than reinventing query or filesystem libraries,
 `earthaccess` composes and extends existing open-source tools and contributes the
 NASA-specific domain knowledge (DAAC configurations, credential endpoints,
-authentication flows, cloud-detection logic) that binds them into a usable
-data access layer.
+authentication flows, and the mapping between HTTPS and direct-S3 access links) that
+binds them into a usable data access layer.
 
 Several tools exist for accessing NASA Earth science data, each addressing only part of
 the workflow, or addressing the full workflow for only a subset of NASA's data holdings:
@@ -183,30 +183,30 @@ the workflow, or addressing the full workflow for only a subset of NASA's data h
 `earthaccess` is organized into four core layers, each encapsulating a distinct
 component of the data access workflow:
 
-1. **Authentication**: Manages the full lifecycle of NASA Earthdata Login credentials,
-   supporting environment variables, `.netrc` files, and interactive prompts. Once
-   authenticated, the library creates HTTP sessions that correctly handle NASA's
-   cross-domain redirects and retrieves and renews temporary AWS S3 credentials for in-region
-   cloud access.
+- **Authentication**: Manages the full lifecycle of NASA Earthdata Login credentials,
+  supporting environment variables, `.netrc` files, and interactive prompts. Once
+  authenticated, the library creates HTTP sessions that correctly handle NASA's
+  cross-domain redirects and retrieves and renews temporary AWS S3 credentials for
+  direct S3 access.
 
-2. **Search**: Extends `python-cmr` with DAAC-aware provider resolution, cloud-hosting
-   detection, and deep-paging support. Query results are wrapped in rich objects that
-   preserve the full metadata response while exposing convenience methods for data
-   links, spatial footprints, and formatted citations.
+- **Search**: Extends `python-cmr` with DAAC-aware provider resolution, cloud-hosting
+  detection, and deep-paging support. Query results are wrapped in rich objects that
+  preserve the full metadata response while exposing convenience methods for data
+  links, spatial footprints, and formatted citations.
 
-3. **Access**: Attempts to detect at runtime whether the process is running within AWS `us-west-2`
-   and automatically selects the optimal access path -- direct S3 reads for in-region
-   access or HTTPS access otherwise. Users can manually specify an access path if needed.  Files can be opened as `fsspec`-compatible
-   file-like objects for streaming into libraries such as xarray [@xarray], or
-   downloaded to disk with parallel, fault-tolerant transfers. Because `earthaccess`
-   returns ordinary Python file-like objects and makes no assumptions about the
-   underlying file format, it interoperates directly with the wider scientific Python
-   ecosystem -- including the PyData and Pangeo tool stacks -- rather than requiring
-   format- or mission-specific readers.
+- **Access**: Presents a single interface over both access mechanisms -- HTTPS and
+  direct S3 reads -- so that the same user code works from a local workstation or from
+  within AWS, with the mechanism selectable by the user. Files can be opened as
+  `fsspec`-compatible file-like objects for streaming into libraries such as xarray
+  [@xarray], or downloaded to disk with parallel, fault-tolerant transfers. Because
+  `earthaccess` returns ordinary Python file-like objects and makes no assumptions about
+  the underlying file format, it interoperates directly with the wider scientific Python
+  ecosystem -- including the PyData and Pangeo tool stacks -- rather than requiring
+  format- or mission-specific readers.
 
-4. **Virtual datasets**: Leverages NASA's DMR++ sidecar metadata files [@dmrpp] to
-   construct virtual Zarr stores via VirtualiZarr [@virtualizarr] or kerchunk
-   [@kerchunk], enabling lazy, chunk-level access to archival HDF5/NetCDF4 data without downloading or reformatting files. For example, a researcher can extract a single variable across thousands of files by reading only the relevant byte ranges from NASA's cloud storage, with minimal local resource usage. These features are available as optional dependencies to keep the core library lightweight.
+- **Virtual datasets**: Leverages NASA's DMR++ sidecar metadata files [@dmrpp] to
+  construct virtual Zarr stores via VirtualiZarr [@virtualizarr] or kerchunk
+  [@kerchunk], enabling lazy, chunk-level access to archival HDF5/NetCDF4 data without downloading or reformatting files. For example, a researcher can extract a single variable across thousands of files by reading only the relevant byte ranges from NASA's cloud storage, with minimal local resource usage. These features are available as optional dependencies to keep the core library lightweight.
 
 Several deliberate design decisions shape the library:
 
@@ -239,8 +239,8 @@ scope creep, reduces maintenance burden, and strengthens the broader ecosystem
 that `earthaccess` depends on.
 
 **Location-transparent access.** The same user code works whether the computation runs
-in the cloud or on a local workstation. The library automatically selects the optimal
-access path without requiring code changes, reflecting the reality that researchers
+in the cloud or on a local workstation, without requiring code changes; users who want
+direct S3 access can request it explicitly. This reflects the reality that researchers
 are at varying stages of cloud adoption.
 
 **Flat, functional top-level API.** All primary operations are exposed as module-level
