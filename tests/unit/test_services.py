@@ -32,14 +32,12 @@ class TestServices(VCRTestCase):
         earthaccess._auth.authenticated = False
         actual = earthaccess.search_services(concept_id="S2004184019-POCLOUD")
 
-        self.assertTrue(actual[0]["umm"]["Type"] == "OPeNDAP")
-        self.assertTrue(
-            actual[0]["umm"]["ServiceOrganizations"][0]["ShortName"] == "UCAR/UNIDATA",
+        assert actual[0]["umm"]["Type"] == "OPeNDAP"
+        assert (
+            actual[0]["umm"]["ServiceOrganizations"][0]["ShortName"] == "UCAR/UNIDATA"
         )
-        self.assertTrue(
-            actual[0]["umm"]["Description"] == "Earthdata OPEnDAP in the cloud",
-        )
-        self.assertTrue(actual[0]["umm"]["LongName"] == "PO.DAAC OPeNDADP In the Cloud")
+        assert actual[0]["umm"]["Description"] == "Earthdata OPEnDAP in the cloud"
+        assert actual[0]["umm"]["LongName"] == "PO.DAAC OPeNDADP In the Cloud"
 
     def test_service_results(self):
         """Test results.DataCollection.services to return available services."""
@@ -53,18 +51,16 @@ class TestServices(VCRTestCase):
         assert len(datasets) > 0
         results = datasets[0].services
 
-        self.assertTrue(
-            results["S2004184019-POCLOUD"][0]["meta"]["provider-id"] == "POCLOUD",
-        )
-        self.assertTrue(
+        assert results["S2004184019-POCLOUD"][0]["meta"]["provider-id"] == "POCLOUD"
+        assert (
             results["S2004184019-POCLOUD"][0]["umm"]["URL"]["URLValue"]
-            == "https://opendap.earthdata.nasa.gov/",
+            == "https://opendap.earthdata.nasa.gov/"
         )
-        self.assertTrue(
+        assert (
             results["S2606110201-XYZ_PROV"][0]["umm"]["Name"]
-            == "Harmony GDAL Adapter (HGA)",
+            == "Harmony GDAL Adapter (HGA)"
         )
-        self.assertTrue(results["S2164732315-XYZ_PROV"][0]["umm"]["Type"] == "Harmony")
+        assert results["S2164732315-XYZ_PROV"][0]["umm"]["Type"] == "Harmony"
 
 
 if __name__ == "__main__":

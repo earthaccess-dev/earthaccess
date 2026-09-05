@@ -36,16 +36,16 @@ class TestCreateAuth(unittest.TestCase):
 
         # Test
         auth = Auth()
-        self.assertEqual(auth.authenticated, False)
+        assert auth.authenticated is False
         auth.login(strategy="interactive")
-        self.assertEqual(auth.authenticated, True)
-        self.assertEqual(auth.token, json_response)
+        assert auth.authenticated is True
+        assert auth.token == json_response
 
         # test that we are creating a session with the proper headers
         session = auth.get_session()
         headers = session.headers
-        self.assertTrue("User-Agent" in headers)
-        self.assertTrue("earthaccess" in headers["User-Agent"])
+        assert "User-Agent" in headers
+        assert "earthaccess" in headers["User-Agent"]
 
     @responses.activate
     @mock.patch("getpass.getpass")
@@ -71,9 +71,9 @@ class TestCreateAuth(unittest.TestCase):
         # Test
         auth = Auth()
         auth.login(strategy="interactive")
-        self.assertEqual(auth.authenticated, True)
-        self.assertEqual(auth.password, "password")
-        self.assertEqual(auth.token, json_response)
+        assert auth.authenticated is True
+        assert auth.password == "password"
+        assert auth.token == json_response
 
     @responses.activate
     @mock.patch.dict(os.environ, {"EARTHDATA_TOKEN": "ABCDEFGHIJKLMNOPQ"})
@@ -83,8 +83,8 @@ class TestCreateAuth(unittest.TestCase):
         # Test
         auth = Auth()
         auth.login(strategy="environment")
-        self.assertEqual(auth.authenticated, True)
-        self.assertEqual(auth.token, json_response)
+        assert auth.authenticated is True
+        assert auth.token == json_response
 
     @responses.activate
     @mock.patch("getpass.getpass")
@@ -111,4 +111,4 @@ class TestCreateAuth(unittest.TestCase):
         with pytest.raises(LoginAttemptFailure):
             auth.login(strategy="interactive")
 
-        self.assertEqual(auth.authenticated, False)
+        assert auth.authenticated is False

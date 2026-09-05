@@ -36,16 +36,16 @@ class TestServices(VCRTestCase):
             dataset["umm"]["ShortName"]: dataset.services for dataset in datasets
         }
 
-        self.assertEqual(next(iter(dataset_services.keys())), "MUR-JPL-L4-GLOB-v4.1")
-        self.assertEqual(
+        assert next(iter(dataset_services.keys())) == "MUR-JPL-L4-GLOB-v4.1"
+        assert (
             dataset_services["MUR-JPL-L4-GLOB-v4.1"]["S2606110201-XYZ_PROV"][0]["umm"][
                 "LongName"
-            ],
-            "Harmony GDAL Adapter (HGA)",
+            ]
+            == "Harmony GDAL Adapter (HGA)"
         )
-        self.assertEqual(
+        assert (
             dataset_services["MUR-JPL-L4-GLOB-v4.1"]["S2839491596-XYZ_PROV"][0]["umm"][
                 "URL"
-            ]["Description"],
-            "https://harmony.earthdata.nasa.gov",
+            ]["Description"]
+            == "https://harmony.earthdata.nasa.gov"
         )
