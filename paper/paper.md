@@ -72,7 +72,7 @@ affiliations:
  - name: "Ocean Ecology Lab, NASA Goddard Space Flight Center, Greenbelt, MD, USA"
    index: 4
    ror: 0171mag52
- - name: "Development Seed, Inc."
+ - name: "Development Seed"
    index: 5
  - name: "Schmidt Center for Data Science and Environment (DSE), University of California Berkeley"
    index: 6
