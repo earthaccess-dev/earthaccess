@@ -421,6 +421,59 @@ class DataCollections(CollectionQuery):
         """
         return super().temporal(date_from, date_to, exclude_boundary)
 
+    @staticmethod
+    def to_geopandas(collections: list[DataCollection]) -> "gpd.GeoDataFrame":
+        """Convert a list of DataCollection objects to a GeoPandas GeoDataFrame.
+
+        Parameters:
+            collections: A list of DataCollection objects.
+
+        Returns:
+            A GeoPandas GeoDataFrame containing the collection data.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            import earthaccess as ea
+            collections = ea.search_datasets(
+                keyword="above ground biomass",
+            )
+            gdf = ea.DataCollections.to_geopandas(collections)
+            ```
+        """
+        try:
+            import geopandas as gpd
+            import pandas as pd
+            from shapely.geometry import shape
+        except ModuleNotFoundError as e:
+            msg = (
+                "`geopandas` is required for this functionality. "
+                "Please install it using `pip install earthaccess[geopandas]` "
+                "(or `pip install geopandas`)."
+            )
+            raise ModuleNotFoundError(msg) from e
+
+        def _geometry(collection: DataCollection) -> object:
+            """Extracts the geometry from a DataCollection object.
+            If the geometry is invalid, returns None."""
+            try:
+                return shape(collection.__geo_interface__)
+            except ValueError:
+                return None
+
+        geometries = [_geometry(collection) for collection in collections]
+        data = pd.json_normalize(collections)
+        # removing meta and umm prefixes from column names
+        data.columns = data.columns.str.replace(r'^(meta.|umm.)', '', regex=True)
+         
+        return gpd.GeoDataFrame(
+            data=data,
+            geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
+            crs="EPSG:4326",
+        )
+
 
 class DataGranules(GranuleQuery):
     """A Granule oriented client for NASA CMR.
