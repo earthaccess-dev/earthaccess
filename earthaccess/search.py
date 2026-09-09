@@ -3,6 +3,7 @@ import logging
 from collections.abc import Iterable, Sequence
 from inspect import getmembers, ismethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Self,
     SupportsFloat,
@@ -17,6 +18,9 @@ from .auth import Auth
 from .daac import find_provider, find_provider_by_shortname
 from .results import DataCollection, DataGranule
 from .utils._search import get_results
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +420,59 @@ class DataCollections(CollectionQuery):
                 parsable as such) and `date_from` is after `date_to`.
         """
         return super().temporal(date_from, date_to, exclude_boundary)
+
+    @staticmethod
+    def to_geopandas(collections: list[DataCollection]) -> "gpd.GeoDataFrame":
+        """Convert a list of DataCollection objects to a GeoPandas GeoDataFrame.
+
+        Parameters:
+            collections: A list of DataCollection objects.
+
+        Returns:
+            A GeoPandas GeoDataFrame containing the collection data.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            import earthaccess as ea
+            collections = ea.search_datasets(
+                keyword="above ground biomass",
+            )
+            gdf = ea.DataCollections.to_geopandas(collections)
+            ```
+        """
+        try:
+            import geopandas as gpd
+            import pandas as pd
+            from shapely.geometry import shape
+        except ModuleNotFoundError as e:
+            msg = (
+                "`geopandas` is required for this functionality. "
+                "Please install it using `pip install earthaccess[geopandas]` "
+                "(or `pip install geopandas`)."
+            )
+            raise ModuleNotFoundError(msg) from e
+
+        def _geometry(collection: DataCollection) -> object:
+            """Extracts the geometry from a DataCollection object.
+            If the geometry is invalid, returns None."""
+            try:
+                return shape(collection.__geo_interface__)
+            except ValueError:
+                return None
+
+        geometries = [_geometry(collection) for collection in collections]
+        data = pd.json_normalize(collections)
+        # removing meta and umm prefixes from column names
+        data.columns = data.columns.str.replace(r'^(meta.|umm.)', '', regex=True)
+         
+        return gpd.GeoDataFrame(
+            data=data,
+            geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
+            crs="EPSG:4326",
+        )
 
 
 class DataGranules(GranuleQuery):
@@ -961,3 +1018,57 @@ class DataGranules(GranuleQuery):
             )
 
         return self
+
+    @staticmethod
+    def to_geopandas(granules: list[DataGranule]) -> "gpd.GeoDataFrame":
+        """Convert a list of DataGranule objects to a GeoPandas GeoDataFrame.
+
+        Parameters:
+            granules: A list of DataGranule objects.
+
+        Returns:
+            A GeoPandas GeoDataFrame containing the granule data.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            import earthaccess as ea
+            granules = ea.search_data(
+                short_name="MYD11A1",
+                temporal=("2024-01-01", "2024-12-31"),
+            )
+            gdf = ea.DataGranules.to_geopandas(granules)
+            ```
+        """
+        try:
+            import geopandas as gpd
+            import pandas as pd
+            from shapely.geometry import shape
+        except ModuleNotFoundError as e:
+            msg = (
+                "`geopandas` is required for this functionality. "
+                "Please install it using `pip install earthaccess[geopandas]` "
+                "(or `pip install geopandas`)."
+            )
+            raise ModuleNotFoundError(msg) from e
+
+        def _geometry(granule: DataGranule) -> object:
+            """Extracts the geometry from a DataGranule object.
+            If the geometry is invalid, returns None."""
+            try:
+                return shape(granule.__geo_interface__)
+            except ValueError:
+                return None
+
+        geometries = [_geometry(granule) for granule in granules]
+        data = pd.json_normalize(granules)
+        # removing meta and umm prefixes from column names
+        data.columns = data.columns.str.replace(r'^(meta.|umm.)', '', regex=True)
+
+        return gpd.GeoDataFrame(
+            data=data,
+            geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
+            crs="EPSG:4326",
+        )
