@@ -122,8 +122,8 @@ covering both HTTPS download and direct Amazon Web Services (AWS) S3 access to d
 NASA's Earthdata Cloud. `earthaccess` also supports streaming data directly into
 analysis-ready formats using `fsspec` [@fsspec] and constructing virtual Zarr stores
 from archival formats (e.g., HDF5 and NetCDF4) using DMR++ metadata [@dmrpp], powered by
-VirtualiZarr [@virtualizarr] and kerchunk [@kerchunk], enabling drastic improvements in
-access performance.
+`VirtualiZarr` [@virtualizarr] and `kerchunk` [@kerchunk], enabling drastic
+improvements in access performance.
 
 
 # Statement of need
@@ -142,12 +142,11 @@ credentials; and (5) retrieve the data by downloading it over HTTPS, streaming i
 directly from S3, or passing the information into a third-party package for
 customization services. Researchers must know enough about the technical implementation
 of multiple APIs to perform these steps accurately, each of which introduces
-opportunities for error. DAAC-specific configurations and NASA's ongoing migration to
-the Earthdata Cloud compound the challenge, as researchers contend with multiple access
-paradigms, often within a single analysis workflow.
+opportunities for error. DAAC-specific configurations and NASA's migration of data to
+the Earthdata Cloud compound the challenge.
 
-NASA's ongoing migration to the Earthdata Cloud adds further complexity, as researchers
-must now contend with two possible access paradigms, traditional HTTPS downloads and
+NASA's Earthdata Cloud introduced a novel source of complexity for most researchers, who
+must now choose between two possible access paradigms: traditional HTTPS downloads and
 S3-based access. These both may even occur within a single analysis workflow. During
 workshops organized by NASA Openscapes [@nasa_openscapes; @lowndes2019], the need for
 simpler tools became evident. `earthaccess` is a community project that was created to
@@ -231,7 +230,7 @@ component of the data access workflow:
 - **Access**: Presents a single interface over both access mechanisms -- HTTPS and
   direct S3 reads -- so that the same user code works from a local workstation or from
   within AWS, with the mechanism selectable by the user. Files can be opened as
-  `fsspec`-compatible file-like objects for streaming into libraries such as xarray
+  `fsspec`-compatible file-like objects for streaming into libraries such as `xarray`
   [@xarray], or downloaded to disk with parallel, fault-tolerant transfers. Because
   `earthaccess` returns ordinary Python file-like objects and makes no assumptions about
   the underlying file format, it interoperates directly with the wider scientific Python
@@ -239,7 +238,7 @@ component of the data access workflow:
   format- or mission-specific readers.
 
 - **Virtual datasets**: Leverages NASA's DMR++ sidecar metadata files [@dmrpp] to
-  construct virtual Zarr stores via VirtualiZarr [@virtualizarr] or kerchunk
+  construct virtual Zarr stores via `VirtualiZarr` [@virtualizarr] or `kerchunk`
   [@kerchunk], enabling lazy, chunk-level access to archival HDF5/NetCDF4 data without
   downloading or reformatting files. For example, a researcher can extract a single
   variable across thousands of files by reading only the relevant byte ranges from
@@ -250,7 +249,7 @@ Several deliberate design decisions shape the library:
 
 **Build on, don't replace, existing libraries.** `earthaccess` composes existing
 open-source tools -- `python-cmr` for search, `fsspec` and `s3fs` for file I/O,
-VirtualiZarr and kerchunk for virtual datasets -- rather than reimplementing their
+`VirtualiZarr` and `kerchunk` for virtual datasets -- rather than reimplementing their
 functionality. The library's unique contribution is the NASA-specific integration layer
 that binds these tools together. For example, retrieving NASA's TEMPO Level-3 ozone
 product [@tempo_o3tot_l3] directly from the Earthdata Cloud with `boto3`, `requests`,
@@ -263,17 +262,17 @@ composes `fsspec` for byte-range access, streaming a single variable across 28 g
 (6.7 GB) and computing a summary statistic completed in roughly 45 seconds end-to-end,
 compared with roughly 78 seconds to download the full files serially beforehand (medians
 of three runs on the NASA-Openscapes `us-west-2` JupyterHub). Constructing or reading
-virtual data stores over the same files with VirtualiZarr [@virtualizarr], which enables
-reading only the requested chunks, can reduce access time further. The same pattern
-applies to other granule-heavy products, such as ICESat-2 ATL06 land-ice height data
-[@atl06], and is most pronounced where an analysis touches only a small portion of each
-file.
+virtual data stores over the same files with `VirtualiZarr` [@virtualizarr], which
+enables reading only the requested chunks, can reduce access time further. The same
+pattern applies to other granule-heavy products, such as ICESat-2 ATL06 land-ice height
+data [@atl06], and is most pronounced where an analysis touches only a small portion of
+each file.
 
 **Contribute upstream, don't accumulate.** When community discussions surface features
 that belong in a dependency, the project contributes that work upstream rather than
 absorbing it. Advanced CMR query capabilities were developed in `python-cmr` rather than
 duplicated in `earthaccess`, and aspects of DMR++ parsing and multi-file virtual dataset
-functionality were migrated to VirtualiZarr where they could benefit the wider
+functionality were migrated to `VirtualiZarr` where they could benefit the wider
 community. This upstream-first discipline avoids scope creep, reduces maintenance
 burden, and strengthens the broader ecosystem that `earthaccess` depends on.
 
