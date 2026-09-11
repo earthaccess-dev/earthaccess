@@ -34,8 +34,11 @@
     <img src="https://github.com/earthaccess-dev/earthaccess/actions/workflows/test.yml/badge.svg" alt="Unit Tests status" />
 </a>
 
-</p>
+<a href="https://github.com/pyOpenSci/software-review/issues/302" target="_blank">
+    <img src="https://pyopensci.org/badges/peer-reviewed.svg" alt="pyOpenSci Peer-Reviewed" />
+</a>
 
+</p>
 
 `earthaccess` is a python library to **search for**, and **download** or **stream** NASA Earth science data with just a few lines of code.
 
