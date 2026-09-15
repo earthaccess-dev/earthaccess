@@ -300,7 +300,7 @@ dependent on `earthaccess`, including [@Scheick2025], [@Xiahou2026], [@Widlansky
 
 **Community adoption.** The library is a dependency of 260 public GitHub repositories
 (as of 4 September 2026), spanning data analysis workflows, Jupyter-based tutorials, and
-downstream libraries. It is distributed through both PyPI and conda-forge, and has been
+downstream libraries. It is distributed through both PyPI and conda-forge and 
 installed and used in cloud-hosted Jupyter environments provided by NASA and partner
 organizations. As one example of downstream adoption, icepack -- a finite element
 library for ice sheet and glacier modeling [@shapero2021] -- replaced its hand-written
@@ -350,14 +350,14 @@ work.
 The development of `earthaccess` was supported by NASA's Earth Science Data Systems
 (ESDS) program through the NASA Openscapes project (NASA award #20-TWSC20-2-0003
 “Openscapes: Enabling a new era of science on the cloud, in response to the 2020 NASA
-ROSES Element E2”, Lowndes and Erin Robinson). We thank NASA Openscapes for the
+ROSES Element E2”, Julie Lowndes and Erin Robinson). We thank NASA Openscapes for the
 community workshops, collaborative working environment, and people-first approach that
 have motivated and continue to support this work. We are grateful to the National Snow
-and Ice Data Center (NSIDC) for hosting the repository during its initial development,
+and Ice Data Center (NSIDC) for hosting the repository during its initial development
 and to all contributors who have shaped `earthaccess` through contributing code,
-documentation, issue reports, and community engagement. People have been able to
+documentation, issue reports, and community engagement. People 
 contribute to earthaccess as adopters and developers as part of their jobs across the
-NASA ecosystem as well as outside of it, and this has been critical to making this
+NASA ecosystem as well as outside of it, which is critical to making this
 shared resource successful. We appreciate everyone who advocates for and uses approved
 time to make this possible. We also thank Allison Horst for the `earthaccess` artwork
 and Daniel Kaufman for leading the preparation of this submission.
