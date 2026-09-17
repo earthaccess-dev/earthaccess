@@ -136,7 +136,7 @@ docs = [
   "pygments >=2.11.1",
   "xarray",
   "h5netcdf",
-  "matplotlib >=3.3",
+  "matplotlib>=3.3",
   "h5netcdf >=0.11",
   "pyproj >=3.5.0; python_version < '3.12'",
   "pyproj >=3.6.1; python_version >= '3.12'",
@@ -154,6 +154,10 @@ docs = [
   "cftime>=1.6.4",
   "cartopy>=0.24.1",
   "mkdocs-awesome-nav>=3.3.0",
+  "folium>=0.20.0",
+  "mapclassify>=2.11.0",
+  "pandas>=2.3.3",
+  "geopandas>=1.1.2",
 ]
 
 
