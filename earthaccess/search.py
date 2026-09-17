@@ -444,9 +444,9 @@ class DataCollections(CollectionQuery):
             ```
         """
         try:
-            import geopandas as gpd
-            import pandas as pd
-            from shapely.geometry import shape
+            import geopandas as gpd  # noqa: PLC0415
+            import pandas as pd  # noqa: PLC0415
+            from shapely.geometry import shape  # noqa: PLC0415
         except ModuleNotFoundError as e:
             msg = (
                 "`geopandas` is required for this functionality. "
@@ -1043,9 +1043,9 @@ class DataGranules(GranuleQuery):
             ```
         """
         try:
-            import geopandas as gpd
-            import pandas as pd
-            from shapely.geometry import shape
+            import geopandas as gpd  # noqa: PLC0415
+            import pandas as pd  # noqa: PLC0415
+            from shapely.geometry import shape  # noqa: PLC0415
         except ModuleNotFoundError as e:
             msg = (
                 "`geopandas` is required for this functionality. "

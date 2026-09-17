@@ -21,7 +21,7 @@ def _citation(*, doi: str, format_: str, language: str) -> str:
     return response.text
 
 def _geometry_to_geojson(geometry: dict[str, Any]) -> dict[str, object]:
-    """Convert a UMM-G Geometry to a GeoJSON representation. 
+    """Convert a UMM-G Geometry to a GeoJSON representation.
     It is assumed that the `dict` contains only a single key-value pair,
     and this property is the result of converting the value of that pair
     into an equivalent GeoJSON structure, depending on the key, as follows:

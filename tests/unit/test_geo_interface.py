@@ -282,7 +282,7 @@ def test_missing_horizontal_spatial_domain_raises():
         _ = granule.__geo_interface__
 
 def _make_granule(test_case: dict[str, object], name: str) -> DataGranule:
-    """returns a DataGranule with geometry and key attributes for testing to_geopandas()"""
+    """Returns a DataGranule with geometry and key attributes for testing to_geopandas()."""
     return DataGranule(
         {
             "meta": {"concept-id": f"G-{name}", "provider-id": "PROV"},
@@ -383,7 +383,7 @@ def test_to_geopandas_empty_result():
 
 
 def _make_collection(test_case: dict[str, object], name: str) -> DataCollection:
-    """returns a DataCollection with geometry and key attributes for testing to_geopandas()"""
+    """Returns a DataCollection with geometry and key attributes for testing to_geopandas()."""
     return DataCollection(
         {
             "meta": {"concept-id": f"C-{name}", "provider-id": "PROV"},
