@@ -457,7 +457,8 @@ class DataCollections(CollectionQuery):
 
         def _geometry(collection: DataCollection) -> object:
             """Extracts the geometry from a DataCollection object.
-            If the geometry is invalid, returns None."""
+            If the geometry is invalid, returns None.
+            """
             try:
                 return shape(collection.__geo_interface__)
             except ValueError:
@@ -466,8 +467,8 @@ class DataCollections(CollectionQuery):
         geometries = [_geometry(collection) for collection in collections]
         data = pd.json_normalize(collections)
         # removing meta and umm prefixes from column names
-        data.columns = data.columns.str.replace(r'^(meta.|umm.)', '', regex=True)
-         
+        data.columns = data.columns.str.replace(r"^(meta.|umm.)", "", regex=True)
+
         return gpd.GeoDataFrame(
             data=data,
             geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
@@ -1056,7 +1057,8 @@ class DataGranules(GranuleQuery):
 
         def _geometry(granule: DataGranule) -> object:
             """Extracts the geometry from a DataGranule object.
-            If the geometry is invalid, returns None."""
+            If the geometry is invalid, returns None.
+            """
             try:
                 return shape(granule.__geo_interface__)
             except ValueError:
@@ -1065,7 +1067,7 @@ class DataGranules(GranuleQuery):
         geometries = [_geometry(granule) for granule in granules]
         data = pd.json_normalize(granules)
         # removing meta and umm prefixes from column names
-        data.columns = data.columns.str.replace(r'^(meta.|umm.)', '', regex=True)
+        data.columns = data.columns.str.replace(r"^(meta.|umm.)", "", regex=True)
 
         return gpd.GeoDataFrame(
             data=data,

@@ -20,9 +20,10 @@ def _citation(*, doi: str, format_: str, language: str) -> str:
     response.raise_for_status()
     return response.text
 
+
 def _geometry_to_geojson(geometry: dict[str, Any]) -> dict[str, object]:
     """Convert a UMM-G Geometry to a GeoJSON representation.
-    
+
     It is assumed that the `dict` contains only a single key-value pair,
     and this property is the result of converting the value of that pair
     into an equivalent GeoJSON structure, depending on the key, as follows:
@@ -36,7 +37,7 @@ def _geometry_to_geojson(geometry: dict[str, Any]) -> dict[str, object]:
 
     Parameters:
         geometry: A UMM-G Geometry dictionary.
-    
+
     Returns:
         A GeoJSON representation of the UMM-G Geometry.
 
@@ -385,6 +386,7 @@ class DataCollection(CustomDict):
             raise ValueError(msg) from None
 
         return _geometry_to_geojson(geometry)
+
 
 class DataGranule(CustomDict):
     """Dictionary-like object to represent a granule from CMR."""

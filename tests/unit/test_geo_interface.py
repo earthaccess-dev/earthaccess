@@ -281,6 +281,7 @@ def test_missing_horizontal_spatial_domain_raises():
     with pytest.raises(ValueError):
         _ = granule.__geo_interface__
 
+
 def _make_granule(test_case: dict[str, object], name: str) -> DataGranule:
     """Returns a DataGranule with geometry and key attributes for testing to_geopandas()."""
     return DataGranule(
@@ -354,8 +355,9 @@ def test_to_geopandas_includes_full_umm_column():
 
     row = gdf.iloc[0]
     assert row["umm"] == granule["umm"]
-    assert row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"] == (
-        TEST_CASES["points"]["geometry"]
+    assert (
+        row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]
+        == (TEST_CASES["points"]["geometry"])
     )
 
 
@@ -443,8 +445,9 @@ def test_collections_to_geopandas_includes_full_umm_column():
     gdf = DataCollections.to_geopandas([collection])
     row = gdf.iloc[0]
     assert row["umm"] == collection["umm"]
-    assert row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"] == (
-        TEST_CASES["points"]["geometry"]
+    assert (
+        row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]
+        == (TEST_CASES["points"]["geometry"])
     )
 
 
