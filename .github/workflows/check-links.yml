@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@b48fcdb87e70c45789abd80d4042b06641e47b46 # v1
-      - uses: jupyterlab/maintainer-tools/.github/actions/check-links@b48fcdb87e70c45789abd80d4042b06641e47b46 # v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@94b14ddfbdd1ed651e9f9343ae2409ab5c73a6a8 # v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/check-links@94b14ddfbdd1ed651e9f9343ae2409ab5c73a6a8 # v1
         with:
           # Allow absolute links; any broken internal links will get caught in the docs build
           # Ignore failed checks on earthdata.nasa.gov: They 403 on requests based on user agent. Nothing we can do short of spoofing.

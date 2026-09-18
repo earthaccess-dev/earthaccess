@@ -15,7 +15,7 @@ jobs:
       - name: verify version matches git tag
         run: scripts/verify_tag.sh
 
-      - uses: hynek/build-and-inspect-python-package@d44ca7d91762de7a7d5436ddae667c6da6d1c3df # v2
+      - uses: hynek/build-and-inspect-python-package@2abe76da66d0a6a4a227101f9348ee855797cfa5 # v3.0.1
 
   publish:
     name: Publish to PyPI
@@ -32,4 +32,4 @@ jobs:
           name: Packages
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
