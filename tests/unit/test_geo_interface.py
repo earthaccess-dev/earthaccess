@@ -354,10 +354,10 @@ def test_to_geopandas_includes_full_umm_column():
     gdf = DataGranules().to_geopandas([granule])
 
     row = gdf.iloc[0]
-    assert row["umm"] == granule["umm"]
+    assert row["umm.GranuleUR"] == granule["umm"]["GranuleUR"]
     assert (
-        row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]
-        == (TEST_CASES["points"]["geometry"])
+        row["umm.SpatialExtent.HorizontalSpatialDomain.Geometry.Points"]
+        == TEST_CASES["points"]["geometry"]["Points"]
     )
 
 
@@ -395,12 +395,8 @@ def _make_collection(test_case: dict[str, object], name: str) -> DataCollection:
                 "SpatialExtent": {
                     "HorizontalSpatialDomain": {"Geometry": test_case["geometry"]},
                 },
-                "RelatedUrls": [
-                    {
-                        "URL": f"https://search.earthdata.nasa.gov/search?q={name}",
-                        "Type": "GET DATA",
-                    },
-                ],
+                "EntryTitle": name,
+                "DOI": {"DOI": "10.3334/ORNLDAAC/146", "Authority": "https://doi.org"},
             },
         },
     )
@@ -435,7 +431,8 @@ def test_collections_to_geopandas_includes_attribute_columns():
     assert row["concept_id"] == "C-coll-rect"
     assert row["short_name"] == "coll-rect"
     assert row["version"] == "2.1"
-    assert row["data_links"] == ["https://search.earthdata.nasa.gov/search?q=coll-rect"]
+    assert row["title"] == "coll-rect"
+    assert row["doi"] == "10.3334/ORNLDAAC/146"
 
 
 def test_collections_to_geopandas_includes_full_umm_column():
@@ -444,10 +441,10 @@ def test_collections_to_geopandas_includes_full_umm_column():
     collection = _make_collection(TEST_CASES["points"], "coll-point")
     gdf = DataCollections.to_geopandas([collection])
     row = gdf.iloc[0]
-    assert row["umm"] == collection["umm"]
+    assert row["umm.ShortName"] == collection["umm"]["ShortName"]
     assert (
-        row["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]
-        == (TEST_CASES["points"]["geometry"])
+        row["umm.SpatialExtent.HorizontalSpatialDomain.Geometry.Points"]
+        == TEST_CASES["points"]["geometry"]["Points"]
     )
 
 

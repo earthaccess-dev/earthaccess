@@ -447,6 +447,7 @@ class DataCollections(CollectionQuery):
             import geopandas as gpd  # noqa: PLC0415
             import pandas as pd  # noqa: PLC0415
             from shapely.geometry import shape  # noqa: PLC0415
+            from shapely.geometry.base import BaseGeometry  # noqa: PLC0415
         except ModuleNotFoundError as e:
             msg = (
                 "`geopandas` is required for this functionality. "
@@ -455,7 +456,7 @@ class DataCollections(CollectionQuery):
             )
             raise ModuleNotFoundError(msg) from e
 
-        def _geometry(collection: DataCollection) -> object:
+        def _geometry(collection: DataCollection) -> BaseGeometry | None:
             """Extracts the geometry from a DataCollection object.
             If the geometry is invalid, returns None.
             """
@@ -464,14 +465,33 @@ class DataCollections(CollectionQuery):
             except ValueError:
                 return None
 
+        def _record(collection: DataCollection) -> dict[str, Any]:
+            """Builds a collection record."""
+            return {
+                "concept_id": collection["meta"].get("concept-id"),
+                "short_name": collection.get_umm("ShortName"),
+                "version": collection.version,
+                "title": collection.get_umm("EntryTitle"),
+                "doi": collection.doi,
+            }
+
         geometries = [_geometry(collection) for collection in collections]
-        data = pd.json_normalize(collections)
-        # removing meta and umm prefixes from column names
-        data.columns = data.columns.str.replace(r"^(meta.|umm.)", "", regex=True)
+        data = pd.DataFrame.from_records(
+            [_record(collection) for collection in collections],
+            columns=["concept_id", "short_name", "version", "title", "doi"],
+        )
+        # Flatten the UMM records into columns.
+        umm = pd.json_normalize(
+            [dict(collection["umm"]) for collection in collections],
+        ).add_prefix("umm.")
+        umm.index = data.index
+        data = pd.concat([data, umm], axis=1)
 
         return gpd.GeoDataFrame(
             data=data,
-            geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
+            geometry=gpd.GeoSeries(
+                pd.Series(geometries, dtype=object), crs="EPSG:4326"
+            ),
             crs="EPSG:4326",
         )
 
@@ -1047,6 +1067,7 @@ class DataGranules(GranuleQuery):
             import geopandas as gpd  # noqa: PLC0415
             import pandas as pd  # noqa: PLC0415
             from shapely.geometry import shape  # noqa: PLC0415
+            from shapely.geometry.base import BaseGeometry  # noqa: PLC0415
         except ModuleNotFoundError as e:
             msg = (
                 "`geopandas` is required for this functionality. "
@@ -1055,7 +1076,7 @@ class DataGranules(GranuleQuery):
             )
             raise ModuleNotFoundError(msg) from e
 
-        def _geometry(granule: DataGranule) -> object:
+        def _geometry(granule: DataGranule) -> BaseGeometry | None:
             """Extracts the geometry from a DataGranule object.
             If the geometry is invalid, returns None.
             """
@@ -1064,13 +1085,43 @@ class DataGranules(GranuleQuery):
             except ValueError:
                 return None
 
+        def _record(granule: DataGranule) -> dict[str, Any]:
+            """Builds a granule record."""
+            range_date_time = (
+                granule["umm"].get("TemporalExtent", {}).get("RangeDateTime", {})
+            )
+            return {
+                "concept_id": granule["meta"].get("concept-id"),
+                "granule_name": granule["umm"].get("GranuleUR"),
+                "beginning_datetime": range_date_time.get("BeginningDateTime"),
+                "ending_datetime": range_date_time.get("EndingDateTime"),
+                "size_MB": granule.size,
+                "data_links": granule.data_links(),
+            }
+
         geometries = [_geometry(granule) for granule in granules]
-        data = pd.json_normalize(granules)
-        # removing meta and umm prefixes from column names
-        data.columns = data.columns.str.replace(r"^(meta.|umm.)", "", regex=True)
+        data = pd.DataFrame.from_records(
+            [_record(granule) for granule in granules],
+            columns=[
+                "concept_id",
+                "granule_name",
+                "beginning_datetime",
+                "ending_datetime",
+                "size_MB",
+                "data_links",
+            ],
+        )
+        # Flatten the UMM records into columns.
+        umm = pd.json_normalize(
+            [dict(granule["umm"]) for granule in granules],
+        ).add_prefix("umm.")
+        umm.index = data.index
+        data = pd.concat([data, umm], axis=1)
 
         return gpd.GeoDataFrame(
             data=data,
-            geometry=gpd.GeoSeries(geometries, crs="EPSG:4326"),
+            geometry=gpd.GeoSeries(
+                pd.Series(geometries, dtype=object), crs="EPSG:4326"
+            ),
             crs="EPSG:4326",
         )
