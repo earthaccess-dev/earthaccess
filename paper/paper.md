@@ -51,7 +51,7 @@ authors:
   - given-names: "Jessica"
     surname: "Scheick"
     orcid: "https://orcid.org/0000-0002-3421-4459"
-    affiliation: "11"
+    affiliation: "11, 12"
   - given-names: "Amy"
     surname: "Steiker"
     orcid: "https://orcid.org/0000-0002-3039-0260"
@@ -59,7 +59,7 @@ authors:
   - given-names: "Sherwin"
     surname: "Varghese"
     orcid: "https://orcid.org/0009-0005-7030-213X"
-    affiliation: "12"
+    affiliation: "13"
 affiliations:
  - name: "National Snow and Ice Data Center (NSIDC), Cooperative Institute for Research in Environmental Sciences (CIRES), University of Colorado Boulder, Boulder, CO, USA"
    index: 1
@@ -89,9 +89,12 @@ affiliations:
  - name: "Openscapes and National Center for Ecological Analysis and Synthesis (NCEAS), University of California Santa Barbara, Santa Barbara, CA, USA"
    index: 10
    ror: 02t274463
- - name: "University of New Hampshire, Durham, NH, USA and eScience Institute, University of Washington, Seattle, WA, USA"
+ - name: "University of New Hampshire, Durham, NH, USA"
    index: 11
-   ror: 02q4hks80
+   ror: 01rmh9n78
+ - name: "eScience Institute, University of Washington, Seattle, WA, USA"
+   index: 12
+   ror: 00cvxb145
  - name: "Independent Contributor"
    index: 12
  - name: "GESTAR II, University of Maryland Baltimore County, Baltimore, MD, USA"
