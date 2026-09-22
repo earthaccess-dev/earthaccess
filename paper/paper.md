@@ -24,7 +24,7 @@ authors:
   - given-names: "Ian"
     surname: "Carroll"
     orcid: "https://orcid.org/0000-0002-3616-810X"
-    affiliation: "4, 13"
+    affiliation: "4, 14"
   - given-names: "Chuck"
     surname: "Daniels"
     affiliation: "5"
@@ -96,9 +96,9 @@ affiliations:
    index: 12
    ror: 00cvxb145
  - name: "Independent Contributor"
-   index: 12
- - name: "GESTAR II, University of Maryland Baltimore County, Baltimore, MD, USA"
    index: 13
+ - name: "GESTAR II, University of Maryland Baltimore County, Baltimore, MD, USA"
+   index: 14
    ror: 02qskvh78
 date: 04 September 2026
 bibliography: paper.bib
