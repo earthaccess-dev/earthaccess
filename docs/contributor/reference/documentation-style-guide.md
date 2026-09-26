@@ -40,10 +40,10 @@ Callouts (admonitions) draw attention to important information, but use them in 
 
 We use the following callout types:
 
-- `note` — information worth highlighting. Our default.
-- `info` — additional context that's helpful but not essential.
-- `tip` — helpful advice.
-- `warning` — pitfalls and things that can go wrong.
+- `note`: information worth highlighting. Our default.
+- `info`: additional context that's helpful but not essential.
+- `tip`: helpful advice.
+- `warning`: pitfalls and things that can go wrong.
 
 Avoid `hint`; use `note` instead. `important` is an alias for `tip`, so use `tip`.
 
