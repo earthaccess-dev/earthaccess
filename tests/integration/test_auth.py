@@ -60,7 +60,7 @@ def test_auth_can_fetch_s3_credentials(daac):
         assert "accessKeyId" in credentials
 
 
-@pytest.mark.parametrize("location", ({"daac": "podaac"}, {"provider": "pocloud"}))
+@pytest.mark.parametrize("location", [({"daac": "podaac"}, {"provider": "pocloud"})])
 def test_get_s3_credentials_lowercase_location(location):
     earthaccess.login(strategy="environment")
     creds = earthaccess.get_s3_credentials(**location)
@@ -72,7 +72,7 @@ def test_get_s3_credentials_lowercase_location(location):
     )
 
 
-@pytest.mark.parametrize("location", ({"daac": "podaac"}, {"provider": "pocloud"}))
+@pytest.mark.parametrize("location", [({"daac": "podaac"}, {"provider": "pocloud"})])
 def test_get_s3_filesystem_lowercase_location(location):
     earthaccess.login(strategy="environment")
     fs = earthaccess.get_s3_filesystem(**location)

@@ -140,9 +140,9 @@ class TestResults(VCRTestCase):
         granules = earthaccess.search_data(short_name="MOD02QKM", count=3000)
 
         # Assert that we performed one 'hits' search and two 'results' search queries
-        self.assertEqual(len(self.cassette), 3)
-        self.assertEqual(len(granules), 4000)
-        self.assertTrue(unique_results(granules))
+        assert len(self.cassette) == 3
+        assert len(granules) == 4000
+        assert unique_results(granules)
 
     def test_get(self):
         """If we execute a get with no arguments then we expect
@@ -152,9 +152,9 @@ class TestResults(VCRTestCase):
         granules = earthaccess.search_data(short_name="MOD02QKM", count=2000)
 
         # Assert that we performed one 'hits' search and one 'results' search queries
-        self.assertEqual(len(self.cassette), 2)
-        self.assertEqual(len(granules), 2000)
-        self.assertTrue(unique_results(granules))
+        assert len(self.cassette) == 2
+        assert len(granules) == 2000
+        assert unique_results(granules)
 
     def test_get_all_less_than_2k(self):
         """If we execute a get_all then we expect multiple
@@ -166,11 +166,10 @@ class TestResults(VCRTestCase):
             count=2000,
         )
 
-        # Assert that we performed a hits query, a results query, and a final
-        # query that returns an empty page (to detect the end of the results).
-        self.assertEqual(len(self.cassette), 3)
-        self.assertEqual(len(granules), 163)
-        self.assertTrue(unique_results(granules))
+        # Assert that we performed a hits query and one search results query
+        assert len(self.cassette) == 3
+        assert len(granules) == 163
+        assert unique_results(granules)
 
     def test_get_all_more_than_2k(self):
         """If we execute a get_all then we expect multiple
@@ -182,18 +181,15 @@ class TestResults(VCRTestCase):
             count=3000,
         )
 
-        # Assert that we performed a hits query, two results queries, and a
-        # final query that returns an empty page.
-        self.assertEqual(len(self.cassette), 4)
-        self.assertEqual(
-            len(granules),
-            int(self.cassette.responses[0]["headers"]["CMR-Hits"][0]),
+        # Assert that we performed a hits query and two search results queries
+        assert len(self.cassette) == 4
+        assert len(granules) == int(
+            self.cassette.responses[0]["headers"]["CMR-Hits"][0]
         )
-        self.assertEqual(
-            len(granules),
-            min(3000, int(self.cassette.responses[0]["headers"]["CMR-Hits"][0])),
+        assert len(granules) == min(
+            3000, int(self.cassette.responses[0]["headers"]["CMR-Hits"][0])
         )
-        self.assertTrue(unique_results(granules))
+        assert unique_results(granules)
 
     @responses.activate
     def test_get_paginates_past_short_first_page(self):
@@ -249,8 +245,8 @@ class TestResults(VCRTestCase):
 
         results = get_results(query.session, query, limit=12070)
 
-        self.assertEqual(len(results), 3985)
-        self.assertEqual(len(responses.calls), 3)
+        assert len(results) == 3985
+        assert len(responses.calls) == 3
 
     def test_collections_less_than_2k(self):
         """If we execute a get_all then we expect multiple
@@ -261,9 +257,9 @@ class TestResults(VCRTestCase):
         collections = query.get(20)
 
         # Assert that we performed a single search results query
-        self.assertEqual(len(self.cassette), 1)
-        self.assertEqual(len(collections), 20)
-        self.assertTrue(unique_results(collections))
+        assert len(self.cassette) == 1
+        assert len(collections) == 20
+        assert unique_results(collections)
         self.assert_is_using_search_after(self.cassette)
 
     def test_collections_more_than_2k(self):
@@ -275,9 +271,9 @@ class TestResults(VCRTestCase):
         collections = query.get(3000)
 
         # Assert that we performed two search results queries
-        self.assertEqual(len(self.cassette), 2)
-        self.assertEqual(len(collections), 4000)
-        self.assertTrue(unique_results(collections))
+        assert len(self.cassette) == 2
+        assert len(collections) == 4000
+        assert unique_results(collections)
         self.assert_is_using_search_after(self.cassette)
 
     def assert_is_using_search_after(self, cass):
@@ -285,9 +281,9 @@ class TestResults(VCRTestCase):
 
         for request in cass.requests:
             # Verify the page number was not used
-            self.assertTrue("page_num" not in request.uri)
+            assert "page_num" not in request.uri
             # Verify that Search After was used in all requests except first
-            self.assertEqual(first_request, "CMR-Search-After" not in request.headers)
+            assert first_request == ("CMR-Search-After" not in request.headers)
             first_request = False
 
 
