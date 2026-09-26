@@ -35,7 +35,6 @@ nav:
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
       - Tutorials:
-          - "Accessing remote NASA data with fsspec": "user/tutorials/file-access.ipynb"
           - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
           - "Accessing and visualizing EMIT data with a few lines of code": "user/tutorials/emit-earthaccess.ipynb"
@@ -54,6 +53,7 @@ nav:
   - Contributor guide:
       - "contributor/index.md" # << Link target of the parent node
       - "Code of conduct": "contributor/code-of-conduct.md"
+      - "AI policy": "contributor/ai-policy.md"
       - How-to:
           - "Setup dev environment": "contributor/howto/development.md"
           - "Create a Pull Request (PR)": "contributor/howto/pr-guide.md"

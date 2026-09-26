@@ -30,7 +30,7 @@ If you forget this step, you can "convert to draft" towards the top of the right
 panel.
 
 
-### Review [contributing documentation](/contributor/index.md)
+### Review [contributing documentation](../index.md)
 
 If you're new to our community, please ensure you're aware of how we organize
 contributions.
@@ -49,6 +49,12 @@ contributions.
       `closes #1`.
       See more in [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 
+### Disclose AI tool usage
+
+If you used generative AI tools on your contribution, say so in the disclosure
+section of the PR description: which tool(s) and version(s), how you used them, and
+which parts are AI-generated. See our [AI policy](/contributor/ai-policy.md) for what we
+ask and why.
 
 ### Update documentation
 

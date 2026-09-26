@@ -7,6 +7,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [v0.19.0] - 2026-09-03
+
 ### Breaking changes
 
 - Many `DataCollection` and `DataGranule` methods are now read-only fields.
@@ -40,6 +42,16 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `DataGranule.data_links()` has arguments, so it was **not** changed to a property at
   this time).
 
+### Added
+
+- Added an AI policy documenting expectations for AI-assisted contributions,
+  including disclosure, code quality, copyright, and communication, along with
+  an AI usage disclosure prompt in the pull request template.
+  ([#1419](https://github.com/earthaccess-dev/earthaccess/pull/1419))
+- Python 3.14 is now supported.
+  ([#1307](https://github.com/earthaccess-dev/earthaccess/issues/1307))
+  ([@danielfromearth](https://github.com/danielfromearth))
+
 ### Fixed
 
 - `search_services` now respects the authenticated system (UAT vs PROD) instead
@@ -49,6 +61,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   now derives each S3 link from its own HTTPS link instead of repeating the
   first one, so multi-file granules no longer drop their other files.
   ([#1373](https://github.com/earthaccess-dev/earthaccess/pull/1373))
+- `DataGranule.size` is now backed by a private `_size` field, so the
+  deprecated size accessor no longer emits a warning.
+  ([#1420](https://github.com/earthaccess-dev/earthaccess/pull/1420))
 
 ## [v0.18.0] - 2026-05-12
 
@@ -723,4 +738,5 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 [v0.16.0]: https://github.com/earthaccess-dev/earthaccess/releases/tag/v0.16.0
 [v0.17.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.16.0...v0.17.0
 [v0.18.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.17.0...v0.18.0
-[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v0.18.0...HEAD
+[v0.19.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.18.0...v0.19.0
+[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v0.19.0...HEAD
