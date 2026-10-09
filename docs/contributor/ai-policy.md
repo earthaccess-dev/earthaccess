@@ -5,12 +5,12 @@ not harder. Making a contribution/PR used to also be a learning opportunity and
 introduce you to the people who maintain earthaccess. AI can deliver the contribution alone,
 but we ask for the learning and community as well.
 
+AI assistance is welcome, and so is needing help; submitting code you haven't read
+is not.
+
 **In short: disclose your AI use, understand and be able to explain anything you
 submit, stay in the conversation after you open a pull request, and don't let an AI
 agent open one on its own.**
-
-AI assistance is welcome, and so is needing help; submitting code you haven't read
-is not.
 
 ## Scope
 
@@ -52,8 +52,8 @@ review transparent.
 
 Our [code of conduct](code-of-conduct.md) guarantees you a respectful review whatever
 you submit. Depth of engagement (mentoring, design discussion, patient iteration) is
-reciprocal, and we will politely decline it when a pull request's author can't discuss
-what the change does. Failing CI, missing tests, and asking for help are never reasons
+reciprocal, and we will politely decline it when a pull request's author doesn't
+respond to questions about their change. Failing CI, missing tests, and asking for help are never reasons
 to close a pull request; an unanswered "can you explain this change?" is.
 
 ## Copyright
