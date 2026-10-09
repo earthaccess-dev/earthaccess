@@ -2,7 +2,7 @@
 
 We have this policy so that AI tools make earthaccess more enjoyable to work on,
 not harder. Making a contribution/PR used to also be a learning opportunity and
-introduce you to the people who maintain it. AI can deliver the contribution alone, 
+introduce you to the people who maintain earthaccess. AI can deliver the contribution alone,
 but we ask for the learning and community as well.
 
 **In short: disclose your AI use, understand and be able to explain anything you
