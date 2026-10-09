@@ -1,8 +1,9 @@
 # AI Policy
 
 We have this policy so that AI tools make earthaccess more enjoyable to work on,
-not harder. The act of (1) writing a patch used to also (2) be a learning opportunity for both the contributor and maintainers and (3) introduce you and its
-maintainers to one another; AI can deliver the patch alone, so we ask for all three.
+not harder. Making a contribution/PR used to also be a learning opportunity and
+introduce you to the people who maintain it. AI can deliver the contribution alone, 
+but we ask for the learning and community as well.
 
 **In short: disclose your AI use, understand and be able to explain anything you
 submit, stay in the conversation after you open a pull request, and don't let an AI
