@@ -1,8 +1,24 @@
 # DAACS ~= NASA Earthdata data centers
 
+from typing import TypedDict
+
 import requests
 
-DAACS = [
+DAACConfig = TypedDict(
+    "DAACConfig",
+    {
+        "short-name": str,
+        "name": str,
+        "homepage": str,
+        "cloud-providers": list[str],
+        "on-prem-providers": list[str],
+        "s3-credentials": str,
+        "eulas": list[str],
+    },
+)
+
+
+DAACS: list[DAACConfig] = [
     {
         "short-name": "NSIDC",
         "name": "National Snow and Ice Data Center",

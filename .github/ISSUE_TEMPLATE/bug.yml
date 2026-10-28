@@ -1,7 +1,6 @@
 name: 🐞 Bug
 description: >
   A bug is an issue that differs from documentation or has unexpected behavior.
-title: "[BUG] {{ title }}"
 labels:
   - "type: bug"
   - "needs: triage"

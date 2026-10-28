@@ -272,7 +272,12 @@ class TestStoreSessions(unittest.TestCase):
                 # Track cloned sessions
                 cloned_sessions = set()
 
-                def mock_clone_session_in_local_thread(original_session):
+                def mock_clone_session_in_local_thread(
+                    original_session,
+                    store=store,
+                    edl_hostname=edl_hostname,
+                    cloned_sessions=cloned_sessions,
+                ):
                     """Mock session cloning to track cloned sessions."""
                     if not hasattr(store.thread_locals, "local_thread_session"):
                         session = SessionWithHeaderRedirection(edl_hostname)
@@ -288,7 +293,13 @@ class TestStoreSessions(unittest.TestCase):
                     mock_directory = Path("/mock/directory")
                     downloaded_files = []
 
-                    def mock_download_file(url):
+                    def mock_download_file(
+                        url,
+                        store=store,
+                        original_session=original_session,
+                        downloaded_files=downloaded_files,
+                        mock_directory=mock_directory,
+                    ):
                         """Mock file download to track downloaded files."""
                         # Ensure session cloning happens before downloading
                         store._clone_session_in_local_thread(original_session)
@@ -301,7 +312,7 @@ class TestStoreSessions(unittest.TestCase):
                         side_effect=mock_download_file,
                     ):
                         # Test multi-threaded download
-                        pqdm(urls, store._download_file, n_jobs=n_threads)  # type: ignore
+                        pqdm(urls, store._download_file, n_jobs=n_threads)
 
                 # We make sure we reuse the token up to N threads
                 self.assertTrue(len(cloned_sessions) <= n_threads)

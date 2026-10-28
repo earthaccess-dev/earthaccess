@@ -1,6 +1,5 @@
 import logging
 import operator as op
-import os
 import shutil
 from collections.abc import Callable
 from pathlib import Path

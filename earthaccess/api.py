@@ -349,7 +349,7 @@ def login(
     """
     # Set the underlying Auth object's earthdata system,
     # before triggering the getattr function for `__auth__`.
-    earthaccess._auth._set_earthdata_system(system)
+    earthaccess._auth._set_earthdata_system(system)  # noqa: SLF001
 
     if strategy == "all":
         for strategy_name in ["environment", "netrc", "interactive"]:
