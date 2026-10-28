@@ -290,7 +290,7 @@ dependent on `earthaccess`, including [@Scheick2025], [@Xiahou2026], [@Widlansky
 
 **Community adoption.** The library is a dependency of over 270 public GitHub repositories
 (as of 28 October 2026), spanning data analysis workflows, Jupyter Notebook tutorials, and
-downstream libraries. It is distributed through both PyPI and conda-forge and 
+downstream libraries. It is distributed through both PyPI and conda-forge and
 installed and used in cloud-hosted Jupyter environments provided by NASA and partner
 organizations. As one example of downstream adoption, `icepack` -- a finite element
 library for ice sheet and glacier modeling [@shapero2021] -- replaced its hand-written
@@ -343,7 +343,7 @@ community workshops, collaborative working environment, and people-first approac
 have motivated and continue to support this work. We are grateful to the National Snow
 and Ice Data Center (NSIDC) for hosting the repository during its initial development
 and to all contributors who have shaped `earthaccess` through contributing code,
-documentation, issue reports, and community engagement. People 
+documentation, issue reports, and community engagement. People
 contribute to earthaccess as adopters and developers as part of their jobs across the
 NASA ecosystem as well as outside of it, which is critical to making this
 shared resource successful. We appreciate everyone who advocates for and uses approved
