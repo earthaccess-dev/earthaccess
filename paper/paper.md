@@ -63,7 +63,7 @@ authors:
 affiliations:
  - name: "National Snow and Ice Data Center (NSIDC), Cooperative Institute for Research in Environmental Sciences (CIRES), University of Colorado Boulder, Boulder, CO, USA"
    index: 1
-   ror: 02s376052
+   ror: 00bxr0z07
  - name: "NASA Goddard Space Flight Center, Goddard Earth Sciences Data and Information Services Center (GES DISC), Greenbelt, MD, USA"
    index: 2
    ror: 0171mag52
@@ -100,7 +100,7 @@ affiliations:
  - name: "GESTAR II, University of Maryland Baltimore County, Baltimore, MD, USA"
    index: 14
    ror: 02qskvh78
-date: 28 October 2026
+date: 30 October 2026
 bibliography: paper.bib
 ---
 
@@ -109,7 +109,7 @@ bibliography: paper.bib
 `earthaccess` is an open-source Python library that simplifies discovery,
 authentication, and access of NASA Earth science data. NASA's Earth Science Data and Information System (ESDIS) Project
 distributes over 100 petabytes of data across 11
-Distributed Active Archive Centers (DAACs) [@nasa_earthdata], encompassing satellite
+Distributed Active Archive Centers (DAACs) [@nasa_earthdata; @nasa_esds_data_metrics], encompassing satellite
 imagery, climate records, atmospheric measurements, and other geospatial datasets
 critical to Earth science research. Accessing these data programmatically has
 historically required researchers to navigate multiple authentication systems,
@@ -131,7 +131,7 @@ improvements in access performance.
 # Statement of need
 
 NASA's Earth science data archive is one of the largest and most diverse collections of
-Earth observation data in the world, used by over ten million researchers, educators,
+Earth observation data in the world, used by over 14 million researchers, educators,
 and decision-makers globally [@nasa_esds_data_metrics]. However, the complexity of the
 underlying data infrastructure presents a significant barrier to scientific
 productivity. A typical data access workflow requires a researcher to: (1) search the
@@ -154,7 +154,7 @@ simpler tools became evident. Meanwhile, developers supporting these communities
 
 `earthaccess` is a community project that was created to
 address this gap: it provides a uniform interface for access to NASA Earthdata regardless of data
-storage location and handles authentication, credentials, and tokening behind the
+storage location and handles authentication, credentials, and token management behind the
 scenes, enabling researchers to focus more on scientific interpretation and discovery.
 
 The target audience spans Earth system science and its applications, including atmospheric scientists, oceanographers, ecologists, land surface modelers, remote sensing researchers, weather forecasters, disaster response practitioners, civic decision-makers, educators, and application developers. The library is designed to be
@@ -191,9 +191,9 @@ the workflow, or addressing the full workflow for only a subset of NASA's data h
   functionality.
 
 - **icepyx** [@icepyx] provides a mission-specific solution to the general problem
-  solved by earthaccess: search, discovery, authentication, and access to ICESat-2
-  [@icesat2] data products. Established about a year before earthaccess, it handles
-  workflow steps 1, 2, and 5 on its own and now leverages earthaccess to
+  solved by `earthaccess`: search, discovery, authentication, and access to ICESat-2
+  [@icesat2] data products. Established about a year before `earthaccess`, it handles
+  workflow steps 1, 2, and 5 on its own and now leverages `earthaccess` to
   authenticate when users perform an action that requires logging
   in.
 
@@ -286,7 +286,7 @@ science data access. Concrete evidence of its impact includes:
 including studies on multi-sensor drought observations in forested environments
 [@andreadis2024] and tidal bore detection using SWOT satellite data [@arildsen2025].
 Several other research studies and geospatial technology publications utilize libraries
-dependent on `earthaccess`, including [@Scheick2025], [@Xiahou2026], [@Widlansky2025].
+dependent on `earthaccess` [e.g., @Scheick2025; @Xiahou2026; @Widlansky2025].
 
 **Community adoption.** The library is a dependency of over 270 public GitHub repositories
 (as of 28 October 2026), spanning data analysis workflows, Jupyter Notebook tutorials, and
@@ -322,11 +322,10 @@ The `earthaccess` project has adopted a contributor AI policy
 (<https://earthaccess.readthedocs.io/en/latest/contributor/ai-policy/>) that requires
 disclosure of AI assistance, holds contributors responsible for understanding and being
 able to explain any code they submit, and prohibits fully autonomous AI-generated pull
-requests. The version of `earthaccess` described here was developed without generative
-AI assistance. Subsequent development may use AI tools under the terms of that policy.
+requests. The version of `earthaccess` described here was developed with minimal generative AI assistance: i.e., only a few contributions, made before the policy was adopted, used GitHub Copilot for code-review suggestions, changelog text, and CI configuration. Subsequent development may use AI tools under the terms of that policy.
 
-Preparation of this manuscript was assisted by Claude [Sonnet 4.6, Opus 4.6, Opus 5, and Opus 5.5]
-(Anthropic) using the repository source code,
+Preparation of this manuscript was assisted by Claude (Sonnet 4.6, Opus 4.6, Opus 5, and Opus 5.5;
+Anthropic) using the repository source code,
 documentation, commit history, and project metadata as context. Assistance was used for
 manuscript drafting and editorial revision. All content was reviewed, revised, and
 verified for accuracy by the authors, who bear full responsibility for the submitted
@@ -344,7 +343,7 @@ have motivated and continue to support this work. We are grateful to the Nationa
 and Ice Data Center (NSIDC) for hosting the repository during its initial development
 and to all contributors who have shaped `earthaccess` through contributing code,
 documentation, issue reports, and community engagement. People
-contribute to earthaccess as adopters and developers as part of their jobs across the
+contribute to `earthaccess` as adopters and developers as part of their jobs across the
 NASA ecosystem as well as outside of it, which is critical to making this
 shared resource successful. We appreciate everyone who advocates for and uses approved
 time to make this possible. We also thank Allison Horst for the `earthaccess` artwork
