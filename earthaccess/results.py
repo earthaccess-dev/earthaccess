@@ -562,42 +562,42 @@ class Results:
         self._query = query
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}<hits={self.query.hits},>"
-
-    def __str__(self) -> str:
         return (
-            f"Hits: {self.query.hits()}\n"
-            f"Query parameters:\n"
-            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
-            f"Query parameter options:\n"
-            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
+            f"{self.__class__.__name__}("
+            f"params={self.query.params!r}, "
+            f"options={self.query.options!r})"
         )
 
     def _repr_html_(self) -> str:
         return dedent(f"""
             <table>
                 <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                </tr>
-                <tr>
                     <td>Query Type</td>
-                    <td>{self.query.__class__.__name__}</td>
+                    <td style="text-align: left;">{self.query.__class__.__name__}</td>
                 </tr>
                 <tr>
-                    <td>Hits</td>
-                    <td>{self.query.hits()}</td>
+                    <td>Number of Results</td>
+                    <td style="text-align: left;">{self.query.hits()}</td>
                 </tr>
                 <tr>
                     <td>Query parameters</td>
-                    <td>{self.query.params}</td>
+                    <td style="text-align: left;">{self.query.params}</td>
                 </tr>
                 <tr>
                     <td>Query options</td>
-                    <td>{self.query.options}</td>
+                    <td style="text-align: left;">{self.query.options}</td>
                 </tr>
             </table>
         """)
+
+    def __str__(self) -> str:
+        return (
+            f"Number of results: {self.query.hits()}\n"
+            f"Query parameters:\n"
+            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
+            f"Query parameter options:\n"
+            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
+        )
 
     @property
     def query(self) -> DataGranules | DataCollections:
