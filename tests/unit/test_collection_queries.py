@@ -68,15 +68,15 @@ def test_querybuilder_can_handle_has_granules():
     assert "has_granules" not in query.params
 
 
-@pytest.mark.parametrize("start,end,expected", valid_single_dates)
+@pytest.mark.parametrize(("start", "end", "expected"), valid_single_dates)
 def test_query_can_parse_single_dates(start, end, expected):
     query = DataCollections().temporal(start, end)
     assert query.params["temporal"][0] == expected
 
 
-@pytest.mark.parametrize("start,end,expected", invalid_single_dates)
+@pytest.mark.parametrize(("start", "end", "expected"), invalid_single_dates)
 def test_query_can_handle_invalid_dates(start, end, expected):  # noqa: ARG001
     query = DataCollections()
     assert "temporal" not in query.params
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         query.temporal(start, end)

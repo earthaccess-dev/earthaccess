@@ -67,7 +67,7 @@ nasa_statuses = {
 
 
 @pytest.mark.parametrize(
-    "system,nasa_response,expected",
+    ("system", "nasa_response", "expected"),
     [
         (
             PROD,
@@ -261,7 +261,7 @@ def test_download_deferred_failure(tmp_path: Path):
         # With "deferred" exceptions, pqdm catches all exceptions, then at the end
         # raises a single generic Exception, passing the sequence of caught exceptions
         # as arguments to the Exception constructor.
-        pytest.raises(Exception) as exc_info,
+        pytest.raises(Exception) as exc_info,  # noqa: PT011
     ):
         earthaccess.download(
             results,

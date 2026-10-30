@@ -63,9 +63,9 @@ class TestEula(unittest.TestCase):
             status=401,
         )
         store = Store(self.auth)
-        with self.assertRaisesRegex(
+        with pytest.raises(
             EulaNotAccepted,
-            f"Eula Acceptance Failure for {mocked_url}",
+            match=f"Eula Acceptance Failure for {mocked_url}",
         ):
             store.get([mocked_url], "/tmp")
 
@@ -86,9 +86,9 @@ class TestEula(unittest.TestCase):
             status=401,
         )
         store = Store(self.auth)
-        with self.assertRaisesRegex(
+        with pytest.raises(
             DownloadFailure,
-            f"Download failed for {mocked_url}. Status code: 401",
+            match=f"Download failed for {mocked_url}. Status code: 401",
         ):
             store.get([mocked_url], "/tmp")
 
@@ -129,8 +129,8 @@ class TestStoreSessions(unittest.TestCase):
         )
         self.auth = Auth()
         self.auth.login(strategy="environment")
-        self.assertEqual(self.auth.authenticated, True)
-        self.assertEqual(self.auth.token, json_response)
+        assert self.auth.authenticated is True
+        assert self.auth.token == json_response
 
     def tearDown(self):
         self.auth = None
@@ -144,9 +144,9 @@ class TestStoreSessions(unittest.TestCase):
             status=200,
         )
         store = Store(self.auth)
-        self.assertTrue(isinstance(store.auth, Auth))
+        assert isinstance(store.auth, Auth)
         https_fs = store.get_fsspec_session()
-        self.assertEqual(type(https_fs), type(fsspec.filesystem("https")))
+        assert type(https_fs) is type(fsspec.filesystem("https"))
 
     @responses.activate
     def test_store_can_create_s3_fsspec_session(self):
@@ -190,7 +190,7 @@ class TestStoreSessions(unittest.TestCase):
         )
 
         store = Store(self.auth)
-        self.assertTrue(isinstance(store.auth, Auth))
+        assert isinstance(store.auth, Auth)
         for daac in [
             "NSIDC",
             "PODAAC",
@@ -315,10 +315,16 @@ class TestStoreSessions(unittest.TestCase):
                         pqdm(urls, store._download_file, n_jobs=n_threads)
 
                 # We make sure we reuse the token up to N threads
-                self.assertTrue(len(cloned_sessions) <= n_threads)
+                assert len(cloned_sessions) <= n_threads
+                assert len(downloaded_files) == n_files  # 10 files downloaded
+                assert sorted(downloaded_files) == sorted(
+                    urls
+                )  # All files accounted for
 
-                self.assertEqual(len(downloaded_files), n_files)  # 10 files downloaded
-                self.assertCountEqual(downloaded_files, urls)  # All files accounted for
+
+def _write_then_raise(temp_file, new_text, msg):
+    temp_file.write_text(new_text)
+    raise RuntimeError(msg)
 
 
 def test_earthaccess_file_getattr():
@@ -330,7 +336,7 @@ def test_earthaccess_file_getattr():
 
 
 @pytest.mark.parametrize(
-    "file_size, open_kwargs, expected_cache_type, expected_block_size",
+    ("file_size", "open_kwargs", "expected_cache_type", "expected_block_size"),
     [
         # Case 1: Small file, defaults used
         (50 * 1024 * 1024, {}, "background", 4 * 1024 * 1024),
@@ -406,9 +412,7 @@ def test_sibling_tempfile_error(tmp_path):
         pytest.raises(Exception, match="Some error to trigger cleanup"),
         _sibling_tempfile(trg_file) as temp_file,
     ):
-        temp_file.write_text(new_text)
-        msg = "Some error to trigger cleanup"
-        raise RuntimeError(msg)
+        _write_then_raise(temp_file, new_text, msg="Some error to trigger cleanup")
     assert not temp_file.exists()
     assert trg_file.exists()
     assert trg_file.read_text() == orig_text
