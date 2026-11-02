@@ -18,7 +18,7 @@ import earthaccess
 auth = earthaccess.login()
 ```
 
-Or if you want to specify a longin strategy explicitly:
+Or if you want to specify a login strategy explicitly:
 
 ```py
 auth = earthaccess.login(strategy="netrc")
