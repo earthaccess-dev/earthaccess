@@ -23,9 +23,6 @@ You can also set your login strategy explicitly by setting `strategy="environmen
 auth = earthaccess.login(strategy="environment")
 ```
 
-!!! note
-    
-    Alternatively, you can use an existing Earthdata Login token by setting the environment
-    variable `EARTHDATA_TOKEN` to it and using the same "environment" strategy, above.
+Instead of using `EARTHDATA_USERNAME` and `EARTHDATA_PASSWORD`, you can set the environment variable `EARTHDATA_TOKEN` to an existing Earthdata Login token and use the same "environment" strategy as above.
 
 See the [Authetication](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-environment-variables) explanation page for more details.
