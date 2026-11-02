@@ -8,7 +8,7 @@
 
 
 Once you have a NASA Earthdata Login account you will need to create a `.netrc`.
-Instructions for creating a `.netrc` are [here](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-a-netrc)
+Instructions for creating a `.netrc` are [here](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-a-netrc).
 
 Once you have created a `.netrc` you can authenticate using [`earthaccess.login`](https://earthaccess.readthedocs.io/en/stable/api/#earthaccess.api.login):
 
