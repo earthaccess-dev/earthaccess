@@ -68,6 +68,8 @@ jobs:
             save-pr-number: true
           - python-version: 3.13
             save-pr-number: false
+          - python-version: 3.14
+            save-pr-number: false
       fail-fast: false
 
     steps:
@@ -115,7 +117,7 @@ jobs:
           exit 1
 
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Getting the correct commit for a pull_request_target event appears to be
           # a known, problematic issue: https://github.com/actions/checkout/issues/518
@@ -130,6 +132,14 @@ jobs:
           # this point.
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+          # The previous step will exit with failure if the user does not have
+          # appropriate permissions, so only a maintainer can reach this step.
+          # Thus, an "unsafe PR checkout" should be safe, but this does REQUIRE
+          # a maintainer to deem the contributor's changes are safe BEFORE
+          # rerunning the failed (due to lack of permissions) integration tests.
+          # (This input was added to the checkout action v7, and defaults to
+          # false, so we must explicitly set it to true.)
+          allow-unsafe-pr-checkout: true
 
       - name: Install package with dependencies
         uses: ./.github/actions/install-pkg

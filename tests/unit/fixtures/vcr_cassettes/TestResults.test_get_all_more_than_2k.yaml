@@ -69095,4 +69095,43 @@ interactions:
       status:
         code: 200
         message: OK
+  - request:
+      body: null
+      headers:
+        Accept:
+          - "*/*"
+        Accept-Encoding:
+          - gzip, deflate
+        Connection:
+          - keep-alive
+        User-Agent:
+          - python-requests/2.31.0
+        cmr-search-after:
+          - '["pocloud",1712102400000,2923433136]'
+      method: GET
+      uri: https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=CYGNSS_NOAA_L2_SWSP_25KM_V1.2&page_size=2000
+    response:
+      body:
+        string: '{"hits":2520,"took":1,"items":[]}'
+      headers:
+        Access-Control-Allow-Origin:
+          - "*"
+        CMR-Hits:
+          - "2520"
+        CMR-Request-Id:
+          - 00000000-0000-0000-0000-000000000000
+        CMR-Took:
+          - "1"
+        Connection:
+          - keep-alive
+        Content-Type:
+          - application/vnd.nasa.cmr.umm_results+json;version=1.6.5; charset=utf-8
+        Server:
+          - ServerTokens ProductOnly
+        Strict-Transport-Security:
+          - max-age=31536000; includeSubDomains; preload
+      status:
+        code: 200
+        message: OK
+
 version: 1

@@ -48,6 +48,6 @@ def get_results(
 
         results.extend(latest)
 
-        more_results = page_size <= len(latest) and len(results) < limit
+        more_results = len(latest) > 0 and len(results) < limit
 
     return results

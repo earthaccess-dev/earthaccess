@@ -9,31 +9,31 @@ from earthaccess.api import get_s3fs_session
 from earthaccess.store import Store
 
 
-@pytest.fixture(scope="session")
-@responses.activate
-@mock.patch("getpass.getpass")
-@mock.patch("builtins.input")
-def auth(user_input, user_password):
-    user_input.return_value = "user"
-    user_password.return_value = "password"
+@pytest.fixture
+def auth():
     json_response = {"access_token": "EDL-token-1", "expiration_date": "12/15/2021"}
 
-    responses.add(
-        responses.POST,
-        "https://urs.earthdata.nasa.gov/api/users/find_or_create_token",
-        json=json_response,
-        status=200,
-    )
-    responses.add(
-        responses.GET,
-        "https://urs.earthdata.nasa.gov/profile",
-        json={"email_address": "test@test.edu"},
-        status=200,
-    )
+    with (
+        mock.patch("builtins.input", return_value="user"),
+        mock.patch("getpass.getpass", return_value="password"),
+        responses.RequestsMock(assert_all_requests_are_fired=False) as mocked_responses,
+    ):
+        mocked_responses.add(
+            responses.POST,
+            "https://urs.earthdata.nasa.gov/api/users/find_or_create_token",
+            json=json_response,
+            status=200,
+        )
+        mocked_responses.add(
+            responses.GET,
+            "https://urs.earthdata.nasa.gov/profile",
+            json={"email_address": "test@test.edu"},
+            status=200,
+        )
 
-    earthaccess.login(strategy="interactive")
+        earthaccess.login(strategy="interactive")
 
-    return earthaccess.__auth__
+        yield earthaccess.__auth__
 
 
 def test_deprecation_warning_for_api():

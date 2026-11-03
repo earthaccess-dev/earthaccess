@@ -14,8 +14,13 @@ Windows.
 """
 
 import platform
+import shutil
 import subprocess
 import sys
 
+yamlfmt_path = shutil.which("yamlfmt")
+if yamlfmt_path is None:
+    sys.exit("yamlfmt not found on PATH")
+
 if platform.system() != "Windows":
-    sys.exit(subprocess.call(["yamlfmt", *sys.argv[1:]]))
+    sys.exit(subprocess.call([yamlfmt_path, *sys.argv[1:]]))  # noqa: S603

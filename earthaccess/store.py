@@ -183,7 +183,7 @@ def make_instance(
         # NOTE: This uses the first data_link listed in the granule. That's not
         #       guaranteed to be the right one.
         return earthaccess.open([granule])[0]
-    return EarthAccessFile(loads(data), granule)
+    return EarthAccessFile(loads(data), granule)  # noqa: S301
 
 
 def _get_url_granule_mapping(
@@ -524,7 +524,7 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
-        total_size = round(sum([granule.size() for granule in granules]) / 1024, 2)
+        total_size = round(sum([granule._size for granule in granules]) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Opening %s granules, approx size: %s GB",
             len(granules),
@@ -840,7 +840,7 @@ class Store:
                 for granule in granules
             ),
         )
-        total_size = round(sum(granule.size() for granule in granules) / 1024, 2)
+        total_size = round(sum(granule._size for granule in granules) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Getting %s granules, approx download size: %s GB",
             len(granules),

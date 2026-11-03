@@ -12,7 +12,19 @@ data_links = [granule.data_links(access="direct") for granule in results]
 # or if the data is an on-prem dataset
 data_links = [granule.data_links(access="external") for granule in results]
 
+# retrieve OPeNDAP service URLs when the collection provides them
+opendap_links = [
+    link["URL"]
+    for granule in results
+    for link in granule.get("umm", {}).get("RelatedUrls", [])
+    if link.get("Type") == "USE SERVICE API"
+    and link.get("Subtype") == "OPENDAP DATA"
+]
+
 ```
+
+Not every collection provides OPeNDAP access. If the search results do not
+include OPeNDAP service metadata, `opendap_links` will be an empty list.
 
 > Note: *earthaccess* can get S3 credentials for us, or authenticated HTTP sessions in case we want to use them with a different library.
 
