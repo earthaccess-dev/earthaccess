@@ -17,7 +17,7 @@ import requests
 import earthaccess
 
 from .formatters import _repr_granule_html
-from .services import DataServices
+from .services import DataServicesQuery
 
 
 @cache
@@ -28,6 +28,112 @@ def _citation(*, doi: str, format_: str, language: str) -> str:
     )
     response.raise_for_status()
     return response.text
+
+
+def _geometry_to_geojson(geometry: dict[str, Any]) -> dict[str, object]:
+    """Convert a UMM-G Geometry to a GeoJSON representation.
+
+    It is assumed that the `dict` contains only a single key-value pair,
+    and this property is the result of converting the value of that pair
+    into an equivalent GeoJSON structure, depending on the key, as follows:
+
+    |Key                   |Value converted to GeoJSON|
+    |:---------------------|:-------------------------|
+    |`"Lines"`             |`"MultiLineString"`       |
+    |`"Points"`            |`"MultiPoint"`            |
+    |`"BoundingRectangles"`|`"MultiPolygon"`          |
+    |`"GPolygons"`         |`"MultiPolygon"`          |
+
+    Parameters:
+        geometry: A UMM-G Geometry dictionary.
+
+    Returns:
+        A GeoJSON representation of the UMM-G Geometry.
+
+    Raises:
+        ValueError: If the UMM-G Geometry is invalid or unsupported.
+    """
+    if "GPolygons" in geometry:
+        return {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    # Outer ring (counterclockwise)
+                    [
+                        [point["Longitude"], point["Latitude"]]
+                        for point in poly["Boundary"]["Points"]
+                    ],
+                    # Inner rings (clockwise)
+                    *(
+                        [
+                            [point["Longitude"], point["Latitude"]]
+                            # In UMM-G, boundary points are always counterclockwise,
+                            # but GeoJSON wants inner rings to be clockwise, so we
+                            # must reverse the points in ExclusiveZone Boundaries.
+                            for point in reversed(boundary["Points"])
+                        ]
+                        # In UMM-G, ExclusiveZone is optional.
+                        for boundary in poly.get("ExclusiveZone", {}).get(
+                            "Boundaries",
+                            [],
+                        )
+                    ),
+                ]
+                for poly in geometry["GPolygons"]
+            ],
+        }
+
+    if "BoundingRectangles" in geometry:
+        return {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    [
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["EastBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["EastBoundingCoordinate"],
+                            rect["NorthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["NorthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                    ],
+                ]
+                for rect in geometry["BoundingRectangles"]
+            ],
+        }
+
+    if "Points" in geometry:
+        return {
+            "type": "MultiPoint",
+            "coordinates": [
+                [p["Longitude"], p["Latitude"]] for p in geometry["Points"]
+            ],
+        }
+
+    if "Lines" in geometry:
+        return {
+            "type": "MultiLineString",
+            "coordinates": [
+                [[p["Longitude"], p["Latitude"]] for p in line["Points"]]
+                for line in geometry["Lines"]
+            ],
+        }
+
+    msg = f"Invalid Geometry in granule's horizontal spatial extent: {geometry}"
+    raise ValueError(msg)
 
 
 class CustomDict(dict):
@@ -235,7 +341,7 @@ class DataCollection(CustomDict):
         """Return list of services available for this collection."""
         services = self.get("meta", {}).get("associations", {}).get("services", [])
         queries = (
-            DataServices(auth=earthaccess.__auth__).parameters(concept_id=service)
+            DataServicesQuery(auth=earthaccess.__auth__).parameters(concept_id=service)
             for service in services
         )
 
@@ -251,6 +357,44 @@ class DataCollection(CustomDict):
             indent=2,
             separators=(",", ": "),
         )
+
+    @property
+    def __geo_interface__(self) -> dict[str, object]:
+        """A GeoJSON representation of this granule.
+
+        This granule must contain a `dict` value at the path
+        `self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]`.
+        It is assumed that the `dict` contains only a single key-value pair,
+        and this property is the result of converting the value of that pair
+        into an equivalent GeoJSON structure, depending on the key, as follows:
+
+        |Key                   |Value converted to GeoJSON|
+        |:---------------------|:-------------------------|
+        |`"Lines"`             |`"MultiLineString"`       |
+        |`"Points"`            |`"MultiPoint"`            |
+        |`"BoundingRectangles"`|`"MultiPolygon"`          |
+        |`"GPolygons"`         |`"MultiPolygon"`          |
+
+        Raises:
+            ValueError: If this granule does not contain a value at the path
+                `self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]`,
+                or the value there is not a `dict` containing a value for one of
+                `"Points"`, `"Lines"`, `"BoundingRectangles"`, or `"GPolygons"`.
+
+        See Also:
+            - [`__geo_interface__` Specification](https://gist.github.com/sgillies/2217756)
+            - [NASA UMM-G JSON Schema](https://git.earthdata.nasa.gov/projects/EMFD/repos/unified-metadata-model/browse/granule/v1.6.6/umm-g-json-schema.json)
+            - [The GeoJSON Format](https://datatracker.ietf.org/doc/html/rfc7946)
+        """
+        try:
+            geometry = self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"][
+                "Geometry"
+            ]
+        except KeyError:
+            msg = "Granule has no horizontal spatial extent"
+            raise ValueError(msg) from None
+
+        return _geometry_to_geojson(geometry)
 
 
 class DataGranule(CustomDict):
@@ -464,178 +608,4 @@ class DataGranule(CustomDict):
             msg = "Granule has no horizontal spatial extent"
             raise ValueError(msg) from None
 
-        if "GPolygons" in geometry:
-            return {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [
-                        # Outer ring (counterclockwise)
-                        [
-                            [point["Longitude"], point["Latitude"]]
-                            for point in poly["Boundary"]["Points"]
-                        ],
-                        # Inner rings (clockwise)
-                        *(
-                            [
-                                [point["Longitude"], point["Latitude"]]
-                                # In UMM-G, boundary points are always counterclockwise,
-                                # but GeoJSON wants inner rings to be clockwise, so we
-                                # must reverse the points in ExclusiveZone Boundaries.
-                                for point in reversed(boundary["Points"])
-                            ]
-                            # In UMM-G, ExclusiveZone is optional.
-                            for boundary in poly.get("ExclusiveZone", {}).get(
-                                "Boundaries",
-                                [],
-                            )
-                        ),
-                    ]
-                    for poly in geometry["GPolygons"]
-                ],
-            }
-
-        if "BoundingRectangles" in geometry:
-            return {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [
-                        [
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["EastBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["EastBoundingCoordinate"],
-                                rect["NorthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["NorthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                        ],
-                    ]
-                    for rect in geometry["BoundingRectangles"]
-                ],
-            }
-
-        if "Points" in geometry:
-            return {
-                "type": "MultiPoint",
-                "coordinates": [
-                    [p["Longitude"], p["Latitude"]] for p in geometry["Points"]
-                ],
-            }
-
-        if "Lines" in geometry:
-            return {
-                "type": "MultiLineString",
-                "coordinates": [
-                    [[p["Longitude"], p["Latitude"]] for p in line["Points"]]
-                    for line in geometry["Lines"]
-                ],
-            }
-
-        msg = f"Invalid Geometry in granule's horizontal spatial extent: {geometry}"
-        raise ValueError(msg)
-
-
-class Results:
-    """An immutable iterable of search results with convenience methods."""
-
-    # TODO: Needs to support both a lazy generator approach and an in-memory approach where
-    #       items are never consumed.
-    def __init__(
-        self,
-        items: list[DataGranule] | list[DataCollection],
-        *,
-        query: DataGranules | DataCollections,
-    ) -> None:
-        self._items = items
-        self._query = query
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"params={self.query.params!r}, "
-            f"options={self.query.options!r})"
-        )
-
-    def _repr_html_(self) -> str:
-        return dedent(f"""
-            <table>
-                <tr>
-                    <td>Query Type</td>
-                    <td style="text-align: left;">{self.query.__class__.__name__}</td>
-                </tr>
-                <tr>
-                    <td>Number of Results</td>
-                    <td style="text-align: left;">{self.query.hits()}</td>
-                </tr>
-                <tr>
-                    <td>Query parameters</td>
-                    <td style="text-align: left;">{self.query.params}</td>
-                </tr>
-                <tr>
-                    <td>Query options</td>
-                    <td style="text-align: left;">{self.query.options}</td>
-                </tr>
-            </table>
-        """)
-
-    def __str__(self) -> str:
-        return (
-            f"Number of results: {self.query.hits()}\n"
-            f"Query parameters:\n"
-            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
-            f"Query parameter options:\n"
-            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
-        )
-
-    @property
-    def query(self) -> DataGranules | DataCollections:
-        return self._query
-
-
-class GranuleResults(Results):
-    def __init__(
-        self,
-        items: list[DataGranule],
-        *,
-        query: DataGranules,  # TODO: DataGranules is a bad name! Should be DataGranuleQuery.
-    ) -> None:
-        super().__init__(items, query=query)
-
-    def to_gdf(self) -> GeoDataFrame:
-        # TODO: Allow user to receive the raw normalized gdf and rename columns?
-        # TODO: Pre-massage the GDF to a small set of "known useful" columns and
-        #       give them more reader-friendly names. Avoid future breaking changes
-        #       that might arise from selecting too many columns.
-        try:
-            import pandas as pd  # noqa: PLC0415
-            from geopandas import GeoDataFrame  # noqa: PLC0415
-        except ImportError as e:
-            msg = "GeoPandas must be installed"
-            raise ImportError(msg) from e
-        return GeoDataFrame(
-            pd.json_normalize(self),
-            geometry=self,
-            crs="EPSG:4326",
-        )
-
-
-class CollectionResults(Results):
-    def __init__(
-        self,
-        items: list[DataCollection],
-        *,
-        query: DataCollections,
-    ) -> None:
-        super().__init__(items, query=query)
+        return _geometry_to_geojson(geometry)

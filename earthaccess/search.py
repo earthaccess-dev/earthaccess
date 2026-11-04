@@ -3,6 +3,7 @@ import logging
 from collections.abc import Iterable, Sequence
 from inspect import getmembers, ismethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Self,
     SupportsFloat,
@@ -18,17 +19,20 @@ from .daac import find_provider, find_provider_by_shortname
 from .results import DataCollection, DataGranule, Results
 from .utils._search import get_results
 
+if TYPE_CHECKING:
+    import geopandas as gpd
+
 logger = logging.getLogger(__name__)
 
 type FloatLike = str | SupportsFloat
 type PointLike = tuple[FloatLike, FloatLike]
 
 
-class DataCollections(CollectionQuery):
+class DataCollectionsQuery(CollectionQuery):
     """Query CMR for collection metadata.
 
     ???+ Info
-        The DataCollection class queries against
+        The DataCollectionsQuery class queries against
         https://cmr.earthdata.nasa.gov/search/collections.umm_json,
         the response has to be in umm_json to use the result classes.
     """
@@ -37,7 +41,7 @@ class DataCollections(CollectionQuery):
     _format = "umm_json"
 
     def __init__(self, auth: Auth | None = None, *args: Any, **kwargs: Any) -> None:
-        """Builds an instance of DataCollections to query the CMR.
+        """Builds an instance of DataCollectionsQuery to query the CMR.
 
         Parameters:
             auth: An authenticated `Auth` instance. This is an optional parameter
@@ -230,7 +234,7 @@ class DataCollections(CollectionQuery):
 
         ???+ Example
             ```python
-            query = DataCollections.parameters(
+            query = DataCollectionsQuery.parameters(
                 short_name="AST_L1T",
                 temporal=("2015-01","2015-02"),
                 point=(42.5, -101.25)
@@ -424,8 +428,82 @@ class DataCollections(CollectionQuery):
         """
         return super().temporal(date_from, date_to, exclude_boundary)
 
+    @staticmethod
+    def to_geopandas(collections: list[DataCollection]) -> "gpd.GeoDataFrame":
+        """Convert a list of DataCollection objects to a GeoPandas GeoDataFrame.
 
-class DataGranules(GranuleQuery):
+        Parameters:
+            collections: A list of DataCollection objects.
+
+        Returns:
+            A GeoPandas GeoDataFrame containing the collection data.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            import earthaccess as ea
+            collections = ea.search_datasets(
+                keyword="above ground biomass",
+            )
+            gdf = ea.DataCollections.to_geopandas(collections)
+            ```
+        """
+        try:
+            import geopandas as gpd  # noqa: PLC0415
+            import pandas as pd  # noqa: PLC0415
+            from shapely.geometry import shape  # noqa: PLC0415
+            from shapely.geometry.base import BaseGeometry  # noqa: PLC0415
+        except ModuleNotFoundError as e:
+            msg = (
+                "`geopandas` is required for this functionality. "
+                "Please install it using `pip install earthaccess[geopandas]` "
+                "(or `pip install geopandas`)."
+            )
+            raise ModuleNotFoundError(msg) from e
+
+        def _geometry(collection: DataCollection) -> BaseGeometry | None:
+            """Extracts the geometry from a DataCollection object.
+            If the geometry is invalid, returns None.
+            """
+            try:
+                return shape(collection.__geo_interface__)
+            except ValueError:
+                return None
+
+        def _record(collection: DataCollection) -> dict[str, Any]:
+            """Builds a collection record."""
+            return {
+                "concept_id": collection["meta"].get("concept-id"),
+                "short_name": collection.get_umm("ShortName"),
+                "version": collection.version,
+                "title": collection.get_umm("EntryTitle"),
+                "doi": collection.doi,
+            }
+
+        geometries = [_geometry(collection) for collection in collections]
+        data = pd.DataFrame.from_records(
+            [_record(collection) for collection in collections],
+            columns=["concept_id", "short_name", "version", "title", "doi"],
+        )
+        # Flatten the UMM records into columns.
+        umm = pd.json_normalize(
+            [dict(collection["umm"]) for collection in collections],
+        ).add_prefix("umm.")
+        umm.index = data.index
+        data = pd.concat([data, umm], axis=1)
+
+        return gpd.GeoDataFrame(
+            data=data,
+            geometry=gpd.GeoSeries(
+                pd.Series(geometries, dtype=object), crs="EPSG:4326"
+            ),
+            crs="EPSG:4326",
+        )
+
+
+class DataGranulesQuery(GranuleQuery):
     """A Granule oriented client for NASA CMR.
 
     API: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html
@@ -488,7 +566,7 @@ class DataGranules(GranuleQuery):
             limit: The number of results to return.
 
         Returns:
-            Query results as a (possibly empty) list of `DataGranules` instances.
+            Query results as a (possibly empty) list of `DataGranule` instances.
 
         Raises:
             RuntimeError: The CMR query failed.
@@ -513,7 +591,7 @@ class DataGranules(GranuleQuery):
 
         ???+ Example
             ```python
-            query = DataCollections.parameters(
+            query = DataGranulesQuery.parameters(
                 short_name="AST_L1T",
                 temporal=("2015-01","2015-02"),
                 point=(42.5, -101.25)
@@ -959,7 +1037,7 @@ class DataGranules(GranuleQuery):
             RuntimeError: The CMR query to get the collection for the DOI fails.
         """
         # TODO consider deferring this query until the search is executed
-        collection = DataCollections().doi(doi).get()
+        collection = DataCollectionsQuery().doi(doi).get()
 
         # TODO consider raising an exception when there are multiple collections, since
         # we can't know which one the user wants, and choosing one is arbitrary.
@@ -975,3 +1053,89 @@ class DataGranules(GranuleQuery):
             )
 
         return self
+
+    @staticmethod
+    def to_geopandas(granules: list[DataGranule]) -> "gpd.GeoDataFrame":
+        """Convert a list of DataGranule objects to a GeoPandas GeoDataFrame.
+
+        Parameters:
+            granules: A list of DataGranule objects.
+
+        Returns:
+            A GeoPandas GeoDataFrame containing the granule data.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            import earthaccess as ea
+            granules = ea.search_data(
+                short_name="MYD11A1",
+                temporal=("2024-01-01", "2024-12-31"),
+            )
+            gdf = ea.DataGranules.to_geopandas(granules)
+            ```
+        """
+        try:
+            import geopandas as gpd  # noqa: PLC0415
+            import pandas as pd  # noqa: PLC0415
+            from shapely.geometry import shape  # noqa: PLC0415
+            from shapely.geometry.base import BaseGeometry  # noqa: PLC0415
+        except ModuleNotFoundError as e:
+            msg = (
+                "`geopandas` is required for this functionality. "
+                "Please install it using `pip install earthaccess[geopandas]` "
+                "(or `pip install geopandas`)."
+            )
+            raise ModuleNotFoundError(msg) from e
+
+        def _geometry(granule: DataGranule) -> BaseGeometry | None:
+            """Extracts the geometry from a DataGranule object.
+            If the geometry is invalid, returns None.
+            """
+            try:
+                return shape(granule.__geo_interface__)
+            except ValueError:
+                return None
+
+        def _record(granule: DataGranule) -> dict[str, Any]:
+            """Builds a granule record."""
+            range_date_time = (
+                granule["umm"].get("TemporalExtent", {}).get("RangeDateTime", {})
+            )
+            return {
+                "concept_id": granule["meta"].get("concept-id"),
+                "granule_name": granule["umm"].get("GranuleUR"),
+                "beginning_datetime": range_date_time.get("BeginningDateTime"),
+                "ending_datetime": range_date_time.get("EndingDateTime"),
+                "size_MB": granule.size,
+                "data_links": granule.data_links(),
+            }
+
+        geometries = [_geometry(granule) for granule in granules]
+        data = pd.DataFrame.from_records(
+            [_record(granule) for granule in granules],
+            columns=[
+                "concept_id",
+                "granule_name",
+                "beginning_datetime",
+                "ending_datetime",
+                "size_MB",
+                "data_links",
+            ],
+        )
+        # Flatten the UMM records into columns.
+        umm = pd.json_normalize(
+            [dict(granule["umm"]) for granule in granules],
+        ).add_prefix("umm.")
+        umm.index = data.index
+        data = pd.concat([data, umm], axis=1)
+
+        return gpd.GeoDataFrame(
+            data=data,
+            geometry=gpd.GeoSeries(
+                pd.Series(geometries, dtype=object), crs="EPSG:4326"
+            ),
+            crs="EPSG:4326",
+        )
