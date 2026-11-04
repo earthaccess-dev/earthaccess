@@ -577,7 +577,7 @@ class DataGranulesQuery(GranuleQuery):
 
         ???+ Example
             ```python
-            query = DataCollectionsQuery.parameters(
+            query = DataGranulesQuery.parameters(
                 short_name="AST_L1T",
                 temporal=("2015-01","2015-02"),
                 point=(42.5, -101.25)
