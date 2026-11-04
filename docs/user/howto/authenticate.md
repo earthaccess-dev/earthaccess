@@ -1,7 +1,7 @@
 # Authenticate with Earthdata Login
 
 !!! important
-    
+
     You will need a NASA Earthdata Login account to download or stream NASA Earthdata.
     To obtain a NASA Earthdata Login account , please follow the instructions at
     [NASA EDL](https://urs.earthdata.nasa.gov/)
@@ -20,4 +20,4 @@ Earthdata Login credentials are set as environment variables `EARTHDATA_USERNAME
 look to see if you have a `.netrc` file with your Earthdata Login credentials.  If none of these strategies are available, you will be
 prompted to enter your username and password.
 
-See the [Authetication](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-environment-variables) explanation page for more details.
+See the [Authentication](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-environment-variables) explanation page for more details.
