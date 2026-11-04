@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import earthaccess
 import fsspec
 import pytest
 import responses
@@ -412,3 +413,35 @@ def test_sibling_tempfile_error(tmp_path):
     assert not temp_file.exists()
     assert trg_file.exists()
     assert trg_file.read_text() == orig_text
+
+
+ACCESS_CASES = [
+    pytest.param(None, "https", id="default"),
+    pytest.param("https", "https", id="https"),
+    pytest.param("s3", "s3", id="s3"),
+    pytest.param("direct", "s3", id="legacy-direct"),
+    pytest.param("indirect", "https", id="legacy-indirect"),
+    pytest.param("external", "https", id="legacy-external"),
+]
+
+
+@pytest.mark.parametrize(("access", "expected"), ACCESS_CASES)
+@pytest.mark.parametrize(
+    ("api_name", "store_method"),
+    [("open", "open"), ("download", "get")],
+)
+def test_access_normalized_for_open_and_download(
+    monkeypatch,
+    api_name,
+    store_method,
+    access,
+    expected,
+):
+    store = MagicMock()
+    monkeypatch.setattr(earthaccess, "__store__", store)
+
+    kwargs = {} if access is None else {"access": access}
+    getattr(earthaccess, api_name)([MagicMock()], **kwargs)
+
+    method = getattr(store, store_method)
+    assert method.call_args.kwargs["access"] == expected

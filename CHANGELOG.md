@@ -7,6 +7,12 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Breaking changes
+
+- `earthaccess.open()` and `earthaccess.download()` now use HTTPS by default.
+  Use `access="s3"` to opt into direct S3 access. Runtime detection of the
+  AWS `us-west-2` region has been removed.
+
 ## [v0.19.0] - 2026-09-03
 
 ### Breaking changes
