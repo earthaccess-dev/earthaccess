@@ -7,7 +7,7 @@ import earthaccess
 import pytest
 import responses
 from earthaccess.results import DataCollection, DataGranule
-from earthaccess.search import DataCollections, DataGranules
+from earthaccess.search import DataCollectionsQuery, DataGranulesQuery
 from earthaccess.utils._search import get_results
 from vcr.unittest import VCRTestCase  # type: ignore[import-untyped]
 
@@ -234,7 +234,7 @@ class TestResults(VCRTestCase):
             status=200,
         )
 
-        query = DataGranules()
+        query = DataGranulesQuery()
         query.concept_id("C3974616058-LPCLOUD")
         query.temporal("2024-01-01", "2024-12-31")
 
@@ -248,7 +248,7 @@ class TestResults(VCRTestCase):
         invocations of a cmr granule search and
         to not fetch back more results than we ask for.
         """
-        query = DataCollections().daac("PODAAC").cloud_hosted(True)
+        query = DataCollectionsQuery().daac("PODAAC").cloud_hosted(True)
         collections = query.get(20)
 
         # Assert that we performed a single search results query
@@ -262,7 +262,7 @@ class TestResults(VCRTestCase):
         invocations of a cmr granule search and
         to not fetch back more results than we ask for.
         """
-        query = DataCollections()
+        query = DataCollectionsQuery()
         collections = query.get(3000)
 
         # Assert that we performed two search results queries

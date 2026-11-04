@@ -1,6 +1,9 @@
 import pytest
-from earthaccess.results import DataCollection, DataGranule
-from earthaccess.search import DataCollections, DataGranules
+from earthaccess.results import (
+    DataCollection,
+    DataGranule,
+)
+from earthaccess.search import DataCollectionsQuery, DataGranulesQuery
 
 # Mapping from test case identifier to UMMG Geometry with the GeoJSON expected
 # to be the value of the __geo_interface__ property of a DataGranule that
@@ -319,7 +322,7 @@ def test_to_geopandas_returns_geodataframe():
         _make_granule(TEST_CASES["lines"], "line"),
     ]
 
-    gdf = DataGranules.to_geopandas(granules)
+    gdf = DataGranulesQuery.to_geopandas(granules)
 
     assert isinstance(gdf, gpd.GeoDataFrame)
     assert str(gdf.crs).upper() == "EPSG:4326"
@@ -336,7 +339,7 @@ def test_to_geopandas_includes_attribute_columns():
     pytest.importorskip("geopandas")
 
     granules = [_make_granule(TEST_CASES["bounding-rectangles"], "rect")]
-    gdf = DataGranules().to_geopandas(granules)
+    gdf = DataGranulesQuery().to_geopandas(granules)
 
     row = gdf.iloc[0]
     assert row["concept_id"] == "G-rect"
@@ -351,7 +354,7 @@ def test_to_geopandas_includes_full_umm_column():
     pytest.importorskip("geopandas")
 
     granule = _make_granule(TEST_CASES["points"], "point")
-    gdf = DataGranules().to_geopandas([granule])
+    gdf = DataGranulesQuery().to_geopandas([granule])
 
     row = gdf.iloc[0]
     assert row["umm.GranuleUR"] == granule["umm"]["GranuleUR"]
@@ -371,7 +374,7 @@ def test_to_geopandas_keeps_granules_without_spatial_extent():
             "umm": {"GranuleUR": "nospatial", "SpatialExtent": {"Orbit": {}}},
         },
     )
-    gdf = DataGranules().to_geopandas([with_geom, without_geom])
+    gdf = DataGranulesQuery().to_geopandas([with_geom, without_geom])
     assert len(gdf) == 2
     assert gdf.geometry.iloc[0] is not None
     assert gdf.geometry.iloc[1] is None
@@ -380,7 +383,7 @@ def test_to_geopandas_keeps_granules_without_spatial_extent():
 
 def test_to_geopandas_empty_result():
     pytest.importorskip("geopandas")
-    gdf = DataGranules().to_geopandas([])
+    gdf = DataGranulesQuery().to_geopandas([])
     assert len(gdf) == 0
 
 
@@ -409,7 +412,7 @@ def test_collections_to_geopandas_returns_geodataframe():
         _make_collection(TEST_CASES["multiple-gpolygons"], "coll-poly"),
         _make_collection(TEST_CASES["points"], "coll-point"),
     ]
-    gdf = DataCollections.to_geopandas(collections)
+    gdf = DataCollectionsQuery.to_geopandas(collections)
 
     assert isinstance(gdf, gpd.GeoDataFrame)
     assert str(gdf.crs).upper() == "EPSG:4326"
@@ -425,7 +428,7 @@ def test_collections_to_geopandas_returns_geodataframe():
 def test_collections_to_geopandas_includes_attribute_columns():
     pytest.importorskip("geopandas")
     collection = _make_collection(TEST_CASES["bounding-rectangles"], "coll-rect")
-    gdf = DataCollections.to_geopandas([collection])
+    gdf = DataCollectionsQuery.to_geopandas([collection])
 
     row = gdf.iloc[0]
     assert row["concept_id"] == "C-coll-rect"
@@ -439,7 +442,7 @@ def test_collections_to_geopandas_includes_full_umm_column():
     pytest.importorskip("geopandas")
 
     collection = _make_collection(TEST_CASES["points"], "coll-point")
-    gdf = DataCollections.to_geopandas([collection])
+    gdf = DataCollectionsQuery.to_geopandas([collection])
     row = gdf.iloc[0]
     assert row["umm.ShortName"] == collection["umm"]["ShortName"]
     assert (
@@ -459,7 +462,7 @@ def test_collections_to_geopandas_keeps_collections_without_spatial_extent():
         },
     )
 
-    gdf = DataCollections.to_geopandas([with_geom, without_geom])
+    gdf = DataCollectionsQuery.to_geopandas([with_geom, without_geom])
     assert len(gdf) == 2
     assert gdf.geometry.iloc[0] is not None
     assert gdf.geometry.iloc[1] is None
@@ -469,5 +472,5 @@ def test_collections_to_geopandas_keeps_collections_without_spatial_extent():
 def test_collections_to_geopandas_empty_result():
     pytest.importorskip("geopandas")
 
-    gdf = DataCollections.to_geopandas([])
+    gdf = DataCollectionsQuery.to_geopandas([])
     assert len(gdf) == 0
