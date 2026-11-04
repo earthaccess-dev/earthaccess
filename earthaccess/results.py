@@ -1,5 +1,6 @@
 import json
 import uuid
+import warnings
 from functools import cache
 from typing import Any, ClassVar
 
@@ -7,6 +8,7 @@ import requests
 
 import earthaccess
 
+from ._access import AccessType, normalize_access
 from .formatters import _repr_granule_html
 from .services import DataServices
 
@@ -513,46 +515,44 @@ class DataGranule(CustomDict):
 
     def data_links(
         self,
-        access: str | None = None,
-        in_region: bool = False,  # noqa: FBT001, FBT002
+        access: AccessType | None = None,
+        in_region: bool | None = None,  # noqa: FBT001
     ) -> list[str]:
         """Return data links for the requested granule access mode.
 
         Returns the data links from a granule.
 
         Parameters:
-            access: direct or external.
-                Direct means in-region access for cloud-hosted collections.
-            in_region: True if we are running in us-west-2.
-                It is meant for the store class.
+            access: ``"https"`` (default) or ``"s3"``. Legacy values
+                ``"external"`` and ``"indirect"`` map to HTTPS, and ``"direct"``
+                maps to S3.
+            in_region: Deprecated. Use ``access`` instead.
 
         Returns:
             The data links for the requested access type.
         """
+        if in_region is not None:
+            warnings.warn(
+                "`in_region` is deprecated; use `access='s3'` or "
+                "`access='https'` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if access is None:
+                access = "s3" if in_region else "https"
+
+        canonical_access = normalize_access(access)
         https_links = self._filter_related_links("GET DATA")
         s3_links = self._filter_related_links("GET DATA VIA DIRECT ACCESS")
-        if in_region:
-            # we are in us-west-2
-            if self.cloud_hosted and access in (None, "direct"):
-                # this is a cloud collection, and we didn't specify the access type
-                # default to S3 links
-                if len(s3_links) == 0 and len(https_links) > 0:
-                    # This is guessing the S3 links for some cloud collections that for
-                    # some reason only offered HTTPS links
-                    return self._derive_s3_link(https_links)
-                # we have the s3 links so we return those
-                return s3_links
-            # Even though we are in us-west-2, the user wants the HTTPS links used in-region.
-            # They are S3 signed links from TEA.
-            # <https://github.com/asfadmin/thin-egress-app>
+
+        if canonical_access == "https":
             return https_links
-        # we are not in-region
-        if access == "direct":
-            # maybe the user wants to collect S3 links and use them later
-            # from the cloud
-            return s3_links
-        # we are not in us-west-2, even cloud collections have HTTPS links
-        return https_links
+
+        if not s3_links and https_links:
+            # This is guessing the S3 links for some cloud collections that for
+            # some reason only offered HTTPS links
+            return self._derive_s3_link(https_links)
+        return s3_links
 
     @property
     def dataviz_links(self) -> list[str]:

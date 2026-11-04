@@ -28,6 +28,7 @@ from typing_extensions import deprecated
 
 import earthaccess
 
+from ._access import AccessType
 from .auth import Auth
 from .daac import DAAC_TEST_URLS, find_provider
 from .exceptions import DownloadFailure, EulaNotAccepted
@@ -188,7 +189,7 @@ def make_instance(
 
 def _get_url_granule_mapping(
     granules: list[DataGranule],
-    access: str,
+    access: AccessType,
 ) -> Mapping[str, DataGranule]:
     """Construct a mapping between file urls and granules."""
     url_mapping = {}
@@ -536,7 +537,7 @@ class Store:
             raise ValueError(msg)
         if self.in_region:
             if granules[0].cloud_hosted:
-                access = "direct"
+                access: AccessType = "direct"
                 provider = granules[0]["meta"]["provider-id"]
                 endpoint = credentials_endpoint or self._own_s3_credentials(
                     granules[0]["umm"]["RelatedUrls"],
@@ -548,7 +549,7 @@ class Store:
                     logger.info("using provider: %s", provider)
                     s3_fs = self.get_s3_filesystem(provider=provider)
             else:
-                access = "on_prem"
+                access = "external"
                 s3_fs = None
 
             url_mapping = _get_url_granule_mapping(granules, access)
@@ -574,7 +575,7 @@ class Store:
                     open_kwargs=open_kwargs,
                 )
         else:
-            url_mapping = _get_url_granule_mapping(granules, access="on_prem")
+            url_mapping = _get_url_granule_mapping(granules, access="external")
             return self._open_urls_https(
                 url_mapping,
                 pqdm_kwargs=pqdm_kwargs,
@@ -832,7 +833,9 @@ class Store:
         provider = granules[0]["meta"]["provider-id"]
         endpoint = self._own_s3_credentials(granules[0]["umm"]["RelatedUrls"])
         cloud_hosted = granules[0].cloud_hosted
-        access = "direct" if (cloud_hosted and self.in_region) else "external"
+        access: AccessType = (
+            "direct" if (cloud_hosted and self.in_region) else "external"
+        )
         data_links = list(
             # we are not in-region
             chain.from_iterable(
