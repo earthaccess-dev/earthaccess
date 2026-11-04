@@ -1,7 +1,7 @@
 # Authenticate with Earthdata Login stored in a `.netrc`
 
 !!! important
-    
+
     You will need a NASA Earthdata Login account to download or stream NASA Earthdata.
     To obtain a NASA Earthdata Login account , please follow the instructions at
     [NASA EDL](https://urs.earthdata.nasa.gov/)
@@ -24,4 +24,4 @@ Or if you want to specify a login strategy explicitly:
 auth = earthaccess.login(strategy="netrc")
 ```
 
-See the [Authetication](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-environment-variables) explanation page for more details.
+See the [Authentication](https://earthaccess.readthedocs.io/en/stable/user/explanation/authenticate/#login-using-environment-variables) explanation page for more details.
