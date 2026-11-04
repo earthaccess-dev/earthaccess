@@ -30,6 +30,14 @@ from earthaccess.virtual.core import virtualize
 # Helpers
 # ---------------------------------------------------------------------------
 
+ACCESS_CASES = [
+    pytest.param(None, "https", id="default"),
+    pytest.param("https", "https", id="https"),
+    pytest.param("s3", "s3", id="s3"),
+    pytest.param("direct", "s3", id="legacy-direct"),
+    pytest.param("indirect", "https", id="legacy-indirect"),
+]
+
 
 def _make_granules(n: int = 1, base_url: str = "s3://bucket/file") -> list[DataGranule]:
     granules = []
@@ -135,6 +143,23 @@ def test_virtualize_load_true_delegates_to_kerchunk(tmp_path) -> None:
     assert result is expected_ds
 
 
+@pytest.mark.parametrize(("access", "expected"), ACCESS_CASES)
+def test_virtualize_normalizes_access(access, expected) -> None:
+    """virtualize() normalizes access before forwarding it to its helpers."""
+    reg_patch, open_patch = _patch_internals()
+    with (
+        reg_patch as registry,
+        open_patch as open_virtual,
+        patch("earthaccess.virtual.core._load_via_kerchunk") as mock_load,
+    ):
+        kwargs = {} if access is None else {"access": access}
+        virtualize(_make_granules(1), load=True, **kwargs)
+
+    assert registry.call_args.kwargs["access"] == expected
+    assert open_virtual.call_args.kwargs["access"] == expected
+    assert mock_load.call_args.kwargs["access"] == expected
+
+
 # ---------------------------------------------------------------------------
 # core — DMR++ fallback behaviour
 # ---------------------------------------------------------------------------
@@ -213,13 +238,13 @@ def test_get_urls_dmrpp_appends_dmrpp_suffix() -> None:
     assert urls == ["s3://bucket/file.nc.dmrpp"]
 
 
-def test_get_urls_passes_access_to_data_links() -> None:
-    """get_urls_for_parser forwards the access argument to granule.data_links."""
+def test_get_urls_normalizes_access_for_data_links() -> None:
+    """get_urls_for_parser normalizes legacy access values."""
     mock = MagicMock()
     mock.data_links.return_value = ["https://example.com/file.h5"]
     granule = cast("DataGranule", mock)
     get_urls_for_parser([granule], resolve_parser("HDFParser"), access="indirect")
-    mock.data_links.assert_called_once_with(access="indirect")
+    mock.data_links.assert_called_once_with(access="https")
 
 
 # ---------------------------------------------------------------------------

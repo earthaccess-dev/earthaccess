@@ -15,13 +15,14 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import earthaccess
+from earthaccess._access import normalize_access
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from virtualizarr.registry import ObjectStoreRegistry
 
-    from earthaccess.virtual._types import AccessType
+    from earthaccess._access import AccessType
 
 
 logger = logging.getLogger(__name__)
@@ -98,15 +99,16 @@ def build_obstore_registry(
     Parameters:
         granules: The granules to build the registry for.  Only the first
             granule is inspected to determine the host/bucket.
-        access: ``"direct"`` builds an authenticated ``S3Store``; ``"indirect"``
-            builds an ``HTTPStore`` using the user's EDL Bearer token.
+        access: ``"s3"`` builds an authenticated ``S3Store``; ``"https"``
+            builds an ``HTTPStore`` using the user's EDL Bearer token. Legacy
+            ``"direct"`` and ``"indirect"`` values are also accepted.
 
     Returns:
         A configured ``ObjectStoreRegistry``.
 
     Raises:
-        ValueError: If ``access="indirect"`` and the user is not authenticated.
-        ValueError: If ``access="direct"`` and no S3 credentials endpoint can
+        ValueError: If the user is not authenticated.
+        ValueError: If ``access="s3"`` and no S3 credentials endpoint can
             be resolved.
         ImportError: If ``earthaccess[virtualizarr]`` is not installed.
     """
@@ -123,19 +125,19 @@ def build_obstore_registry(
         raise ImportError(msg) from None
 
     validate_granules(granules)
+    canonical_access = normalize_access(access)
 
-    parsed_url = urlparse(granules[0].data_links(access=access)[0])
+    parsed_url = urlparse(granules[0].data_links(access=canonical_access)[0])
     auth = earthaccess.__auth__
     edl_token = getattr(auth, "token", None)
     if not edl_token or "access_token" not in edl_token:
         msg = (
-            "You must be logged in to use indirect access. "
-            "Call earthaccess.login() first."
+            "You must be logged in to use virtualize(). Call earthaccess.login() first."
         )
         raise ValueError(msg)
     token: str = edl_token["access_token"]
 
-    if access == "direct":
+    if canonical_access == "s3":
         credentials_endpoint, region = get_granule_credentials_endpoint_and_region(
             granules[0],
         )
@@ -152,7 +154,7 @@ def build_obstore_registry(
         )
         return ObjectStoreRegistry({f"s3://{bucket}": s3_store})
 
-    # indirect — HTTPS
+    # HTTPS
     domain = parsed_url.netloc
     http_store = HTTPStore.from_url(
         f"https://{domain}",
