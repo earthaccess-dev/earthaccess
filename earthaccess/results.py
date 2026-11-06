@@ -1,7 +1,16 @@
+from __future__ import annotations
+
 import json
+import pprint
 import uuid
 from functools import cache
-from typing import Any, ClassVar
+from textwrap import dedent, indent
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
+
+    from .search import DataCollections, DataGranules
 
 import requests
 
