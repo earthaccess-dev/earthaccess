@@ -519,9 +519,13 @@ class Store:
 
         if access == "s3":
             url_mapping = _get_url_granule_mapping(granules, access="s3")
-            if not url_mapping:
-                msg = "No S3 data links found for the requested granules."
-                raise ValueError(msg)
+            for granule in granules:
+                if not granule.data_links(access="s3"):
+                    msg = (
+                        f"Granule {granule['meta'].get('concept-id', '<unknown>')} "
+                        "has no S3 data links."
+                    )
+                    raise ValueError(msg)
 
             provider = granules[0]["meta"]["provider-id"]
             endpoint = credentials_endpoint or self._own_s3_credentials(
