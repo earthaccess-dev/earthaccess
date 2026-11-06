@@ -191,6 +191,32 @@ def test_download(tmp_path, selection, use_url, access):
     assert all(Path(f).exists() for f in files)
 
 
+@pytest.mark.parametrize("selection", [0, slice(None)])
+@pytest.mark.parametrize("use_url", [True, False])
+def test_open(selection, use_url, access):
+    granules = earthaccess.search_data(
+        count=2,
+        short_name="ATL08",
+        cloud_hosted=True,
+        bounding_box=(-92.86, 16.26, -91.58, 16.97),
+    )
+    provider = granules[0]["meta"]["provider-id"]
+    if use_url:
+        results = [link for r in granules for link in r.data_links(access=access)]
+    else:
+        results = granules
+    selected = results[selection]
+    if not isinstance(selected, list):
+        selected = [selected]
+    files = earthaccess.open(selected, provider=provider, access=access)
+    assert isinstance(files, list)
+    assert files
+    for file in files:
+        assert not isinstance(file, Exception)
+        assert file.read(16)
+        file.close()
+
+
 @pytest.mark.parametrize(
     ("force", "cmp"),
     [
