@@ -8,7 +8,7 @@ We use `earthaccess.open` to _stream_ data.  This creates a virtual file system 
 
 !!! important
 
-    You will need to authenticate your NASA Earthdata Login account using
+    We will need to authenticate your NASA Earthdata Login account using
     `earthaccess.login` to download data
 
 ```python
