@@ -31,8 +31,10 @@ nav:
           - "Authenticate with Earthdata Login using environment variables": "user/howto/authenticate-with-environment-variables.md"
           - "Authenticate with Earthdata Login using `.netrc`": "user/howto/authenticate-using-a-netrc.md"
           - "Search for data using filters": "user/howto/search-granules.md"
-          - "Access data": "user/howto/access-data.md"
-          - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
+          - "Download data to a local machine": "user/howto/download-to-local-machine.md"
+          - "Stream data directly to xarray": "user/howto/stream-data-to-xarray.md"
+          - "Get URLs for granules": "user/howto/get-urls-for-granules.md"
+          - "Get OPeNDAP URLs for granules": "user/howto/get-opendap-links.md"
           - "Search for services": "user/howto/search-services.md"
       - Tutorials:
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
