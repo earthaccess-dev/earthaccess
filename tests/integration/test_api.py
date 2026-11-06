@@ -176,24 +176,33 @@ def test_granules_search_returns_valid_results(kwargs):
 @pytest.mark.parametrize("selection", [0, slice(None)])
 @pytest.mark.parametrize("use_url", [True, False])
 def test_download(tmp_path, selection, use_url, access):
+    earthaccess.login(strategy="environment")
     results = earthaccess.search_data(
         count=2,
         short_name="ATL08",
         cloud_hosted=True,
         bounding_box=(-92.86, 16.26, -91.58, 16.97),
     )
+    provider = results[0]["meta"]["provider-id"]
     if use_url:
         # Download via file URL string instead of DataGranule object
         results = [link for r in results for link in r.data_links(access=access)]
     result = results[selection]
-    files = earthaccess.download(result, str(tmp_path), access=access)
+    files = earthaccess.download(
+        result,
+        str(tmp_path),
+        provider=provider,
+        access=access,
+    )
     assert isinstance(files, list)
+    assert files
     assert all(Path(f).exists() for f in files)
 
 
 @pytest.mark.parametrize("selection", [0, slice(None)])
 @pytest.mark.parametrize("use_url", [True, False])
 def test_open(selection, use_url, access):
+    earthaccess.login(strategy="environment")
     granules = earthaccess.search_data(
         count=2,
         short_name="ATL08",
