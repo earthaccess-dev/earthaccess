@@ -40,7 +40,6 @@ jobs:
   build-image:
     permissions:
       contents: read
-      packages: write
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -70,7 +69,7 @@ jobs:
             image="${INPUT_IMAGE}"
             needs_build=false
           else
-            image="ghcr.io/${owner}/${IMAGE_NAME}:pr-${PR_NUMBER}-${short_sha}"
+            image="ttl.sh/${IMAGE_NAME}-${short_sha}-${GITHUB_RUN_ID}:24h"
             needs_build=true
           fi
           echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
@@ -78,13 +77,6 @@ jobs:
           echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
           echo "image=${image}" >> "${GITHUB_OUTPUT}"
           echo "needs_build=${needs_build}" >> "${GITHUB_OUTPUT}"
-
-      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-        if: steps.meta.outputs.needs_build == 'true'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         if: steps.meta.outputs.needs_build == 'true'
@@ -114,27 +106,11 @@ jobs:
             python -c "import os, subprocess, earthaccess; repo = os.environ[\"EARTHACCESS_REPO_DIR\"]; actual = subprocess.check_output([\"git\", \"-C\", repo, \"rev-parse\", \"HEAD\"], text=True).strip(); expected = os.environ[\"EARTHACCESS_COMMIT\"]; assert actual == expected, (actual, expected); print(earthaccess.__version__); print(earthaccess.__file__)"
           '
 
-      - name: Make GHCR package public
-        if: steps.meta.outputs.needs_build == 'true'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-        run: |
-          owner_type="$(gh api "/users/${OWNER}" --jq .type)"
-          if [ "${owner_type}" = "Organization" ]; then
-            endpoint="/orgs/${OWNER}/packages/container/${IMAGE_NAME}"
-          else
-            endpoint="/user/packages/container/${IMAGE_NAME}"
-          fi
-          gh api --method PATCH "${endpoint}" -f visibility=public
-
       - name: Verify image is publicly pullable
         if: steps.meta.outputs.needs_build == 'true'
         env:
           IMAGE: ${{ steps.meta.outputs.image }}
         run: |
-          docker logout ghcr.io || true
           docker pull "${IMAGE}"
 
   hub-integration:
