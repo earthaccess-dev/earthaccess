@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.source="https://github.com/earthaccess-dev/eartha
 LABEL org.opencontainers.image.revision="${EARTHACCESS_COMMIT}"
 
 ENV EARTHACCESS_COMMIT="${EARTHACCESS_COMMIT}"
-ENV EARTHACCESS_REPO_DIR="/home/${NB_USER}/earthaccess"
+ENV EARTHACCESS_REPO_DIR="/opt/earthaccess"
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 USER root
@@ -26,8 +26,10 @@ RUN cd /tmp/earthaccess-deps \
     && uv pip install --system --no-cache -r requirements.txt \
     && rm -rf /tmp/earthaccess-deps
 
+RUN mkdir -p /opt/earthaccess && chown "${NB_UID}:${NB_GID}" /opt/earthaccess
+
 USER ${NB_UID}
-WORKDIR /home/${NB_USER}
+WORKDIR /opt
 
 RUN test -n "${EARTHACCESS_COMMIT}" \
     && git clone --filter=blob:none "${EARTHACCESS_REPOSITORY}" earthaccess \
@@ -37,4 +39,4 @@ RUN test -n "${EARTHACCESS_COMMIT}" \
     && python -c "import earthaccess; print(earthaccess.__file__, earthaccess.__version__)"
 
 USER ${NB_UID}
-WORKDIR /home/${NB_USER}/earthaccess
+WORKDIR /opt/earthaccess

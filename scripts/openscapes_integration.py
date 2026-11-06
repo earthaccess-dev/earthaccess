@@ -448,7 +448,7 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--repo-dir",
-        default=os.environ.get("EARTHACCESS_REPO_DIR", "/home/jovyan/earthaccess"),
+        default=os.environ.get("EARTHACCESS_REPO_DIR", "/opt/earthaccess"),
     )
     parser.add_argument(
         "--expected-commit",
