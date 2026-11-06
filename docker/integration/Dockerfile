@@ -26,7 +26,7 @@ RUN test -n "${EARTHACCESS_COMMIT}" \
     && git clone --filter=blob:none "${EARTHACCESS_REPOSITORY}" earthaccess \
     && cd earthaccess \
     && git checkout --detach "${EARTHACCESS_COMMIT}" \
-    && uv pip install --system --no-cache --all-extras --group test -e . \
+    && uv pip install --system --no-cache --group test -e ".[all]" \
     && python -c "import earthaccess; print(earthaccess.__file__, earthaccess.__version__)"
 
 USER ${NB_UID}
