@@ -118,7 +118,7 @@ def _spawn_server(
     server_name: str,
     runtime_options: dict[str, Any] | None,
 ) -> str:
-    payload = {"user_options": runtime_options} if runtime_options else {}
+    payload = runtime_options or {}
 
     if not server_name:
         url = _server_api_url(hub_url, username, "")
@@ -194,9 +194,9 @@ def _stop_server(
     server_name: str,
 ) -> None:
     url = _server_api_url(hub_url, username, server_name)
-    params = {"remove": "true"} if server_name else None
+    kwargs = {"json": {"remove": True}} if server_name else {}
     try:
-        response = session.delete(url, params=params, timeout=60)
+        response = session.delete(url, timeout=60, **kwargs)
     except requests.RequestException as exc:
         print(f"Warning: failed to stop JupyterHub server: {exc}", file=sys.stderr)
         return
