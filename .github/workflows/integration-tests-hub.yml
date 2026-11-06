@@ -93,7 +93,7 @@ jobs:
         if: steps.meta.outputs.needs_build == 'true'
         with:
           context: docker/integration
-          file: Dockerfile
+          file: docker/integration/Dockerfile
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.image }}
