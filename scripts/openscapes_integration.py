@@ -141,22 +141,26 @@ def _spawn_server(
 def _wait_for_server(
     session: requests.Session,
     hub_url: str,
-    username: str,
+    username: str,  # noqa: ARG001
     server_name: str,
     timeout_seconds: int,
 ) -> dict[str, Any]:
-    url = _server_api_url(hub_url, username, server_name)
+    url = _api_url(hub_url, "user")
     deadline = time.monotonic() + timeout_seconds
     last_state = "unknown"
 
     while time.monotonic() < deadline:
-        try:
-            response = _request(session, "GET", url)
-        except HubAPIError as exc:
-            if exc.status != 404:
-                raise
+        response = _request(session, "GET", url)
+        data = response.json()
+        servers = data.get("servers", {})
+        if server_name:
+            model = servers.get(server_name)
         else:
-            model = response.json()
+            model = data.get("server") or servers.get("")
+
+        if model is None:
+            last_state = "not found"
+        else:
             last_state = (
                 "ready"
                 if model.get("ready")

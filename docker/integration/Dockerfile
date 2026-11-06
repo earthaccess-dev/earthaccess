@@ -19,6 +19,13 @@ RUN apt-get update \
 
 RUN pip install --no-cache-dir "uv==${UV_VERSION}"
 
+COPY pyproject.toml uv.lock /tmp/earthaccess-deps/
+RUN cd /tmp/earthaccess-deps \
+    && uv export --frozen --all-extras --no-default-groups --group test \
+        --no-emit-project --no-hashes --no-header -o requirements.txt \
+    && uv pip install --system --no-cache -r requirements.txt \
+    && rm -rf /tmp/earthaccess-deps
+
 USER ${NB_UID}
 WORKDIR /home/${NB_USER}
 
@@ -26,7 +33,7 @@ RUN test -n "${EARTHACCESS_COMMIT}" \
     && git clone --filter=blob:none "${EARTHACCESS_REPOSITORY}" earthaccess \
     && cd earthaccess \
     && git checkout --detach "${EARTHACCESS_COMMIT}" \
-    && uv pip install --system --no-cache --group test -e ".[all]" \
+    && uv pip install --system --no-cache --no-deps -e . \
     && python -c "import earthaccess; print(earthaccess.__file__, earthaccess.__version__)"
 
 USER ${NB_UID}
