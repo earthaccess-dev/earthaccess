@@ -499,6 +499,7 @@ def main() -> int:
         hub_runtime_options = _load_hub_runtime_options(
             args.hub_runtime_options, args.image
         )
+        print(f"Hub runtime options: {json.dumps(hub_runtime_options, sort_keys=True)}")
         server_name = _spawn_server(
             session,
             args.hub_url,
@@ -512,6 +513,17 @@ def main() -> int:
             username,
             server_name,
             args.startup_timeout,
+        )
+        print(
+            "Hub server model: "
+            + json.dumps(
+                {
+                    key: model.get(key)
+                    for key in ("image", "user_options", "ready", "url")
+                },
+                default=str,
+                sort_keys=True,
+            )
         )
         server_url = urljoin(
             args.hub_url.rstrip("/") + "/",
