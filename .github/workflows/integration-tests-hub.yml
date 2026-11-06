@@ -150,6 +150,7 @@ jobs:
           TEST_COMMAND: ${{ inputs.test_command || vars.HUB_TEST_COMMAND || 'python -c "print(''hello from OpenScapes'')"' }}
           EARTHDATA_USERNAME: ${{ secrets.EARTHACCESS_TEST_USERNAME || secrets.EDL_USERNAME }}
           EARTHDATA_PASSWORD: ${{ secrets.EARTHACCESS_TEST_PASSWORD || secrets.EDL_PASSWORD }}
+          EARTHACCESS_TEST_S3: "1"
           GITHUB_PR_NUMBER: ${{ needs.build-image.outputs.pr_number }}
         run: |
           server_name="pr-${PR_NUMBER}-${SHORT_SHA}"

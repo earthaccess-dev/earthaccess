@@ -61,7 +61,7 @@ daac_list: list[ProviderParam] = [
 
 
 @pytest.mark.parametrize("daac", daac_list)
-def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac):
+def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac, access):
     """Tests that we can download cloud collections using HTTPS links."""
     provider = daac["provider_name"]
     n_for_top_collections = daac["n_for_top_collections"]
@@ -109,7 +109,7 @@ def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac):
 
         try:
             # We are testing this method
-            store.get(granules_to_download, local_path=path)
+            store.get(granules_to_download, local_path=path, access=access)
         except Exception as e:  # noqa: BLE001
             logger.warning(e)
 
@@ -140,13 +140,18 @@ def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac):
         (False, op.eq),
     ],
 )
-def test_multi_file_granule(tmp_path, force: bool, cmp: Callable[[float, float], bool]):
+def test_multi_file_granule(
+    tmp_path,
+    force: bool,
+    cmp: Callable[[float, float], bool],
+    access,
+):
     # Ensure granules that contain multiple files are handled correctly
     granules = earthaccess.search_data(short_name="HLSL30", count=1)
     assert len(granules) == 1
-    urls = granules[0].data_links()
+    urls = granules[0].data_links(access=access)
     assert len(urls) > 1
-    files = earthaccess.download(granules, str(tmp_path))
+    files = earthaccess.download(granules, str(tmp_path), access=access)
     assert {Path(f).name for f in urls} == {Path(f).name for f in files}
 
     # Make sure no temp files are left behind
@@ -154,7 +159,9 @@ def test_multi_file_granule(tmp_path, force: bool, cmp: Callable[[float, float],
 
     # Verify force behavior by calling download again and checking mtimes
     first_mtimes = [f.stat().st_mtime for f in files]
-    second_files = earthaccess.download(granules, str(tmp_path), force=force)
+    second_files = earthaccess.download(
+        granules, str(tmp_path), force=force, access=access
+    )
     second_mtimes = [f.stat().st_mtime for f in second_files]
     assert all(
         cmp(*mtime_pair)

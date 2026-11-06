@@ -23,11 +23,12 @@ EXIT_CODE_MARKER = "__EARTHACCESS_EXIT_CODE__="
 DEFAULT_HUB_RUNTIME_OPTIONS = (
     '{"image--unlisted-choice": "{image}", "resource_allocation": "mem_7_gb"}'
 )
-CREDENTIAL_ENV_VARS = (
+KERNEL_ENV_VARS = (
     "EARTHDATA_USERNAME",
     "EARTHDATA_PASSWORD",
     "EARTHDATA_TOKEN",
     "NETRC",
+    "EARTHACCESS_TEST_S3",
 )
 
 
@@ -212,7 +213,7 @@ def _stop_server(
 def _kernel_env() -> dict[str, str]:
     return {
         key: value
-        for key in CREDENTIAL_ENV_VARS
+        for key in KERNEL_ENV_VARS
         if (value := os.environ.get(key)) is not None
     }
 
