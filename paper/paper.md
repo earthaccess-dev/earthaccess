@@ -11,54 +11,54 @@ tags:
 authors:
   - given-names: "Andrew P."
     surname: "Barrett"
-    orcid: "https://orcid.org/0000-0003-4394-5445"
+    orcid: 0000-0003-4394-5445
     affiliation: "1"
   - given-names: "Chris"
     surname: "Battisto"
-    orcid: "https://orcid.org/0000-0002-9608-3634"
+    orcid: 0000-0002-9608-3634
     affiliation: "2"
   - given-names: "James"
     surname: "Bourbeau"
-    orcid: "https://orcid.org/0000-0003-2164-7789"
+    orcid: 0000-0003-2164-7789
     affiliation: "3"
   - given-names: "Ian"
     surname: "Carroll"
-    orcid: "https://orcid.org/0000-0002-3616-810X"
+    orcid: 0000-0002-3616-810X
     affiliation: "4, 14"
   - given-names: "Chuck"
     surname: "Daniels"
     affiliation: "5"
   - given-names: "Matt"
     surname: "Fisher"
-    orcid: "https://orcid.org/0000-0003-3260-5445"
+    orcid: 0000-0003-3260-5445
     affiliation: "6"
   - given-names: "Daniel E."
     surname: "Kaufman"
-    orcid: "https://orcid.org/0000-0002-1487-7298"
+    orcid: 0000-0002-1487-7298
     affiliation: "7, 8"
   - given-names: "Joseph H."
     surname: "Kennedy"
-    orcid: "https://orcid.org/0000-0002-9348-693X"
+    orcid: 0000-0002-9348-693X
     affiliation: "9"
   - given-names: "Luis"
     surname: "Lopez"
-    orcid: "https://orcid.org/0000-0003-4896-3263"
+    orcid: 0000-0003-4896-3263
     affiliation: "1"
   - given-names: "Julia S."
     surname: "Lowndes"
-    orcid: "https://orcid.org/0000-0003-1682-3872"
+    orcid: 0000-0003-1682-3872
     affiliation: "10"
   - given-names: "Jessica"
     surname: "Scheick"
-    orcid: "https://orcid.org/0000-0002-3421-4459"
+    orcid: 0000-0002-3421-4459
     affiliation: "11, 12"
   - given-names: "Amy"
     surname: "Steiker"
-    orcid: "https://orcid.org/0000-0002-3039-0260"
+    orcid: 0000-0002-3039-0260
     affiliation: "1"
   - given-names: "Sherwin"
     surname: "Varghese"
-    orcid: "https://orcid.org/0009-0005-7030-213X"
+    orcid: 0009-0005-7030-213X
     affiliation: "13"
 affiliations:
  - name: "National Snow and Ice Data Center (NSIDC), Cooperative Institute for Research in Environmental Sciences (CIRES), University of Colorado Boulder, Boulder, CO, USA"
