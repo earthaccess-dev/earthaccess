@@ -111,19 +111,7 @@ jobs:
           docker pull "${IMAGE}"
           docker run --rm "${IMAGE}" sh -c '
             jupyterhub-singleuser --help >/dev/null
-            python -c "
-            import os
-            import subprocess
-            import earthaccess
-            repo = os.environ[\"EARTHACCESS_REPO_DIR\"]
-            actual = subprocess.check_output(
-                [\"git\", \"-C\", repo, \"rev-parse\", \"HEAD\"], text=True
-            ).strip()
-            expected = os.environ[\"EARTHACCESS_COMMIT\"]
-            assert actual == expected, (actual, expected)
-            print(earthaccess.__version__)
-            print(earthaccess.__file__)
-            "
+            python -c "import os, subprocess, earthaccess; repo = os.environ[\"EARTHACCESS_REPO_DIR\"]; actual = subprocess.check_output([\"git\", \"-C\", repo, \"rev-parse\", \"HEAD\"], text=True).strip(); expected = os.environ[\"EARTHACCESS_COMMIT\"]; assert actual == expected, (actual, expected); print(earthaccess.__version__); print(earthaccess.__file__)"
           '
 
       - name: Make GHCR package public
