@@ -3,9 +3,28 @@ name: Integration Tests on OpenScapes Hub
 on:
   push:
     branches:
+      - main
       - "hub-ci/**"
+    paths:
+      - "earthaccess/**"
+      - "tests/integration/**"
+      - "docker/integration/**"
+      - "scripts/openscapes_integration.py"
+      - ".github/workflows/integration-tests-hub.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "uv.lock"
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - "earthaccess/**"
+      - "tests/integration/**"
+      - "docker/integration/**"
+      - "scripts/openscapes_integration.py"
+      - ".github/workflows/integration-tests-hub.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "uv.lock"
   workflow_dispatch:
     inputs:
       ref:
