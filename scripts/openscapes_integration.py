@@ -112,17 +112,17 @@ def _spawn_server(
     username: str,
     server_name: str,
     runtime_options: dict[str, Any] | None,
-) -> tuple[str, dict[str, Any]]:
+) -> str:
     payload = {"user_options": runtime_options} if runtime_options else {}
 
     if not server_name:
         url = _server_api_url(hub_url, username, "")
-        response = _request(session, "POST", url, json=payload)
-        return "", response.json()
+        _request(session, "POST", url, json=payload)
+        return ""
 
     url = _server_api_url(hub_url, username, server_name)
     try:
-        response = _request(session, "POST", url, json=payload)
+        _request(session, "POST", url, json=payload)
     except HubAPIError as exc:
         if exc.status == 404 or (
             exc.status == 400 and "named server" in exc.body.lower()
@@ -132,10 +132,10 @@ def _spawn_server(
                 file=sys.stderr,
             )
             default_url = _server_api_url(hub_url, username, "")
-            response = _request(session, "POST", default_url, json=payload)
-            return "", response.json()
+            _request(session, "POST", default_url, json=payload)
+            return ""
         raise
-    return server_name, response.json()
+    return server_name
 
 
 def _wait_for_server(
@@ -478,7 +478,7 @@ def main() -> int:
     session = _session(args.token)
     started = time.monotonic()
     server_name = args.server_name
-    server_spawned = False
+    username = ""
     server_url = ""
     output = ""
     error = ""
@@ -501,7 +501,6 @@ def main() -> int:
             server_name,
             hub_runtime_options,
         )
-        server_spawned = True
         model = _wait_for_server(
             session,
             args.hub_url,
@@ -544,7 +543,7 @@ def main() -> int:
         error = traceback.format_exc()
         status = "error"
     finally:
-        if server_spawned:
+        if username:
             try:
                 _stop_server(session, args.hub_url, username, server_name)
             except Exception as exc:  # noqa: BLE001
