@@ -20,7 +20,9 @@ import requests
 from websocket import WebSocketTimeoutException, create_connection
 
 EXIT_CODE_MARKER = "__EARTHACCESS_EXIT_CODE__="
-DEFAULT_HUB_RUNTIME_OPTIONS = '{"image": "{image}", "resource_allocation": "mem_7_gb"}'
+DEFAULT_HUB_RUNTIME_OPTIONS = (
+    '{"image--unlisted-choice": "{image}", "resource_allocation": "mem_7_gb"}'
+)
 CREDENTIAL_ENV_VARS = (
     "EARTHDATA_USERNAME",
     "EARTHDATA_PASSWORD",
@@ -98,6 +100,8 @@ def _load_hub_runtime_options(raw_options: str, image: str) -> dict[str, Any] | 
     if not isinstance(options, dict):
         msg = "HUB_RUNTIME_OPTIONS must be a JSON object"
         raise TypeError(msg)
+    if "image" in options and "image--unlisted-choice" not in options:
+        options["image--unlisted-choice"] = options.pop("image")
 
     rendered = json.dumps(options).replace("{image}", image)
     parsed = json.loads(rendered)
