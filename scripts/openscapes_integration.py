@@ -10,6 +10,7 @@ import re
 import shlex
 import sys
 import time
+import traceback
 import uuid
 from pathlib import Path
 from typing import Any
@@ -72,7 +73,16 @@ def _request(
 
 
 def _current_user(session: requests.Session, hub_url: str) -> str:
-    data = _request(session, "GET", _api_url(hub_url, "user")).json()
+    response = _request(session, "GET", _api_url(hub_url, "user"))
+    try:
+        data = response.json()
+    except ValueError as exc:
+        msg = (
+            f"Expected JSON from {response.url}, got status {response.status_code} "
+            f"and content type {response.headers.get('content-type')!r}: "
+            f"{response.text[:300]!r}"
+        )
+        raise RuntimeError(msg) from exc
     return str(data["name"])
 
 
@@ -530,8 +540,8 @@ def main() -> int:
             output,
             "error",
         )
-    except Exception as exc:  # noqa: BLE001
-        error = f"{type(exc).__name__}: {exc}"
+    except Exception:  # noqa: BLE001
+        error = traceback.format_exc()
         status = "error"
     finally:
         if server_spawned:
