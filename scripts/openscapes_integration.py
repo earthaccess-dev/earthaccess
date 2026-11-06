@@ -494,7 +494,7 @@ def main() -> int:
         hub_runtime_options = _load_hub_runtime_options(
             args.hub_runtime_options, args.image
         )
-        server_name, _ = _spawn_server(
+        server_name = _spawn_server(
             session,
             args.hub_url,
             username,
