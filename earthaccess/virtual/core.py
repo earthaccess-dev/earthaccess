@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import earthaccess
+from earthaccess._access import normalize_access
 from earthaccess.virtual._credentials import build_obstore_registry
 from earthaccess.virtual._parser import get_urls_for_parser, resolve_parser
 
@@ -21,8 +22,8 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
+    from earthaccess._access import AccessType, CanonicalAccessType
     from earthaccess.virtual._types import (
-        AccessType,
         CombineAttrsType,
         CompatType,
         DataVarsType,
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 def virtualize(  # noqa: PLR0913
     granules: list[earthaccess.DataGranule],
     *,
-    access: AccessType = "direct",
+    access: AccessType = "https",
     load: bool = False,
     group: str = "/",
     concat_dim: str | None = None,
@@ -68,8 +69,9 @@ def virtualize(  # noqa: PLR0913
     Parameters:
         granules: One or more ``DataGranule`` objects from
             ``earthaccess.search_data()``.
-        access: Cloud access mode.  ``"direct"`` uses S3 (fastest inside AWS
-            us-west-2); ``"indirect"`` uses HTTPS (works anywhere).
+        access: Access method. ``"https"`` (default) works anywhere; ``"s3"``
+            uses direct S3 access. Legacy values ``"direct"`` and ``"indirect"``
+            are also accepted.
         load: When ``False`` (default) returns a virtual dataset with
             ``ManifestArray`` variables.  When ``True`` materialises the
             references via a kerchunk round-trip and returns a concrete,
@@ -120,11 +122,11 @@ def virtualize(  # noqa: PLR0913
         )
 
         # Virtual dataset (no data downloaded)
-        vds = earthaccess.virtualize(granules, access="indirect", concat_dim="time")
+        vds = earthaccess.virtualize(granules, access="https", concat_dim="time")
         vds.virtualize.to_kerchunk("mur_combined.json", format="json")
 
         # Loaded dataset (kerchunk round-trip, lazy dask arrays)
-        ds = earthaccess.virtualize(granules, access="direct", load=True, concat_dim="time")
+        ds = earthaccess.virtualize(granules, access="s3", load=True, concat_dim="time")
         ```
     """
     if len(granules) == 0:
@@ -140,8 +142,9 @@ def virtualize(  # noqa: PLR0913
     # Validate / resolve parser early so callers get a clear error before any
     # network activity.
     resolved_parser = resolve_parser(parser, group=group if group != "/" else None)
+    canonical_access = normalize_access(access)
 
-    registry = build_obstore_registry(granules, access=access)
+    registry = build_obstore_registry(granules, access=canonical_access)
 
     # Attempt to open with the requested parser; fall back to HDFParser if
     # DMR++ sidecars are not present.
@@ -150,7 +153,7 @@ def virtualize(  # noqa: PLR0913
             granules=granules,
             parser=resolved_parser,
             registry=registry,
-            access=access,
+            access=canonical_access,
             concat_dim=concat_dim,
             preprocess=preprocess,
             parallel=parallel,
@@ -174,12 +177,12 @@ def virtualize(  # noqa: PLR0913
             "HDFParser",
             group=group if group != "/" else None,
         )
-        registry = build_obstore_registry(granules, access=access)
+        registry = build_obstore_registry(granules, access=canonical_access)
         vds = _open_virtual_mfdataset(
             granules=granules,
             parser=resolved_parser,
             registry=registry,
-            access=access,
+            access=canonical_access,
             concat_dim=concat_dim,
             preprocess=preprocess,
             parallel=parallel,
@@ -197,7 +200,7 @@ def virtualize(  # noqa: PLR0913
         vds=vds,
         granules=granules,
         group=group,
-        access=access,
+        access=canonical_access,
         reference_dir=reference_dir,
         reference_format=reference_format,
     )
@@ -212,7 +215,7 @@ def _open_virtual_mfdataset(  # noqa: PLR0913
     granules: list[earthaccess.DataGranule],
     parser: Any,
     registry: Any,
-    access: AccessType,
+    access: CanonicalAccessType,
     concat_dim: str | None,
     preprocess: Callable | None,
     parallel: ParallelType,
@@ -259,7 +262,7 @@ def _load_via_kerchunk(  # noqa: PLR0913
     vds: xr.Dataset,
     granules: list[earthaccess.DataGranule],
     group: str,
-    access: AccessType,
+    access: CanonicalAccessType,
     reference_dir: str | None,
     reference_format: ReferenceFormatType,
 ) -> xr.Dataset:
@@ -291,7 +294,7 @@ def _load_via_kerchunk(  # noqa: PLR0913
     vds.virtualize.to_kerchunk(str(ref_path), format=reference_format)
 
     storage_options = {
-        "remote_protocol": "s3" if access == "direct" else "https",
+        "remote_protocol": access,
         "remote_options": fs.storage_options,
     }
     return xr.open_dataset(

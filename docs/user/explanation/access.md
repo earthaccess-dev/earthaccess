@@ -17,6 +17,12 @@ The are two **access** methods available in `earthaccess`.  The first method is 
 ```python
 filelist = earthaccess.download(results)
 ```
+
+By default, downloads use HTTPS, which works from anywhere. If you are running in the AWS `us-west-2` region, you can opt into direct S3 downloads with `access="s3"`.
+
+```python
+filelist = earthaccess.download(results, access="s3")
+```
 ```
 QUEUEING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 1706.04it/s]
 PROCESSING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  6.89s/it]
@@ -73,6 +79,12 @@ Streaming data with the `open` method is very similar to `download`.
 
 ```python
 fileobjects = earthaccess.open(results)
+```
+
+`open` also uses HTTPS by default. Use `access="s3"` for direct S3 access.
+
+```python
+fileobjects = earthaccess.open(results, access="s3")
 ```
 ```
 QUEUEING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 1706.04it/s]

@@ -12,6 +12,7 @@ from typing_extensions import (
 )
 
 import earthaccess
+from earthaccess._access import AccessType, normalize_access
 from earthaccess.exceptions import LoginStrategyUnavailable, ServiceOutage
 from earthaccess.services import DataServicesQuery
 
@@ -388,6 +389,7 @@ def download(  # noqa: PLR0913
     provider: str | None = None,
     threads: int = 8,
     *,
+    access: AccessType = "https",
     show_progress: bool | None = None,
     credentials_endpoint: str | None = None,
     pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -395,9 +397,8 @@ def download(  # noqa: PLR0913
 ) -> list[Path]:
     """Retrieves data granules from a remote storage system. Provide the optional `local_path` argument to prevent repeated downloads.
 
-       * If we run this in the cloud, we will be using S3 to move data to `local_path`.
-       * If we run it outside AWS (us-west-2 region) and the dataset is cloud hosted,
-            we'll use HTTP links.
+       By default, data are downloaded over HTTPS. Set `access="s3"` to download
+       directly from S3.
 
     Parameters:
         granules: a granule, list of granules, a granule link (HTTP), or a list of granule links (HTTP)
@@ -407,6 +408,7 @@ def download(  # noqa: PLR0913
             month, and day of the current date, and `UUID` is the last 6 digits
             of a UUID4 value.
         provider: if we download a list of URLs, we need to specify the provider.
+        access: access method, either `"https"` (default) or `"s3"`.
         credentials_endpoint: S3 credentials endpoint to be used for obtaining temporary S3 credentials. This is only required if
             the metadata doesn't include it, or we pass urls to the method instead of `DataGranule` instances.
         threads: parallel number of threads to use to download the files, adjust as necessary, default = 8
@@ -437,6 +439,7 @@ def download(  # noqa: PLR0913
             local_path,
             provider,
             threads,
+            access=normalize_access(access),
             credentials_endpoint=credentials_endpoint,
             show_progress=show_progress,
             pqdm_kwargs=pqdm_kwargs,
@@ -454,6 +457,7 @@ def open(  # noqa: A001, PLR0913
     granules: list[str] | list[DataGranule],
     provider: str | None = None,
     *,
+    access: AccessType = "https",
     credentials_endpoint: str | None = None,
     show_progress: bool | None = None,
     pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -462,10 +466,14 @@ def open(  # noqa: A001, PLR0913
     """Returns a list of file-like objects that can be used to access files
     hosted on S3 or HTTPS by third party libraries like xarray.
 
+    By default, files are opened over HTTPS. Set `access="s3"` to open files
+    directly from S3.
+
     Parameters:
         granules: a list of granule instances **or** list of URLs, e.g. `s3://some-granule`.
             If a list of URLs is passed, we need to specify the data provider.
         provider: e.g. POCLOUD, NSIDC_CPRD, etc.
+        access: access method, either `"https"` (default) or `"s3"`.
         show_progress: whether or not to display a progress bar. If not specified, defaults to `True` for interactive sessions
             (i.e., in a notebook or a python REPL session), otherwise `False`.
         pqdm_kwargs: Additional keyword arguments to pass to pqdm, a parallel processing library.
@@ -480,6 +488,7 @@ def open(  # noqa: A001, PLR0913
     return earthaccess.__store__.open(
         granules=granules,
         provider=_normalize_location(provider),
+        access=normalize_access(access),
         credentials_endpoint=credentials_endpoint,
         show_progress=show_progress,
         pqdm_kwargs=pqdm_kwargs,

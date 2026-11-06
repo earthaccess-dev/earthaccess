@@ -28,6 +28,7 @@ from typing_extensions import deprecated
 
 import earthaccess
 
+from ._access import AccessType, CanonicalAccessType, normalize_access
 from .auth import Auth
 from .daac import DAAC_TEST_URLS, find_provider
 from .exceptions import DownloadFailure, EulaNotAccepted
@@ -36,7 +37,6 @@ from .search import DataCollectionsQuery
 
 logger = logging.getLogger(__name__)
 
-_HTTP_OK = 200
 _HTTP_SUCCESS_CODES = range(200, 300)
 _HTTP_CLIENT_ERROR_CODES = range(400, 500)
 _HTTP_SERVER_ERROR_CODES = range(500, 600)
@@ -165,7 +165,7 @@ def _open_files(
 
 
 def make_instance(
-    cls: Any,
+    _cls: Any,
     granule: DataGranule,
     auth: Auth,
     data: Any,
@@ -175,20 +175,16 @@ def make_instance(
         earthaccess.__auth__ = auth
         earthaccess.login()
 
-    # When sending EarthAccessFiles between processes, it's possible that
-    # we will need to switch between s3 <--> https protocols.
-    if (earthaccess.__store__.in_region and cls is not s3fs.S3File) or (
-        not earthaccess.__store__.in_region and cls is s3fs.S3File
-    ):
-        # NOTE: This uses the first data_link listed in the granule. That's not
-        #       guaranteed to be the right one.
-        return earthaccess.open([granule])[0]
+    # Restore the original serialized file state so multi-file granules and
+    # file handles created from raw URLs keep pointing at the correct object.
+    # Access is explicit, so do not switch protocols based on the worker's
+    # environment.
     return EarthAccessFile(loads(data), granule)  # noqa: S301
 
 
 def _get_url_granule_mapping(
     granules: list[DataGranule],
-    access: str,
+    access: AccessType,
 ) -> Mapping[str, DataGranule]:
     """Construct a mapping between file urls and granules."""
     url_mapping = {}
@@ -263,7 +259,6 @@ class Store:
         else:
             logger.warning("The current session is not authenticated with NASA")
             self.auth = None
-        self.in_region = self._running_in_us_west_2()
 
     def _derive_concept_provider(self, concept_id: str | None = None) -> str:
         if concept_id is not None:
@@ -282,25 +277,6 @@ class Store:
             if "/s3credentials" in link["URL"]:
                 return link["URL"]
         return None
-
-    def _running_in_us_west_2(self) -> bool:
-        session = self.auth.get_session()
-        try:
-            # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
-            token_ = session.put(
-                "http://169.254.169.254/latest/api/token",
-                headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
-                timeout=1,
-            )
-            resp = session.get(
-                "http://169.254.169.254/latest/meta-data/placement/region",
-                timeout=1,
-                headers={"X-aws-ec2-metadata-token": token_.text},
-            )
-        except Exception:  # noqa: BLE001
-            return False
-
-        return resp.status_code == _HTTP_OK and resp.content == b"us-west-2"
 
     def set_requests_session(self, url: str, method: str = "get") -> None:
         """Sets up a `requests` session with bearer tokens that are used by CMR.
@@ -459,6 +435,7 @@ class Store:
         granules: list[str] | list[DataGranule],
         provider: str | None = None,
         *,
+        access: AccessType = "https",
         show_progress: bool | None = None,
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -471,6 +448,8 @@ class Store:
             granules: a list of granule instances **or** list of URLs, e.g. `s3://some-granule`.
                 If a list of URLs is passed, we need to specify the data provider.
             provider: e.g. POCLOUD, NSIDC_CPRD, etc.
+            access: access method, either `"https"` (default) or `"s3"`.
+                When URLs are provided, their scheme takes precedence.
             show_progress: whether or not to display a progress bar. If not specified, defaults to `True` for interactive sessions
                 (i.e., in a notebook or a python REPL session), otherwise `False`.
             credentials_endpoint: S3 credentials endpoint
@@ -495,6 +474,7 @@ class Store:
             return self._open(
                 granules,
                 provider,
+                access=normalize_access(access),
                 credentials_endpoint=credentials_endpoint,
                 pqdm_kwargs=pqdm_kwargs,
                 open_kwargs=open_kwargs,
@@ -502,11 +482,12 @@ class Store:
         return []
 
     @singledispatchmethod
-    def _open(
+    def _open(  # noqa: PLR0913
         self,
         granules: list[str] | list[DataGranule],
         provider: str | None = None,
         *,
+        access: CanonicalAccessType = "https",
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
@@ -515,11 +496,12 @@ class Store:
         raise NotImplementedError(msg)
 
     @_open.register
-    def _open_granules(
+    def _open_granules(  # noqa: PLR0913
         self,
         granules: list[DataGranule],
         provider: str | None = None,
         *,
+        access: CanonicalAccessType = "https",
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
@@ -534,59 +516,57 @@ class Store:
         if self.auth is None:
             msg = "A valid Earthdata login instance is required to retrieve credentials"
             raise ValueError(msg)
-        if self.in_region:
-            if granules[0].cloud_hosted:
-                access = "direct"
-                provider = granules[0]["meta"]["provider-id"]
-                endpoint = credentials_endpoint or self._own_s3_credentials(
-                    granules[0]["umm"]["RelatedUrls"],
-                )
-                if endpoint is not None:
-                    logger.info("using endpoint: %s", endpoint)
-                    s3_fs = self.get_s3_filesystem(endpoint=endpoint)
-                else:
-                    logger.info("using provider: %s", provider)
-                    s3_fs = self.get_s3_filesystem(provider=provider)
-            else:
-                access = "on_prem"
-                s3_fs = None
 
-            url_mapping = _get_url_granule_mapping(granules, access)
-            if s3_fs is not None:
-                try:
-                    return _open_files(
-                        url_mapping,
-                        fs=s3_fs,
-                        pqdm_kwargs=pqdm_kwargs,
-                        open_kwargs=open_kwargs,
-                    )
-                except Exception as e:
+        if access == "s3":
+            url_mapping = _get_url_granule_mapping(granules, access="s3")
+            for granule in granules:
+                if not granule.data_links(access="s3"):
                     msg = (
-                        "An exception occurred while trying to access remote files on S3. "
-                        "This may be caused by trying to access the data outside the us-west-2 region."
-                        f"Exception: {traceback.format_exc()}"
+                        f"Granule {granule['meta'].get('concept-id', '<unknown>')} "
+                        "has no S3 data links."
                     )
-                    raise RuntimeError(msg) from e
+                    raise ValueError(msg)
+
+            provider = granules[0]["meta"]["provider-id"]
+            endpoint = credentials_endpoint or self._own_s3_credentials(
+                granules[0]["umm"]["RelatedUrls"],
+            )
+            if endpoint is not None:
+                logger.info("using endpoint: %s", endpoint)
+                s3_fs = self.get_s3_filesystem(endpoint=endpoint)
             else:
-                return self._open_urls_https(
+                logger.info("using provider: %s", provider)
+                s3_fs = self.get_s3_filesystem(provider=provider)
+
+            try:
+                return _open_files(
                     url_mapping,
+                    fs=s3_fs,
                     pqdm_kwargs=pqdm_kwargs,
                     open_kwargs=open_kwargs,
                 )
-        else:
-            url_mapping = _get_url_granule_mapping(granules, access="on_prem")
-            return self._open_urls_https(
-                url_mapping,
-                pqdm_kwargs=pqdm_kwargs,
-                open_kwargs=open_kwargs,
-            )
+            except Exception as e:
+                msg = (
+                    "An exception occurred while trying to access remote files on S3. "
+                    "Check that S3 access is available for the requested granules. "
+                    f"Exception: {traceback.format_exc()}"
+                )
+                raise RuntimeError(msg) from e
+
+        url_mapping = _get_url_granule_mapping(granules, access="https")
+        return self._open_urls_https(
+            url_mapping,
+            pqdm_kwargs=pqdm_kwargs,
+            open_kwargs=open_kwargs,
+        )
 
     @_open.register
-    def _open_urls(
+    def _open_urls(  # noqa: PLR0913
         self,
         granules: list[str],
         provider: str | None = None,
         *,
+        access: CanonicalAccessType = "https",  # noqa: ARG002
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
@@ -606,7 +586,7 @@ class Store:
             raise ValueError(msg)
 
         url_mapping: Mapping[str, None] = dict.fromkeys(granules)
-        if self.in_region and granules[0].startswith("s3"):
+        if granules[0].startswith("s3"):
             if provider is not None:
                 s3_fs = self.get_s3_filesystem(provider=provider)
             elif credentials_endpoint is not None:
@@ -622,7 +602,7 @@ class Store:
                 except Exception as e:
                     msg = (
                         "An exception occurred while trying to access remote files on S3. "
-                        "This may be caused by trying to access the data outside the us-west-2 region. "
+                        "Check that S3 access is available for the requested granules. "
                         f"Exception: {traceback.format_exc()}"
                     )
                     raise RuntimeError(msg) from e
@@ -633,9 +613,6 @@ class Store:
                 credentials_endpoint,
             )
             return []
-        if granules[0].startswith("s3"):
-            msg = "We cannot open S3 links when we are not in-region, try using HTTPS links"
-            raise ValueError(msg)
         return self._open_urls_https(
             url_mapping,
             pqdm_kwargs=pqdm_kwargs,
@@ -648,6 +625,7 @@ class Store:
         provider: str | None = None,
         threads: int = 8,
         *,
+        access: AccessType = "https",
         credentials_endpoint: str | None = None,
         show_progress: bool | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -655,12 +633,8 @@ class Store:
     ) -> list[Path]:
         """Retrieves data granules from a remote storage system.
 
-           * If we run this in the cloud,
-             we are moving data from S3 to a cloud compute instance (EC2, AWS Lambda).
-           * If we run it outside the us-west-2 region and the data granules are part of a cloud-based
-             collection, the method will not get any files.
-           * If we request data granules from an on-prem collection,
-             the data will be effectively downloaded to a local directory.
+           By default, data are downloaded over HTTPS. Set `access="s3"` to
+           download directly from S3.
 
         Parameters:
             granules: A list of granules(DataGranule) instances or a list of granule links (HTTP).
@@ -670,6 +644,8 @@ class Store:
                 month, and day of the current date, and `UUID` is the last 6 digits
                 of a UUID4 value.
             provider: a valid cloud provider, each DAAC has a provider code for their cloud distributions
+            access: access method, either `"https"` (default) or `"s3"`.
+                When URLs are provided, their scheme takes precedence.
             credentials_endpoint: If provided, this will be used to get S3 credentials
             threads: Parallel number of threads to use to download the files;
                 adjust as necessary, default = 8.
@@ -706,6 +682,7 @@ class Store:
             granules,
             Path(local_path),
             provider,
+            access=normalize_access(access),
             credentials_endpoint=credentials_endpoint,
             pqdm_kwargs=pqdm_kwargs,
             force=force,
@@ -718,23 +695,22 @@ class Store:
         local_path: Path,
         provider: str | None = None,
         *,
+        access: CanonicalAccessType = "https",
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
     ) -> list[Path]:
         """Retrieves data granules from a remote storage system.
 
-           * If we run this in the cloud,
-             we are moving data from S3 to a cloud compute instance (EC2, AWS Lambda).
-           * If we run it outside the us-west-2 region and the data granules are part of a cloud-based
-             collection, the method will not get any files.
-           * If we request data granules from an on-prem collection,
-             the data will be effectively downloaded to a local directory.
+           By default, data are downloaded over HTTPS. Set `access="s3"` to
+           download directly from S3.
 
         Parameters:
             granules: A list of granules (DataGranule) instances or a list of granule links (HTTP).
             local_path: Local directory to store the remote data granules
             provider: a valid cloud provider, each DAAC has a provider code for their cloud distributions
+            access: access method, either `"https"` (default) or `"s3"`.
+                When URLs are provided, their scheme takes precedence.
             pqdm_kwargs: Additional keyword arguments to pass to pqdm, a parallel processing library.
                 See pqdm documentation for available options. Default is to use immediate exception behavior
                 and the number of jobs specified by the `threads` parameter.
@@ -775,6 +751,7 @@ class Store:
         local_path: Path,
         provider: str | None = None,
         *,
+        access: CanonicalAccessType = "https",  # noqa: ARG002
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
@@ -784,7 +761,7 @@ class Store:
         if (
             provider is None
             and credentials_endpoint is None
-            and self.in_region
+            and data_links[0].startswith("s3")
             and "cumulus" in data_links[0]
         ):
             msg = (
@@ -792,7 +769,7 @@ class Store:
                 "we need to use one from `earthaccess.list_cloud_providers()` or if known the S3 credential endpoint"
             )
             raise ValueError(msg)
-        if self.in_region and data_links[0].startswith("s3"):
+        if data_links[0].startswith("s3"):
             if credentials_endpoint is not None:
                 logger.info(
                     "Accessing cloud dataset using credentials_endpoint: %s",
@@ -809,7 +786,6 @@ class Store:
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
 
-        # if we are not in AWS
         return self._download_onprem_granules(
             data_links,
             local_path,
@@ -824,20 +800,15 @@ class Store:
         local_path: Path,
         provider: str | None = None,
         *,
-        credentials_endpoint: str | None = None,  # noqa: ARG002
+        access: CanonicalAccessType = "https",
+        credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
     ) -> list[Path]:
-        data_links: list = []
         provider = granules[0]["meta"]["provider-id"]
-        endpoint = self._own_s3_credentials(granules[0]["umm"]["RelatedUrls"])
-        cloud_hosted = granules[0].cloud_hosted
-        access = "direct" if (cloud_hosted and self.in_region) else "external"
         data_links = list(
-            # we are not in-region
             chain.from_iterable(
-                granule.data_links(access=access, in_region=self.in_region)
-                for granule in granules
+                granule.data_links(access=access) for granule in granules
             ),
         )
         total_size = round(sum(granule._size for granule in granules) / 1024, 2)  # noqa: SLF001
@@ -846,7 +817,15 @@ class Store:
             len(granules),
             total_size,
         )
-        if access == "direct":
+
+        if access == "s3":
+            if not data_links:
+                msg = "No S3 data links found for the requested granules."
+                raise ValueError(msg)
+
+            endpoint = credentials_endpoint or self._own_s3_credentials(
+                granules[0]["umm"]["RelatedUrls"],
+            )
             if endpoint is not None:
                 logger.info(
                     "Accessing cloud dataset using dataset endpoint credentials: %s",
@@ -865,8 +844,6 @@ class Store:
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
 
-        # if the data are cloud-based, but we are not in AWS,
-        # it will be downloaded as if it was on prem
         return self._download_onprem_granules(
             data_links,
             local_path,

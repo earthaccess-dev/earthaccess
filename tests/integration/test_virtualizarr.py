@@ -35,25 +35,25 @@ def granules(request):
     )
 
 
-def test_virtualize_materialize_indexable(granules):
+def test_virtualize_materialize_indexable(granules, access):
     # Simply check that the dmrpp can be found, parsed, and loaded. Actual parser result is checked in virtualizarr
     vds = earthaccess.virtualize(
         granules,
         concat_dim="time",
         load=True,
-        access="indirect",
+        access=access,
     )
     # We can use fancy indexing
     assert vds.isel(time=0) is not None
 
 
-def test_virtualize_non_materialize(granules):
+def test_virtualize_non_materialize(granules, access):
     # Simply check that the dmrpp can be found, parsed, and loaded. Actual parser result is checked in virtualizarr
     vds = earthaccess.virtualize(
         granules,
         concat_dim="time",
         load=False,
-        access="indirect",
+        access=access,
     )
     # we are not materializing the data
     for name in vds.data_vars:
