@@ -66,7 +66,8 @@ def _request(
     url: str,
     **kwargs: Any,
 ) -> requests.Response:
-    response = session.request(method, url, timeout=60, **kwargs)
+    timeout = kwargs.pop("timeout", 60)
+    response = session.request(method, url, timeout=timeout, **kwargs)
     if response.status_code >= 400:
         raise HubAPIError(method, url, response.status_code, response.text)
     return response
