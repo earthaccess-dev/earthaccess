@@ -130,7 +130,14 @@ def get_urls_for_parser(
 
     urls: list[str] = []
     for granule in granules:
-        url = granule.data_links(access=canonical_access)[0]
+        links = granule.data_links(access=canonical_access)
+        if not links:
+            msg = (
+                f"Granule {granule['meta']['concept-id']} has no "
+                f"{canonical_access} data links."
+            )
+            raise ValueError(msg)
+        url = links[0]
         if is_dmrpp:
             url = url + ".dmrpp"
         urls.append(url)

@@ -3,6 +3,7 @@ import os
 import threading
 import unittest
 from pathlib import Path
+from pickle import dumps
 from unittest.mock import MagicMock, patch
 
 import earthaccess
@@ -10,11 +11,16 @@ import fsspec
 import pytest
 import responses
 import s3fs
-from earthaccess import Auth, Store
+from earthaccess import Auth, DataGranule, Store
 from earthaccess.auth import SessionWithHeaderRedirection
 from earthaccess.daac import DAACS
 from earthaccess.exceptions import DownloadFailure, EulaNotAccepted
-from earthaccess.store import EarthAccessFile, _open_files, _sibling_tempfile
+from earthaccess.store import (
+    EarthAccessFile,
+    _open_files,
+    _sibling_tempfile,
+    make_instance,
+)
 from pqdm.threads import pqdm
 
 
@@ -445,3 +451,70 @@ def test_access_normalized_for_open_and_download(
 
     method = getattr(store, store_method)
     assert method.call_args.kwargs["access"] == expected
+
+
+def test_make_instance_restores_serialized_file(monkeypatch):
+    fs = fsspec.filesystem("memory")
+    with fs.open("foo", "wb") as f:
+        f.write(b"bar")
+    f = fs.open("foo", "rb")
+    auth = MagicMock()
+    auth.authenticated = True
+    monkeypatch.setattr(earthaccess, "__auth__", auth)
+
+    restored = make_instance(s3fs.S3File, None, auth, dumps(f))
+
+    assert restored.read() == b"bar"
+    fs.store.clear()
+
+
+def test_open_s3_uses_links_without_cloud_hosted(monkeypatch):
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {"provider-id": "POCLOUD"},
+        },
+        cloud_hosted=False,
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock(return_value=MagicMock())
+    monkeypatch.setattr(
+        "earthaccess.store._open_files",
+        lambda *_args, **_kwargs: ["opened"],
+    )
+
+    assert store.open([granule], access="s3") == ["opened"]
+
+
+def test_download_s3_uses_links_without_cloud_hosted(monkeypatch, tmp_path):
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {"provider-id": "POCLOUD"},
+        },
+        cloud_hosted=False,
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock(return_value=MagicMock())
+
+    def fake_download(_s3_fs, file, local_path, *, force=False):
+        _ = force
+        path = Path(local_path) / Path(file).name
+        path.write_text("data")
+        return path
+
+    monkeypatch.setattr(store, "_download_cloud_file", fake_download)
+
+    files = store.get([granule], str(tmp_path), access="s3")
+
+    assert files == [tmp_path / "file.nc"]

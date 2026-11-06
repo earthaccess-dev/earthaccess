@@ -510,7 +510,9 @@ class DataGranule(CustomDict):
             elif link.startswith("https://") and (
                 "cumulus" in link or "protected" in link
             ):
-                s3_links.append(f"s3://{link.split('nasa.gov/')[1]}")
+                _, separator, suffix = link.partition("nasa.gov/")
+                if separator:
+                    s3_links.append(f"s3://{suffix}")
         return s3_links
 
     def data_links(
@@ -539,7 +541,8 @@ class DataGranule(CustomDict):
                 stacklevel=2,
             )
             if access is None:
-                access = "s3" if in_region else "https"
+                # Preserve the old in_region behavior for on-prem granules.
+                access = "s3" if in_region and self.cloud_hosted else "https"
 
         canonical_access = normalize_access(access)
         https_links = self._filter_related_links("GET DATA")
@@ -548,11 +551,14 @@ class DataGranule(CustomDict):
         if canonical_access == "https":
             return https_links
 
-        if not s3_links and https_links:
+        if s3_links:
+            return s3_links
+
+        if self.cloud_hosted:
             # This is guessing the S3 links for some cloud collections that for
             # some reason only offered HTTPS links
             return self._derive_s3_link(https_links)
-        return s3_links
+        return []
 
     @property
     def dataviz_links(self) -> list[str]:

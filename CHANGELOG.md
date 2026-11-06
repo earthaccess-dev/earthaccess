@@ -11,7 +11,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - `earthaccess.open()` and `earthaccess.download()` now use HTTPS by default.
   Use `access="s3"` to opt into direct S3 access. Runtime detection of the
-  AWS `us-west-2` region has been removed.
+  AWS `us-west-2` region has been removed, including the `Store.in_region`
+  attribute. `DataGranule.data_links(in_region=...)` is deprecated in favor of
+  `access=`. Serialized file handles now retain their original access method on
+  Dask workers instead of switching protocols based on the worker environment.
 - `earthaccess.virtualize()` now uses HTTPS by default and accepts
   `access="https"` or `access="s3"`. Legacy `"indirect"` and `"direct"` values
   remain supported.

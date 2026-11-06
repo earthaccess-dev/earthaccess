@@ -72,21 +72,23 @@ def get_granule_credentials_endpoint_and_region(
 
 def validate_granules(
     granules: Sequence[earthaccess.DataGranule],
+    access: AccessType,
 ) -> None:
     """Validate that the given granules are suitable for virtualizing.
     Parameters:
         granules: The granules to validate.
+        access: The requested access method.
 
     Raises:
         ValueError: If the list of granules is empty.
-        ValueError: If any granule does not have data links.
+        ValueError: If any granule does not have data links for the requested access.
     """
     if not granules or len(granules) == 0:
         msg = "No valid granules provided."
         raise ValueError(msg)
     for granule in granules:
-        if not granule.data_links():
-            msg = f"Granule {granule['meta']['concept-id']} has no data links."
+        if not granule.data_links(access=access):
+            msg = f"Granule {granule['meta']['concept-id']} has no {access} data links."
             raise ValueError(msg)
 
 
@@ -124,8 +126,8 @@ def build_obstore_registry(
         )
         raise ImportError(msg) from None
 
-    validate_granules(granules)
     canonical_access = normalize_access(access)
+    validate_granules(granules, access=canonical_access)
 
     parsed_url = urlparse(granules[0].data_links(access=canonical_access)[0])
     auth = earthaccess.__auth__

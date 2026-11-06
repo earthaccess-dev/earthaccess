@@ -165,7 +165,7 @@ def _open_files(
 
 
 def make_instance(
-    cls: Any,
+    _cls: Any,
     granule: DataGranule,
     auth: Auth,
     data: Any,
@@ -175,12 +175,10 @@ def make_instance(
         earthaccess.__auth__ = auth
         earthaccess.login()
 
-    # When sending EarthAccessFiles between processes, S3 file objects need to
-    # be reopened to restore their filesystem and credentials.
-    if cls is s3fs.S3File:
-        # NOTE: This uses the first data_link listed in the granule. That's not
-        #       guaranteed to be the right one.
-        return earthaccess.open([granule], access="s3")[0]
+    # Restore the original serialized file state so multi-file granules and
+    # file handles created from raw URLs keep pointing at the correct object.
+    # Access is explicit, so do not switch protocols based on the worker's
+    # environment.
     return EarthAccessFile(loads(data), granule)  # noqa: S301
 
 
@@ -520,8 +518,9 @@ class Store:
             raise ValueError(msg)
 
         if access == "s3":
-            if not granules[0].cloud_hosted:
-                msg = "S3 access requested, but this granule is not cloud-hosted."
+            url_mapping = _get_url_granule_mapping(granules, access="s3")
+            if not url_mapping:
+                msg = "No S3 data links found for the requested granules."
                 raise ValueError(msg)
 
             provider = granules[0]["meta"]["provider-id"]
@@ -535,10 +534,6 @@ class Store:
                 logger.info("using provider: %s", provider)
                 s3_fs = self.get_s3_filesystem(provider=provider)
 
-            url_mapping = _get_url_granule_mapping(granules, access="s3")
-            if not url_mapping:
-                msg = "No S3 data links found for the requested granules."
-                raise ValueError(msg)
             try:
                 return _open_files(
                     url_mapping,
@@ -820,9 +815,6 @@ class Store:
         )
 
         if access == "s3":
-            if not granules[0].cloud_hosted:
-                msg = "S3 access requested, but this granule is not cloud-hosted."
-                raise ValueError(msg)
             if not data_links:
                 msg = "No S3 data links found for the requested granules."
                 raise ValueError(msg)

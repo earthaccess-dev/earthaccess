@@ -359,3 +359,26 @@ def test_credentials_raises_when_no_endpoint_anywhere(mock_search_datasets) -> N
 
     with pytest.raises(ValueError, match="did not provide an S3CredentialsAPIEndpoint"):
         get_granule_credentials_endpoint_and_region(_granule_no_endpoint)
+
+
+def test_virtualize_raises_for_missing_requested_access_links() -> None:
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {
+                        "URL": "https://example.com/data/file.h5",
+                        "Type": "GET DATA",
+                    }
+                ]
+            },
+            "meta": {
+                "concept-id": "G1-TEST",
+                "collection-concept-id": "C1-TEST",
+            },
+        },
+        cloud_hosted=False,
+    )
+
+    with pytest.raises(ValueError, match="no s3 data links"):
+        virtualize([granule], access="s3")

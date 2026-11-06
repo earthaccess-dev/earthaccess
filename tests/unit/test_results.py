@@ -425,3 +425,51 @@ def test_derived_s3_links_use_each_link_not_just_the_first():
     ]
     # Each input link maps to a distinct S3 URL; the first is not duplicated.
     assert len(set(s3_links)) == len(s3_links)
+
+
+def test_data_links_in_region_preserves_https_for_on_prem():
+    url = "https://example.com/data/file.nc"
+    granule = DataGranule(
+        {
+            "umm": {"RelatedUrls": [{"URL": url, "Type": "GET DATA"}]},
+            "meta": {},
+        },
+        cloud_hosted=False,
+    )
+
+    with pytest.deprecated_call():
+        links = granule.data_links(in_region=True)
+
+    assert links == [url]
+
+
+def test_data_links_s3_skips_unrecognized_protected_urls():
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "https://example.com/protected_file.nc", "Type": "GET DATA"}
+                ]
+            },
+            "meta": {},
+        },
+        cloud_hosted=True,
+    )
+
+    assert granule.data_links(access="s3") == []
+
+
+def test_data_links_s3_uses_explicit_links_without_cloud_hosted():
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {},
+        },
+        cloud_hosted=False,
+    )
+
+    assert granule.data_links(access="s3") == ["s3://bucket/file.nc"]
