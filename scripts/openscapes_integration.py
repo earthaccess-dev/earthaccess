@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -228,7 +229,7 @@ def _create_kernel(
         session,
         "POST",
         url,
-        json={"name": "python3", "env": _kernel_env()},
+        json={"name": "python3"},
         timeout=timeout_seconds,
     )
     return str(response.json()["id"])
@@ -257,12 +258,17 @@ def _build_execution_code(
     repo_dir: str,
     expected_commit: str | None,
     test_command: str,
+    env: dict[str, str],
 ) -> str:
     command = shlex.split(test_command)
+    encoded_env = base64.b64encode(json.dumps(env).encode()).decode()
     return (
+        "import base64\n"
+        "import json\n"
         "import os\n"
         "import subprocess\n"
         "import sys\n"
+        f'os.environ.update(json.loads(base64.b64decode("{encoded_env}")))\n'
         f"repo_dir = {repo_dir!r}\n"
         f"expected_commit = {expected_commit!r}\n"
         "actual_commit = subprocess.check_output(\n"
@@ -539,6 +545,7 @@ def main() -> int:
             args.repo_dir,
             args.expected_commit,
             args.test_command,
+            _kernel_env(),
         )
         output = _execute_code(
             session,
