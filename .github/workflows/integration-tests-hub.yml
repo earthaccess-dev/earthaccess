@@ -65,7 +65,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
-      image: ${{ steps.meta.outputs.image }}
+      image: ${{ steps.pin.outputs.image }}
+      digest: ${{ steps.pin.outputs.digest }}
       commit: ${{ steps.meta.outputs.commit }}
       short_sha: ${{ steps.meta.outputs.short_sha }}
       pr_number: ${{ steps.meta.outputs.pr_number }}
@@ -100,7 +101,8 @@ jobs:
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         if: steps.meta.outputs.needs_build == 'true'
 
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         if: steps.meta.outputs.needs_build == 'true'
         with:
           context: .
@@ -114,9 +116,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Pin image digest
+        id: pin
+        env:
+          IMAGE_TAG: ${{ steps.meta.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          NEEDS_BUILD: ${{ steps.meta.outputs.needs_build }}
+        run: |
+          if [ "${NEEDS_BUILD}" = "true" ]; then
+            image="${IMAGE_TAG%:*}@${DIGEST}"
+          else
+            image="${IMAGE_TAG}"
+          fi
+          echo "image=${image}" >> "${GITHUB_OUTPUT}"
+          echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
+
       - name: Smoke test image
         env:
-          IMAGE: ${{ steps.meta.outputs.image }}
+          IMAGE: ${{ steps.pin.outputs.image }}
           COMMIT: ${{ steps.meta.outputs.commit }}
         run: |
           docker pull "${IMAGE}"
@@ -128,7 +145,7 @@ jobs:
       - name: Verify image is publicly pullable
         if: steps.meta.outputs.needs_build == 'true'
         env:
-          IMAGE: ${{ steps.meta.outputs.image }}
+          IMAGE: ${{ steps.pin.outputs.image }}
         run: |
           docker pull "${IMAGE}"
 
