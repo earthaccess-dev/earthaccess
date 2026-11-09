@@ -100,15 +100,23 @@ class TestResults(VCRTestCase):
         return myvcr
 
     def test_no_results(self):
-        """If we search for a collection that doesn't exist, we should get no results."""
-        granules = earthaccess.search_data(
-            # STAC collection name; correct short name is OPERA_L3_DSWX-HLS_V1
-            # Example discussed in: https://github.com/earthaccess-dev/earthaccess/pull/839
-            short_name="OPERA_L3_DSWX-HLS_V1_1.0",
-            bounding_box=(-95.19, 30.59, -94.99, 30.79),
-            temporal=("2024-04-30", "2024-05-31"),
-        )
+        """If we search for a collection that doesn't exist, we should get no results
+        and a logged warning that explains what to check.
+        """
+        with self.assertLogs("earthaccess", level="WARNING") as logs:
+            granules = earthaccess.search_data(
+                # STAC collection name; correct short name is OPERA_L3_DSWX-HLS_V1
+                # Example discussed in: https://github.com/earthaccess-dev/earthaccess/pull/839
+                short_name="OPERA_L3_DSWX-HLS_V1_1.0",
+                bounding_box=(-95.19, 30.59, -94.99, 30.79),
+                temporal=("2024-04-30", "2024-05-31"),
+            )
         assert len(granules) == 0
+        assert len(logs.output) == 1
+        self.assertRegex(
+            logs.output[0],
+            r"No granules found.*bounding_box, short_name, temporal",
+        )
 
     def test_data_links(self):
         granules = earthaccess.search_data(
