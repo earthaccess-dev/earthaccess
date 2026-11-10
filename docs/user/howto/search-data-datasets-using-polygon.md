@@ -22,4 +22,4 @@ results = earthaccess.search_data(
 
 `polygon` is defined as a list of _tuples_ `(longitude, latitude)` that define the vertices of the polygon.  Polygon vertices must be in counter-clockwise order.
 
-See [Search](https://earthaccess.readthedocs.io/en/stable/user/explanation/search/#search-for-datasets-or-data-using-a-region-of-interest) exlanation page for more details.
+See [Search](../../user/explanation/search.md#search-for-datasets-or-data-using-a-region-of-interest) exlanation page for more details and other spatial search methods.
