@@ -8,6 +8,8 @@ from textwrap import dedent, indent
 from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from geopandas import GeoDataFrame
 
     from .search import DataCollections, DataGranules
@@ -158,10 +160,15 @@ class CustomDict(dict):
         else:
             self.render_dict = self._filter_fields_(fields)
 
+    def _umm_record(self) -> dict[str, Any]:
+        umm = self.get("umm")
+        return umm if isinstance(umm, dict) else {}
+
     def _filter_fields_(self, fields: list[str]) -> dict[str, Any]:
+        umm = self._umm_record()
         filtered_dict = {
             "umm": {
-                (field, self["umm"][field]) for field in fields if field in self["umm"]
+                (field, umm[field]) for field in fields if field in umm
             },
         }
         basic_dict = {
@@ -178,7 +185,7 @@ class CustomDict(dict):
         """Filter RelatedUrls from the UMM fields on CMR."""
         return [
             link["URL"]
-            for link in self["umm"].get("RelatedUrls", [])
+            for link in self._umm_record().get("RelatedUrls", [])
             if link.get("Type") == link_type
         ]
 
@@ -233,7 +240,7 @@ class DataCollection(CustomDict):
         Returns:
             The value of a given field inside the UMM (Unified Metadata Model).
         """
-        return self["umm"].get(umm_field, "")
+        return self._umm_record().get(umm_field, "")
 
     @property
     def doi(self) -> str | None:
@@ -242,7 +249,7 @@ class DataCollection(CustomDict):
         Returns:
             This collection's DOI information, or `None`, if it has none.
         """
-        doi = self["umm"].get("DOI", {})
+        doi = self._umm_record().get("DOI", {})
         if isinstance(doi, dict):
             return doi.get("DOI", None)
         return None
@@ -284,11 +291,10 @@ class DataCollection(CustomDict):
         Returns:
             The collection data type, i.e. HDF5, CSV etc., if available.
         """
-        return str(
-            self["umm"]
-            .get("ArchiveAndDistributionInformation", {})
-            .get("FileDistributionInformation", ""),
-        )
+        archive_info = self._umm_record().get("ArchiveAndDistributionInformation")
+        if not isinstance(archive_info, dict):
+            return ""
+        return str(archive_info.get("FileDistributionInformation", ""))
 
     @property
     def version(self) -> str:
@@ -297,7 +303,7 @@ class DataCollection(CustomDict):
         Returns:
             The collection's version.
         """
-        return self["umm"].get("Version", "")
+        return self._umm_record().get("Version", "")
 
     @property
     def abstract(self) -> str:
@@ -306,7 +312,7 @@ class DataCollection(CustomDict):
         Returns:
             The abstract of a collection.
         """
-        return self["umm"].get("Abstract", "")
+        return self._umm_record().get("Abstract", "")
 
     @property
     def landing_page(self) -> str:
@@ -334,7 +340,8 @@ class DataCollection(CustomDict):
         Returns:
             The S3 bucket information if the collection has it (**cloud hosted collections only**).
         """
-        return self["umm"].get("DirectDistributionInformation", {})
+        info = self._umm_record().get("DirectDistributionInformation")
+        return info if isinstance(info, dict) else {}
 
     @property
     def services(self) -> dict[Any, list[dict[str, Any]]]:
@@ -622,6 +629,9 @@ class Results:
     ) -> None:
         self._items = items
         self._query = query
+
+    def __iter__(self) -> Iterator[DataGranule | DataCollection]:
+        return iter(self._items)
 
     def __repr__(self) -> str:
         return (

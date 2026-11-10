@@ -429,11 +429,11 @@ class DataCollectionsQuery(CollectionQuery):
         return super().temporal(date_from, date_to, exclude_boundary)
 
     @staticmethod
-    def to_geopandas(collections: list[DataCollection]) -> "gpd.GeoDataFrame":
-        """Convert a list of DataCollection objects to a GeoPandas GeoDataFrame.
+    def to_geopandas(collections: Iterable[DataCollection]) -> "gpd.GeoDataFrame":
+        """Convert collection results to a GeoPandas GeoDataFrame.
 
         Parameters:
-            collections: A list of DataCollection objects.
+            collections: An iterable of DataCollection objects, including a Results object.
 
         Returns:
             A GeoPandas GeoDataFrame containing the collection data.
@@ -462,6 +462,8 @@ class DataCollectionsQuery(CollectionQuery):
                 "(or `pip install geopandas`)."
             )
             raise ModuleNotFoundError(msg) from e
+
+        collections = list(collections)
 
         def _geometry(collection: DataCollection) -> BaseGeometry | None:
             """Extracts the geometry from a DataCollection object.
@@ -1055,11 +1057,11 @@ class DataGranulesQuery(GranuleQuery):
         return self
 
     @staticmethod
-    def to_geopandas(granules: list[DataGranule]) -> "gpd.GeoDataFrame":
-        """Convert a list of DataGranule objects to a GeoPandas GeoDataFrame.
+    def to_geopandas(granules: Iterable[DataGranule]) -> "gpd.GeoDataFrame":
+        """Convert granule results to a GeoPandas GeoDataFrame.
 
         Parameters:
-            granules: A list of DataGranule objects.
+            granules: An iterable of DataGranule objects, including a Results object.
 
         Returns:
             A GeoPandas GeoDataFrame containing the granule data.
@@ -1089,6 +1091,8 @@ class DataGranulesQuery(GranuleQuery):
                 "(or `pip install geopandas`)."
             )
             raise ModuleNotFoundError(msg) from e
+
+        granules = list(granules)
 
         def _geometry(granule: DataGranule) -> BaseGeometry | None:
             """Extracts the geometry from a DataGranule object.
