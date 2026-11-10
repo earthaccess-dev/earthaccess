@@ -29,3 +29,5 @@ results = earthaccess.search_datasets(
 ```
 
 A phrase is distinguished from a list of words by encapsulating the phrase in double-quotes `"`.  This means that we have to encapsulate this double-quoted string in single quotes.
+
+See [Search](../../user/explanation/search.md#search-for-datasets-using-search_datasets) explanation page for more details.
