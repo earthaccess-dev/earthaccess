@@ -7,3 +7,5 @@ import earthaccess
 
 results = earthaccess.search_datasets(instrument="ATLAS")
 ```
+
+See [Search](https://earthaccess.readthedocs.io/en/latest/user/explanation/search/)
