@@ -15,6 +15,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   ([#1363](https://github.com/earthaccess-dev/earthaccess/issues/1363))
   ([@Sherwin-14](https://github.com/Sherwin-14))
 
+### Added
+
+- `search_data()` now logs a warning when no granules match the search, with
+  hints on what to check.
+  ([#1434](https://github.com/earthaccess-dev/earthaccess/issues/1434))
+  ([@perodriguezl](https://github.com/perodriguezl))
+
 ## [v0.19.0] - 2026-09-03
 
 ### Breaking changes

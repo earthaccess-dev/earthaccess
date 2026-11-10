@@ -258,6 +258,10 @@ def search_data(count: int = -1, **kwargs: Any) -> list[DataGranule]:
     Raises:
         RuntimeError: The CMR query failed.
 
+    Note:
+        If no granules match the search, a warning is logged with hints on what
+        to check.
+
     Examples:
         ```python
         granules = earthaccess.search_data(
@@ -280,6 +284,15 @@ def search_data(count: int = -1, **kwargs: Any) -> list[DataGranule]:
         query = DataGranulesQuery().parameters(**kwargs)
     granules_found = query.hits()
     logger.info("Granules found: %s", granules_found)
+    if granules_found == 0:
+        logger.warning(
+            "No granules found for this search. Check that the dataset name and "
+            "version are correct, and that the temporal and spatial filters overlap "
+            "the dataset's coverage. To see a dataset's versions and coverage, use "
+            "earthaccess.search_datasets() with the same short_name. "
+            "Search parameters used: %s.",
+            ", ".join(sorted(kwargs)) or "none",
+        )
     if count > 0:
         return query.get(count)
     return query.get_all()
