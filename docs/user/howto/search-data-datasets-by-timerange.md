@@ -25,3 +25,5 @@ results_dt = earthaccess.search_data(
 
 These two methods return slightly different results, when only year, month and day are defined.
 The date `'2026-04-04'` is resolved as `2026-04-04T23:59:59`.  Whereas, `dt.datetime(2026, 4, 4)` is resolved as `2026-04-04T00:00:00`.  Explicitly setting hour, minute and seconds returns the same number of granules for both temporal range searches.
+
+See [Search](../../user/explanation/search.md#search-for-datasets-or-data-by-time-range) for more details.
