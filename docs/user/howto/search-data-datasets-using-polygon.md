@@ -1,4 +1,4 @@
-# Search for data or datasets using a polygon
+# Search for datasets or data using a polygon
 
 The following example searches for ICESat-2 land ice heights (ATL06) over the Jakobshavn Isbrae in Greenland.
 
