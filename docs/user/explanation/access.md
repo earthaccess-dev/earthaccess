@@ -127,5 +127,3 @@ Two key parameters control the efficiency of file access; cache type and block-s
 HTTPS or S3? For cloud-hosted data, both options read the same files from NASA's S3 buckets in AWS us-west-2. With access="https" (the default), earthaccess goes through the DAAC's distribution service, which checks your Earthdata Login and redirects you to the file in S3. This works from anywhere. With access="s3", earthaccess reads the bucket directly using temporary AWS credentials. This only works from inside us-west-2, but it skips the redirect step and is usually faster when reading many files or small chunks. Data that is not cloud-hosted is only available over HTTPS.
 
 If you previously relied on earthaccess automatically choosing S3 in us-west-2 (for example, on a cloud JupyterHub), add access="s3" to keep that behavior.
-
-
