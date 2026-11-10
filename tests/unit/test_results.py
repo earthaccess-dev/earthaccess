@@ -427,7 +427,7 @@ def test_derived_s3_links_use_each_link_not_just_the_first():
     assert len(set(s3_links)) == len(s3_links)
 
 
-def test_data_links_in_region_preserves_https_for_on_prem():
+def test_data_links_in_region_preserves_https_for_https():
     url = "https://example.com/data/file.nc"
     granule = DataGranule(
         {

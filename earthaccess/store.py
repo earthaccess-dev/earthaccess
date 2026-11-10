@@ -786,7 +786,7 @@ class Store:
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
 
-        return self._download_onprem_granules(
+        return self._download_https_granules(
             data_links,
             local_path,
             pqdm_kwargs=pqdm_kwargs,
@@ -811,6 +811,10 @@ class Store:
                 granule.data_links(access=access) for granule in granules
             ),
         )
+        if not data_links:
+            msg = "No data links found for the requested granules."
+            raise ValueError(msg)
+
         total_size = round(sum(granule._size for granule in granules) / 1024, 2)  # noqa: SLF001
         logger.info(
             "Getting %s granules, approx download size: %s GB",
@@ -819,10 +823,6 @@ class Store:
         )
 
         if access == "s3":
-            if not data_links:
-                msg = "No S3 data links found for the requested granules."
-                raise ValueError(msg)
-
             endpoint = credentials_endpoint or self._own_s3_credentials(
                 granules[0]["umm"]["RelatedUrls"],
             )
@@ -844,7 +844,7 @@ class Store:
             results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
             return [r for r in results if r is not None]
 
-        return self._download_onprem_granules(
+        return self._download_https_granules(
             data_links,
             local_path,
             pqdm_kwargs=pqdm_kwargs,
@@ -922,7 +922,7 @@ class Store:
             logger.info("File %s already downloaded", local_filename)
         return path
 
-    def _download_onprem_granules(
+    def _download_https_granules(
         self,
         urls: list[str],
         directory: Path,
@@ -933,7 +933,7 @@ class Store:
         """Downloads a list of URLS into the data directory.
 
         Parameters:
-            urls: list of granule URLs from an on-prem collection
+            urls: list of granule URLs from an HTTPS distribution URL
             directory: local directory to store the downloaded files
             pqdm_kwargs: Additional keyword arguments to pass to pqdm, a parallel processing library.
                 See pqdm documentation for available options. Default is to use immediate exception behavior
