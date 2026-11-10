@@ -194,6 +194,43 @@ def _get_url_granule_mapping(
     return url_mapping
 
 
+_S3_ACCESS_HINT = (
+    "Direct S3 access only works from AWS us-west-2; use access='https' elsewhere."
+)
+
+
+def _raise_for_missing_links(
+    granules: list[DataGranule],
+    access: CanonicalAccessType,
+) -> None:
+    """Raise when any granule has no data links for the requested access mode."""
+    missing: list[str] = []
+    missing_https_with_s3: list[str] = []
+    for granule in granules:
+        if granule.data_links(access=access):
+            continue
+        concept_id = granule["meta"].get("concept-id", "<unknown>")
+        if access == "https" and granule.data_links(access="s3"):
+            missing_https_with_s3.append(concept_id)
+        else:
+            missing.append(concept_id)
+
+    if missing_https_with_s3:
+        msg = " ".join(
+            f"Granule {concept_id} has no HTTPS data links; it offers S3 links, "
+            "retry with access='s3'."
+            for concept_id in missing_https_with_s3
+        )
+        raise ValueError(msg)
+
+    if missing:
+        msg = " ".join(
+            f"Granule {concept_id} has no {access.upper()} data links."
+            for concept_id in missing
+        )
+        raise ValueError(msg)
+
+
 @contextmanager
 def _sibling_tempfile(sibling: Path) -> Generator[Path, None, None]:
     """Save the file to a temporary name in case of incomplete download.
@@ -435,7 +472,7 @@ class Store:
         granules: list[str] | list[DataGranule],
         provider: str | None = None,
         *,
-        access: AccessType = "https",
+        access: AccessType | None = "https",
         show_progress: bool | None = None,
         credentials_endpoint: str | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -517,16 +554,10 @@ class Store:
             msg = "A valid Earthdata login instance is required to retrieve credentials"
             raise ValueError(msg)
 
+        _raise_for_missing_links(granules, access)
+
         if access == "s3":
             url_mapping = _get_url_granule_mapping(granules, access="s3")
-            for granule in granules:
-                if not granule.data_links(access="s3"):
-                    msg = (
-                        f"Granule {granule['meta'].get('concept-id', '<unknown>')} "
-                        "has no S3 data links."
-                    )
-                    raise ValueError(msg)
-
             provider = granules[0]["meta"]["provider-id"]
             endpoint = credentials_endpoint or self._own_s3_credentials(
                 granules[0]["umm"]["RelatedUrls"],
@@ -549,6 +580,7 @@ class Store:
                 msg = (
                     "An exception occurred while trying to access remote files on S3. "
                     "Check that S3 access is available for the requested granules. "
+                    f"{_S3_ACCESS_HINT} "
                     f"Exception: {traceback.format_exc()}"
                 )
                 raise RuntimeError(msg) from e
@@ -571,7 +603,6 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: dict[str, Any] | None = None,
     ) -> list[Any]:
-        s3_fs = None
         if not isinstance(granules[0], str) or not (
             granules[0].startswith("s3") or granules[0].startswith("http")
         ):
@@ -587,32 +618,30 @@ class Store:
 
         url_mapping: Mapping[str, None] = dict.fromkeys(granules)
         if granules[0].startswith("s3"):
+            if provider is None and credentials_endpoint is None:
+                msg = "Opening s3:// URLs requires provider= or credentials_endpoint=."
+                raise ValueError(msg)
+
             if provider is not None:
                 s3_fs = self.get_s3_filesystem(provider=provider)
-            elif credentials_endpoint is not None:
+            else:
                 s3_fs = self.get_s3_filesystem(endpoint=credentials_endpoint)
-            if s3_fs:
-                try:
-                    return _open_files(
-                        url_mapping,
-                        fs=s3_fs,
-                        pqdm_kwargs=pqdm_kwargs,
-                        open_kwargs=open_kwargs,
-                    )
-                except Exception as e:
-                    msg = (
-                        "An exception occurred while trying to access remote files on S3. "
-                        "Check that S3 access is available for the requested granules. "
-                        f"Exception: {traceback.format_exc()}"
-                    )
-                    raise RuntimeError(msg) from e
+            try:
+                return _open_files(
+                    url_mapping,
+                    fs=s3_fs,
+                    pqdm_kwargs=pqdm_kwargs,
+                    open_kwargs=open_kwargs,
+                )
+            except Exception as e:
+                msg = (
+                    "An exception occurred while trying to access remote files on S3. "
+                    "Check that S3 access is available for the requested granules. "
+                    f"{_S3_ACCESS_HINT} "
+                    f"Exception: {traceback.format_exc()}"
+                )
+                raise RuntimeError(msg) from e
 
-            logger.error(
-                "An error occurred while trying to retrieve the cloud credentials for provider: %s. endpoint: %s",
-                provider,
-                credentials_endpoint,
-            )
-            return []
         return self._open_urls_https(
             url_mapping,
             pqdm_kwargs=pqdm_kwargs,
@@ -625,7 +654,7 @@ class Store:
         provider: str | None = None,
         threads: int = 8,
         *,
-        access: AccessType = "https",
+        access: AccessType | None = "https",
         credentials_endpoint: str | None = None,
         show_progress: bool | None = None,
         pqdm_kwargs: Mapping[str, Any] | None = None,
@@ -783,7 +812,16 @@ class Store:
             def _download(file: str) -> Path | None:
                 return self._download_cloud_file(s3_fs, file, local_path, force=force)
 
-            results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
+            try:
+                results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
+            except Exception as e:
+                msg = (
+                    "An exception occurred while trying to access remote files on S3. "
+                    "Check that S3 access is available for the requested granules. "
+                    f"{_S3_ACCESS_HINT} "
+                    f"Exception: {traceback.format_exc()}"
+                )
+                raise RuntimeError(msg) from e
             return [r for r in results if r is not None]
 
         return self._download_https_granules(
@@ -805,6 +843,8 @@ class Store:
         pqdm_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
     ) -> list[Path]:
+        _raise_for_missing_links(granules, access)
+
         provider = granules[0]["meta"]["provider-id"]
         data_links = list(
             chain.from_iterable(
@@ -841,7 +881,16 @@ class Store:
             def _download(file: str) -> Path | None:
                 return self._download_cloud_file(s3_fs, file, local_path, force=force)
 
-            results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
+            try:
+                results = pqdm(data_links, _download, **(pqdm_kwargs or {}))
+            except Exception as e:
+                msg = (
+                    "An exception occurred while trying to access remote files on S3. "
+                    "Check that S3 access is available for the requested granules. "
+                    f"{_S3_ACCESS_HINT} "
+                    f"Exception: {traceback.format_exc()}"
+                )
+                raise RuntimeError(msg) from e
             return [r for r in results if r is not None]
 
         return self._download_https_granules(

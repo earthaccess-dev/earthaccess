@@ -14,7 +14,10 @@ from typing import TYPE_CHECKING, Any
 
 import earthaccess
 from earthaccess._access import normalize_access
-from earthaccess.virtual._credentials import build_obstore_registry
+from earthaccess.virtual._credentials import (
+    build_obstore_registry,
+    get_granule_credentials_endpoint_and_region,
+)
 from earthaccess.virtual._parser import get_urls_for_parser, resolve_parser
 
 if TYPE_CHECKING:
@@ -39,7 +42,7 @@ logger = logging.getLogger(__name__)
 def virtualize(  # noqa: PLR0913
     granules: list[earthaccess.DataGranule],
     *,
-    access: AccessType = "https",
+    access: AccessType | None = "https",
     load: bool = False,
     group: str = "/",
     concat_dim: str | None = None,
@@ -273,7 +276,13 @@ def _load_via_kerchunk(  # noqa: PLR0913
     """
     import xarray as xr  # noqa: PLC0415
 
-    fs = earthaccess.get_fsspec_https_session()
+    if access == "s3":
+        credentials_endpoint, _ = get_granule_credentials_endpoint_and_region(
+            granules[0],
+        )
+        fs = earthaccess.get_s3_filesystem(endpoint=credentials_endpoint)
+    else:
+        fs = earthaccess.get_fsspec_https_session()
 
     if reference_dir is None:
         ref_dir = Path(tempfile.gettempdir())

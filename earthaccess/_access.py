@@ -20,8 +20,8 @@ def normalize_access(access: AccessType | None) -> CanonicalAccessType:
         return "https"
 
     try:
-        return _ACCESS_ALIASES[access]
-    except KeyError:
+        return _ACCESS_ALIASES[access.lower()]
+    except (AttributeError, KeyError):
         msg = (
             f"Unknown access {access!r}. "
             f"Expected one of {sorted(_ACCESS_ALIASES)} or None."

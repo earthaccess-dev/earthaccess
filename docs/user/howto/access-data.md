@@ -40,6 +40,9 @@ files = earthaccess.download(results, "./local_folder", access="s3")
 
 ```
 
+If you previously relied on earthaccess automatically choosing S3 in us-west-2 (for
+example, on a cloud JupyterHub), add `access="s3"` to keep that behavior.
+
 **Option 3: Stream data directly to xarray**
 
 HTTPS access works from anywhere, including on-prem and cloud-hosted data.

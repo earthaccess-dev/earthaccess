@@ -183,6 +183,7 @@ jobs:
           JUPYTERHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
           HUB_RUNTIME_OPTIONS: ${{ secrets.HUB_RUNTIME_OPTIONS }}
           OPENSCAPES_RESOURCE_LABEL: ~7 GB RAM, ~0.9 CPUs
+          OPENSCAPES_EXECUTION_TIMEOUT: "2700"
           TEST_COMMAND: ${{ inputs.test_command || vars.HUB_TEST_COMMAND || 'python -c "print(''hello from OpenScapes'')"' }}
           EARTHDATA_USERNAME: ${{ secrets.EARTHACCESS_TEST_USERNAME || secrets.EDL_USERNAME }}
           EARTHDATA_PASSWORD: ${{ secrets.EARTHACCESS_TEST_PASSWORD || secrets.EDL_PASSWORD }}
