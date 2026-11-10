@@ -34,6 +34,7 @@ nav:
           - "Access data": "user/howto/access-data.md"
           - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
           - "Search for services": "user/howto/search-services.md"
+          - "Visualize granules": "user/howto/visualize-granules.ipynb"
       - Tutorials:
           # - "Reproducing NASA sea level rise infographic": "tutorials/SSL.ipynb" TODO: make this faster
           - "Accessing and visualizing EMIT data with a few lines of code": "user/tutorials/emit-earthaccess.ipynb"
