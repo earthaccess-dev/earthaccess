@@ -24,7 +24,7 @@ The example below searches for datasets that contain the phrase "arctic sea ice"
 ```python
 
 results = earthaccess.search_datasets(
-    keyword=`"arctic sea ice"`
+    keyword='"arctic sea ice"'
     )
 ```
 
