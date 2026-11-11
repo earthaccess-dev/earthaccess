@@ -1,6 +1,6 @@
 # Search for datasets or data using a time range
 
-We can define a temporal (time) range using date strings formatted YYYY-MM-DD.
+When searching for data, we can define a temporal (time) range using date strings formatted YYYY-MM-DD.
 
 ```python
 import earthaccess
