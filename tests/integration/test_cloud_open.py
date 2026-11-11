@@ -122,4 +122,4 @@ def test_multi_file_granule(access):
     urls = granules[0].data_links(access=access)
     assert len(urls) > 1
     files = earthaccess.open(granules, access=access)
-    assert set(urls) == {f.path for f in files}
+    assert {url.removeprefix("s3://") for url in urls} == {f.path for f in files}

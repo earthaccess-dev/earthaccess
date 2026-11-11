@@ -163,7 +163,7 @@ def _wait_for_server(
         if server_name:
             model = servers.get(server_name)
         else:
-            model = data.get("server") or servers.get("")
+            model = servers.get("")
 
         if model is None:
             last_state = "not found"
@@ -326,7 +326,7 @@ def _execute_code(
             "content": {
                 "code": code,
                 "silent": False,
-                "store_history": True,
+                "store_history": False,
                 "user_expressions": {},
                 "allow_stdin": False,
                 "stop_on_error": True,
