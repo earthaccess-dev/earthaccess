@@ -8,4 +8,6 @@ import earthaccess
 results = earthaccess.search_datasets(instrument="ATLAS")
 ```
 
+Using `instrument="ATLAS"` returns datasets that match "ATLAS".
+
 See [Search](../../user/explanation/search.md) for more details.
