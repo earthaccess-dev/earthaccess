@@ -15,7 +15,7 @@ results = earthaccess.search_datasets(
     )
 ```
 
-The keyword search in case insensitive and supports wildcards `*` and `?`.
+The keyword search is case insensitive and also supports wildcards `*` and `?`.
 
 ## Search for datasets using a key phrase
 
