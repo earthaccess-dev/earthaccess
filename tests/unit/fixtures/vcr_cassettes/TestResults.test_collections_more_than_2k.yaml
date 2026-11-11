@@ -11,7 +11,7 @@ interactions:
         User-Agent:
           - python-requests/2.31.0
       method: GET
-      uri: https://cmr.earthdata.nasa.gov/search/collections.umm_json?page_size=2000
+      uri: https://cmr.earthdata.nasa.gov/search/collections.umm_json?has_granules=true&page_size=2000
     response:
       body:
         string:
@@ -157707,7 +157707,7 @@ interactions:
         cmr-search-after:
           - '["delta-x: in-situ water surface elevation, mrd, louisiana, usa, 2021","ORNL_CLOUD","DeltaX_H2O_Surface_Elevation_2086","1",2633820146,4]'
       method: GET
-      uri: https://cmr.earthdata.nasa.gov/search/collections.umm_json?page_size=2000
+      uri: https://cmr.earthdata.nasa.gov/search/collections.umm_json?has_granules=true&page_size=2000
     response:
       body:
         string:

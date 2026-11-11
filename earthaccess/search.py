@@ -59,6 +59,8 @@ class DataCollectionsQuery(CollectionQuery):
             self.mode(auth.system.cmr_base_url)
 
         self._debug = False
+        # exclude collections without granules by default
+        self.params["has_granules"] = True
 
     @override
     def hits(self) -> int:
