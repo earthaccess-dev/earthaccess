@@ -160,10 +160,7 @@ def _wait_for_server(
         response = _request(session, "GET", url)
         data = response.json()
         servers = data.get("servers", {})
-        if server_name:
-            model = servers.get(server_name)
-        else:
-            model = servers.get("")
+        model = servers.get(server_name) if server_name else servers.get("")
 
         if model is None:
             last_state = "not found"
