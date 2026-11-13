@@ -34,6 +34,7 @@ from .daac import DAAC_TEST_URLS, find_provider
 from .exceptions import DownloadFailure, EulaNotAccepted
 from .results import DataGranule
 from .search import DataCollectionsQuery
+from .utils._validation import raise_for_mixed_providers
 
 logger = logging.getLogger(__name__)
 
@@ -557,6 +558,7 @@ class Store:
         _raise_for_missing_links(granules, access)
 
         if access == "s3":
+            raise_for_mixed_providers(granules, "with access='s3'")
             url_mapping = _get_url_granule_mapping(granules, access="s3")
             provider = granules[0]["meta"]["provider-id"]
             endpoint = credentials_endpoint or self._own_s3_credentials(
@@ -863,6 +865,7 @@ class Store:
         )
 
         if access == "s3":
+            raise_for_mixed_providers(granules, "with access='s3'")
             endpoint = credentials_endpoint or self._own_s3_credentials(
                 granules[0]["umm"]["RelatedUrls"],
             )

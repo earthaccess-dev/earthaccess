@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import earthaccess
 from earthaccess._access import normalize_access
+from earthaccess.utils._validation import raise_for_mixed_providers
 from earthaccess.virtual._credentials import (
     build_obstore_registry,
     get_granule_credentials_endpoint_and_region,
@@ -71,7 +72,8 @@ def virtualize(  # noqa: PLR0913
 
     Parameters:
         granules: One or more ``DataGranule`` objects from
-            ``earthaccess.search_data()``.
+            ``earthaccess.search_data()``. All granules must come from the
+            same provider.
         access: Access method. ``"https"`` (default) works anywhere; ``"s3"``
             uses direct S3 access. Legacy values ``"direct"`` and ``"indirect"``
             are also accepted.
@@ -112,6 +114,7 @@ def virtualize(  # noqa: PLR0913
         ValueError: If ``granules`` is empty.
         ValueError: If ``len(granules) > 1`` and ``concat_dim`` is ``None``.
         ValueError: If ``parser`` is an unrecognised string.
+        ValueError: If the granules come from more than one provider.
         ImportError: If ``earthaccess[virtualizarr]`` is not installed.
 
     Examples:
@@ -146,6 +149,7 @@ def virtualize(  # noqa: PLR0913
     # network activity.
     resolved_parser = resolve_parser(parser, group=group if group != "/" else None)
     canonical_access = normalize_access(access)
+    raise_for_mixed_providers(granules, "by virtualize()")
 
     registry = build_obstore_registry(granules, access=canonical_access)
 

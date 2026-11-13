@@ -603,6 +603,47 @@ def test_download_https_raises_for_mixed_list():
         store.get([onprem_granule, s3_granule], "/tmp")
 
 
+@pytest.mark.parametrize("operation", ["open", "download"])
+def test_s3_rejects_mixed_providers_before_fetching_credentials(operation, tmp_path):
+    granules = [
+        _make_granule(
+            concept_id="G-NSIDC",
+            provider="NSIDC_CPRD",
+            s3=["s3://nsidc-bucket/a.h5"],
+        ),
+        _make_granule(
+            concept_id="G-PODAAC",
+            provider="POCLOUD",
+            s3=["s3://podaac-bucket/b.nc"],
+        ),
+    ]
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock()
+
+    with pytest.raises(ValueError, match=r"multiple providers \(NSIDC_CPRD, POCLOUD\)"):
+        if operation == "open":
+            store.open(granules, access="s3")
+        else:
+            store.get(granules, tmp_path, access="s3")
+
+    store.get_s3_filesystem.assert_not_called()
+
+
+def test_download_https_allows_mixed_providers(tmp_path):
+    granules = [
+        _make_granule(provider="NSIDC_CPRD", https=["https://a.example.com/a.h5"]),
+        _make_granule(provider="POCLOUD", https=["https://b.example.com/b.nc"]),
+    ]
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store._download_https_granules = MagicMock(return_value=["a.h5", "b.nc"])
+
+    assert store.get(granules, tmp_path) == ["a.h5", "b.nc"]
+    links = store._download_https_granules.call_args.args[0]
+    assert links == ["https://a.example.com/a.h5", "https://b.example.com/b.nc"]
+
+
 def test_open_s3_url_without_provider_raises():
     store = Store.__new__(Store)
     store.auth = MagicMock()
