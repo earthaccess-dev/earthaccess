@@ -30,6 +30,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
     workers.
   - Automatic fallback between access methods is not included; error messages
     name the alternative mode.
+  - `access="s3"` and `virtualize()` do not support granules from more than one
+    provider in a single call and raise `ValueError`; call once per provider.
+    HTTPS `open()` and `download()` still accept granules from mixed providers.
   ([#1488](https://github.com/earthaccess-dev/earthaccess/pull/1488))
   ([@betolink](https://github.com/betolink))
 - Renamed the query classes `DataCollections`, `DataGranules`, and

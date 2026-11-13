@@ -409,7 +409,8 @@ def download(  # noqa: PLR0913
             of a UUID4 value.
         provider: if we download a list of URLs, we need to specify the provider.
         access: access method, either `"https"` (default) or `"s3"`. When URLs
-            are provided, their scheme takes precedence.
+            are provided, their scheme takes precedence. With `"s3"`, all
+            granules must come from the same provider.
         credentials_endpoint: S3 credentials endpoint to be used for obtaining temporary S3 credentials. This is only required if
             the metadata doesn't include it, or we pass urls to the method instead of `DataGranule` instances.
         threads: parallel number of threads to use to download the files, adjust as necessary, default = 8
@@ -475,7 +476,8 @@ def open(  # noqa: A001, PLR0913
             If a list of URLs is passed, we need to specify the data provider.
         provider: e.g. POCLOUD, NSIDC_CPRD, etc.
         access: access method, either `"https"` (default) or `"s3"`. When URLs
-            are provided, their scheme takes precedence.
+            are provided, their scheme takes precedence. With `"s3"`, all
+            granules must come from the same provider.
         show_progress: whether or not to display a progress bar. If not specified, defaults to `True` for interactive sessions
             (i.e., in a notebook or a python REPL session), otherwise `False`.
         pqdm_kwargs: Additional keyword arguments to pass to pqdm, a parallel processing library.

@@ -101,6 +101,31 @@ def test_virtualize_invalid_parser_string_raises() -> None:
         virtualize(_make_granules(1), parser="BadParser")
 
 
+@pytest.mark.parametrize("access", ["https", "s3"])
+def test_virtualize_mixed_providers_raises_before_registry(access) -> None:
+    """virtualize() rejects granules from more than one provider."""
+    granules = [
+        DataGranule(
+            {
+                "meta": {
+                    "concept-id": f"G{i}",
+                    "provider-id": provider,
+                    "collection-concept-id": f"C{i}",
+                },
+                "umm": {"RelatedUrls": []},
+            },
+        )
+        for i, provider in enumerate(["NSIDC_CPRD", "POCLOUD"])
+    ]
+    with (
+        patch("earthaccess.virtual.core.build_obstore_registry") as registry,
+        pytest.raises(ValueError, match="multiple providers"),
+    ):
+        virtualize(granules, access=access, concat_dim="time")
+
+    registry.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # core — happy paths
 # ---------------------------------------------------------------------------
