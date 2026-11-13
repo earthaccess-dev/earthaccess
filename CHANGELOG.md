@@ -9,6 +9,32 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Breaking changes
 
+- **HTTPS is now the default access method.** `earthaccess.open()`,
+  `earthaccess.download()`, and `earthaccess.virtualize()` now use HTTPS by
+  default. If you run in AWS us-west-2 and relied on automatic direct S3
+  access, pass `access="s3"` to keep the old behavior.
+  - Runtime detection of the AWS us-west-2 region has been removed, including
+    `Store.in_region`. `DataGranule.data_links(in_region=...)` is deprecated in
+    favor of `access=`.
+  - `access` values are case-insensitive and validated; invalid values raise
+    `ValueError` instead of falling back to HTTPS. Legacy `"direct"`,
+    `"indirect"`, and `"external"` values remain supported.
+  - `open()` and `download()` now raise `ValueError` when any requested granule
+    has no data links for the selected access method, instead of silently
+    returning or downloading a subset.
+  - `open(["s3://..."])` no longer raises outside AWS us-west-2, but requires
+    `provider=` or `credentials_endpoint=`.
+  - `DataGranule.data_links(access="direct")` derives `s3://` links for
+    cloud-hosted granules that only advertise HTTPS links.
+  - Serialized file handles retain their original access method on Dask
+    workers.
+  - Automatic fallback between access methods is not included; error messages
+    name the alternative mode.
+  - `access="s3"` and `virtualize()` do not support granules from more than one
+    provider in a single call and raise `ValueError`; call once per provider.
+    HTTPS `open()` and `download()` still accept granules from mixed providers.
+  ([#1488](https://github.com/earthaccess-dev/earthaccess/pull/1488))
+  ([@betolink](https://github.com/betolink))
 - Renamed the query classes `DataCollections`, `DataGranules`, and
   `DataServices` to `DataCollectionsQuery`, `DataGranulesQuery`, and
   `DataServicesQuery`.

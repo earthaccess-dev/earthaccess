@@ -1,6 +1,6 @@
 # Get OPeNDAP URLs
 
-Some NASA data collections support access using OPeNDAP, the Open-source Project for a Network Data Access Protocol.  If a collection supports access through OPeNDAP, granule metdata returned by `earthaccess.search_data` contains an OPeNDAP url. There is no built-in method to get these urls but the code below will return an OPeNDAP url if one exists.
+Some NASA data collections support access using OPeNDAP, the Open-source Project for a Network Data Access Protocol.  If a collection supports access through OPeNDAP, granule metadata returned by `earthaccess.search_data` contains an OPeNDAP url. There is no built-in method to get these urls but the code below will return an OPeNDAP url if one exists.
 
 ```python
 from itertools import chain
@@ -21,4 +21,4 @@ opendap_link = list(chain.from_iterable(
     )
 ```
 
-If the collection does not support the OPeNDAP service, the above code returns an empty list.    
+If the collection does not support the OPeNDAP service, the above code returns an empty list.

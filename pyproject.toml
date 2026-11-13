@@ -235,6 +235,7 @@ combine-as-imports = true
 "*.ipynb" = ["T201", "T203", "N803", "RET504", "ERA001", "PLR2004", "PD002", "PD010", "PD011", "EM", "ARG001", "BLE001", "FBT","TRY003"]
 "tests/**/*.py" = ["PLR2004", "FBT", "INP001", "SLF001", "S101", "S108", "S301", "S603", "S607"]
 "scripts/**/*.py" = ["INP001"]
+"scripts/openscapes_integration.py" = ["PLR0915", "PLR2004", "T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -1,0 +1,255 @@
+name: Integration Tests on OpenScapes Hub
+
+on:
+  push:
+    branches:
+      - main
+      - "hub-ci/**"
+    paths:
+      - "earthaccess/**"
+      - "tests/integration/**"
+      - "docker/integration/**"
+      - "scripts/openscapes_integration.py"
+      - ".github/workflows/integration-tests-hub.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "uv.lock"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "earthaccess/**"
+      - "tests/integration/**"
+      - "docker/integration/**"
+      - "scripts/openscapes_integration.py"
+      - ".github/workflows/integration-tests-hub.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "uv.lock"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref or commit SHA to test
+        required: false
+        type: string
+      image:
+        description: Optional prebuilt image reference
+        required: false
+        type: string
+      pr_number:
+        description: PR number for reporting
+        required: false
+        type: string
+      test_command:
+        description: Command to execute inside the spawned kernel
+        required: false
+        default: python -c "print('hello from OpenScapes')"
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: openscapes-hub-integration
+  cancel-in-progress: false
+
+env:
+  OPENSCAPES_HUB_URL: https://openscapes.2i2c.cloud
+  IMAGE_NAME: earthaccess-lab
+
+jobs:
+  build-image:
+    permissions:
+      contents: read
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      image: ${{ steps.pin.outputs.image }}
+      digest: ${{ steps.pin.outputs.digest }}
+      commit: ${{ steps.meta.outputs.commit }}
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+      pr_number: ${{ steps.meta.outputs.pr_number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - id: meta
+        env:
+          INPUT_IMAGE: ${{ inputs.image }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number || '0' }}
+        run: |
+          commit="$(git rev-parse HEAD)"
+          short_sha="${commit:0:12}"
+          owner="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          if [ -n "${INPUT_IMAGE}" ]; then
+            image="${INPUT_IMAGE}"
+            needs_build=false
+          else
+            image="ttl.sh/${IMAGE_NAME}-${short_sha}-${GITHUB_RUN_ID}:24h"
+            needs_build=true
+          fi
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+          echo "short_sha=${short_sha}" >> "${GITHUB_OUTPUT}"
+          echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+          echo "image=${image}" >> "${GITHUB_OUTPUT}"
+          echo "needs_build=${needs_build}" >> "${GITHUB_OUTPUT}"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: steps.meta.outputs.needs_build == 'true'
+
+      - id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        if: steps.meta.outputs.needs_build == 'true'
+        with:
+          context: .
+          file: docker/integration/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.image }}
+          build-args: |
+            EARTHACCESS_REPOSITORY=${{ github.server_url }}/${{ github.repository }}.git
+            EARTHACCESS_COMMIT=${{ steps.meta.outputs.commit }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pin image digest
+        id: pin
+        env:
+          IMAGE_TAG: ${{ steps.meta.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          NEEDS_BUILD: ${{ steps.meta.outputs.needs_build }}
+        run: |
+          if [ "${NEEDS_BUILD}" = "true" ]; then
+            image="${IMAGE_TAG%:*}@${DIGEST}"
+          else
+            image="${IMAGE_TAG}"
+          fi
+          echo "image=${image}" >> "${GITHUB_OUTPUT}"
+          echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
+
+      - name: Smoke test image
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+          COMMIT: ${{ steps.meta.outputs.commit }}
+        run: |
+          docker pull "${IMAGE}"
+          docker run --rm "${IMAGE}" sh -c '
+            jupyterhub-singleuser --help >/dev/null
+            python -c "import os, subprocess, earthaccess; repo = os.environ[\"EARTHACCESS_REPO_DIR\"]; actual = subprocess.check_output([\"git\", \"-C\", repo, \"rev-parse\", \"HEAD\"], text=True).strip(); expected = os.environ[\"EARTHACCESS_COMMIT\"]; assert actual == expected, (actual, expected); print(earthaccess.__version__); print(earthaccess.__file__)"
+          '
+
+      - name: Verify image is publicly pullable
+        if: steps.meta.outputs.needs_build == 'true'
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+        run: |
+          docker pull "${IMAGE}"
+
+  hub-integration:
+    needs: build-image
+    permissions:
+      contents: read
+      pull-requests: write
+    if: >-
+      needs.build-image.result == 'success' &&
+      (github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Hub client dependencies
+        run: python -m pip install --disable-pip-version-check "requests==2.32.5" "websocket-client==1.8.0"
+
+      - name: Run integration tests on OpenScapes
+        env:
+          IMAGE: ${{ needs.build-image.outputs.image }}
+          COMMIT: ${{ needs.build-image.outputs.commit }}
+          SHORT_SHA: ${{ needs.build-image.outputs.short_sha }}
+          PR_NUMBER: ${{ needs.build-image.outputs.pr_number }}
+          JUPYTERHUB_URL: ${{ secrets.HUB_URL || 'https://openscapes.2i2c.cloud' }}
+          JUPYTERHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          HUB_RUNTIME_OPTIONS: ${{ secrets.HUB_RUNTIME_OPTIONS }}
+          OPENSCAPES_RESOURCE_LABEL: ~7 GB RAM, ~0.9 CPUs
+          OPENSCAPES_EXECUTION_TIMEOUT: "2700"
+          TEST_COMMAND: ${{ inputs.test_command || vars.HUB_TEST_COMMAND || 'python -c "print(''hello from OpenScapes'')"' }}
+          EARTHDATA_USERNAME: ${{ secrets.EARTHACCESS_TEST_USERNAME || secrets.EDL_USERNAME }}
+          EARTHDATA_PASSWORD: ${{ secrets.EARTHACCESS_TEST_PASSWORD || secrets.EDL_PASSWORD }}
+          EARTHACCESS_TEST_S3: "1"
+          GITHUB_PR_NUMBER: ${{ needs.build-image.outputs.pr_number }}
+        run: |
+          server_name="pr-${PR_NUMBER}-${SHORT_SHA}"
+          if [ "${PR_NUMBER}" = "0" ]; then
+            server_name="hub-${GITHUB_RUN_ID}"
+          fi
+          python scripts/openscapes_integration.py \
+            --hub-url "${JUPYTERHUB_URL}" \
+            --image "${IMAGE}" \
+            --server-name "${server_name}" \
+            --expected-commit "${COMMIT}" \
+            --test-command "${TEST_COMMAND}" \
+            --result-file hub-results.json \
+            --summary-file hub-summary.md \
+            --log-file hub-test.log
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: openscapes-hub-results-${{ github.run_id }}
+          path: |
+            hub-results.json
+            hub-summary.md
+            hub-test.log
+          if-no-files-found: warn
+
+      - name: Report result to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require("fs");
+            const marker = "<!-- openscapes-hub-integration -->";
+            let body;
+            try {
+              body = fs.readFileSync("hub-summary.md", "utf8");
+            } catch {
+              body = "## OpenScapes Hub integration test\n\nNo summary was generated.";
+            }
+            body = `${marker}\n${body}`;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              });
+            }

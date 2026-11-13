@@ -3,17 +3,25 @@ import os
 import threading
 import unittest
 from pathlib import Path
+from pickle import dumps, loads
 from unittest.mock import MagicMock, patch
 
+import earthaccess
 import fsspec
 import pytest
 import responses
 import s3fs
-from earthaccess import Auth, Store
+from earthaccess import Auth, DataGranule, Store
+from earthaccess._access import normalize_access
 from earthaccess.auth import SessionWithHeaderRedirection
 from earthaccess.daac import DAACS
 from earthaccess.exceptions import DownloadFailure, EulaNotAccepted
-from earthaccess.store import EarthAccessFile, _open_files, _sibling_tempfile
+from earthaccess.store import (
+    EarthAccessFile,
+    _open_files,
+    _sibling_tempfile,
+    make_instance,
+)
 from pqdm.threads import pqdm
 
 
@@ -412,3 +420,325 @@ def test_sibling_tempfile_error(tmp_path):
     assert not temp_file.exists()
     assert trg_file.exists()
     assert trg_file.read_text() == orig_text
+
+
+ACCESS_CASES = [
+    pytest.param(None, "https", id="default"),
+    pytest.param("https", "https", id="https"),
+    pytest.param("s3", "s3", id="s3"),
+    pytest.param("direct", "s3", id="legacy-direct"),
+    pytest.param("indirect", "https", id="legacy-indirect"),
+    pytest.param("external", "https", id="legacy-external"),
+]
+
+
+@pytest.mark.parametrize(("access", "expected"), ACCESS_CASES)
+@pytest.mark.parametrize(
+    ("api_name", "store_method"),
+    [("open", "open"), ("download", "get")],
+)
+def test_access_normalized_for_open_and_download(
+    monkeypatch,
+    api_name,
+    store_method,
+    access,
+    expected,
+):
+    store = MagicMock()
+    monkeypatch.setattr(earthaccess, "__store__", store)
+
+    kwargs = {} if access is None else {"access": access}
+    getattr(earthaccess, api_name)([MagicMock()], **kwargs)
+
+    method = getattr(store, store_method)
+    assert method.call_args.kwargs["access"] == expected
+
+
+def test_make_instance_restores_serialized_file(monkeypatch):
+    fs = fsspec.filesystem("memory")
+    with fs.open("foo", "wb") as f:
+        f.write(b"bar")
+    f = fs.open("foo", "rb")
+    auth = MagicMock()
+    auth.authenticated = True
+    monkeypatch.setattr(earthaccess, "__auth__", auth)
+
+    restored = make_instance(s3fs.S3File, None, auth, dumps(f))
+
+    assert restored.read() == b"bar"
+    fs.store.clear()
+
+
+def test_open_s3_uses_links_without_cloud_hosted(monkeypatch):
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {"provider-id": "POCLOUD"},
+        },
+        cloud_hosted=False,
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock(return_value=MagicMock())
+    monkeypatch.setattr(
+        "earthaccess.store._open_files",
+        lambda *_args, **_kwargs: ["opened"],
+    )
+
+    assert store.open([granule], access="s3") == ["opened"]
+
+
+def test_download_s3_uses_links_without_cloud_hosted(monkeypatch, tmp_path):
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {"provider-id": "POCLOUD"},
+        },
+        cloud_hosted=False,
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock(return_value=MagicMock())
+
+    def fake_download(_s3_fs, file, local_path, *, force=False):
+        _ = force
+        path = Path(local_path) / Path(file).name
+        path.write_text("data")
+        return path
+
+    monkeypatch.setattr(store, "_download_cloud_file", fake_download)
+
+    files = store.get([granule], str(tmp_path), access="s3")
+
+    assert files == [tmp_path / "file.nc"]
+
+
+def _make_granule(*, concept_id="G1-TEST", provider="POCLOUD", https=(), s3=()):
+    related_urls = [{"URL": url, "Type": "GET DATA"} for url in https] + [
+        {"URL": url, "Type": "GET DATA VIA DIRECT ACCESS"} for url in s3
+    ]
+    return DataGranule(
+        {
+            "meta": {"concept-id": concept_id, "provider-id": provider},
+            "umm": {"RelatedUrls": related_urls},
+        },
+        cloud_hosted=bool(s3),
+    )
+
+
+def test_open_s3_raises_for_granules_without_s3_links():
+    cloud_granule = _make_granule(
+        concept_id="G-CLOUD",
+        https=["https://example.com/cloud.nc"],
+        s3=["s3://bucket/cloud.nc"],
+    )
+    onprem_granule = _make_granule(
+        concept_id="G-ONPREM",
+        https=["https://example.com/onprem.nc"],
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock()
+
+    with pytest.raises(ValueError, match="G-ONPREM has no S3 data links"):
+        store.open([cloud_granule, onprem_granule], access="s3")
+
+    store.get_s3_filesystem.assert_not_called()
+
+
+def test_download_s3_raises_before_fetching_credentials_for_mixed_lists():
+    onprem_granule = _make_granule(
+        concept_id="G-ONPREM",
+        provider="NSIDC_ECS",
+        https=["https://example.com/onprem.nc"],
+    )
+    s3_granule = _make_granule(
+        concept_id="G-S3",
+        provider="PODAAC",
+        s3=["s3://bucket/cloud.nc"],
+    )
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock()
+
+    with pytest.raises(ValueError, match="G-ONPREM has no S3 data links"):
+        store.get([onprem_granule, s3_granule], "/tmp", access="s3")
+
+    store.get_s3_filesystem.assert_not_called()
+
+
+def test_open_https_suggests_s3_for_s3_only_granule():
+    granule = _make_granule(concept_id="G-S3ONLY", s3=["s3://bucket/cloud.nc"])
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+
+    with pytest.raises(
+        ValueError,
+        match="has no HTTPS data links; it offers S3 links",
+    ):
+        store.open([granule])
+
+
+def test_download_https_raises_for_mixed_list():
+    onprem_granule = _make_granule(
+        concept_id="G-ONPREM",
+        https=["https://example.com/onprem.nc"],
+    )
+    s3_granule = _make_granule(concept_id="G-S3ONLY", s3=["s3://bucket/cloud.nc"])
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+
+    with pytest.raises(
+        ValueError,
+        match="has no HTTPS data links; it offers S3 links",
+    ):
+        store.get([onprem_granule, s3_granule], "/tmp")
+
+
+@pytest.mark.parametrize("operation", ["open", "download"])
+def test_s3_rejects_mixed_providers_before_fetching_credentials(operation, tmp_path):
+    granules = [
+        _make_granule(
+            concept_id="G-NSIDC",
+            provider="NSIDC_CPRD",
+            s3=["s3://nsidc-bucket/a.h5"],
+        ),
+        _make_granule(
+            concept_id="G-PODAAC",
+            provider="POCLOUD",
+            s3=["s3://podaac-bucket/b.nc"],
+        ),
+    ]
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_s3_filesystem = MagicMock()
+
+    with pytest.raises(ValueError, match=r"multiple providers \(NSIDC_CPRD, POCLOUD\)"):
+        if operation == "open":
+            store.open(granules, access="s3")
+        else:
+            store.get(granules, tmp_path, access="s3")
+
+    store.get_s3_filesystem.assert_not_called()
+
+
+def test_download_https_allows_mixed_providers(tmp_path):
+    granules = [
+        _make_granule(provider="NSIDC_CPRD", https=["https://a.example.com/a.h5"]),
+        _make_granule(provider="POCLOUD", https=["https://b.example.com/b.nc"]),
+    ]
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store._download_https_granules = MagicMock(return_value=["a.h5", "b.nc"])
+
+    assert store.get(granules, tmp_path) == ["a.h5", "b.nc"]
+    links = store._download_https_granules.call_args.args[0]
+    assert links == ["https://a.example.com/a.h5", "https://b.example.com/b.nc"]
+
+
+def test_open_s3_url_without_provider_raises():
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+
+    with pytest.raises(
+        ValueError,
+        match="requires provider= or credentials_endpoint=",
+    ):
+        store.open(["s3://bucket/file.nc"])
+
+
+def test_open_https_does_not_request_s3_credentials(monkeypatch):
+    granule = _make_granule(https=["https://example.com/file.nc"])
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    store.get_fsspec_session = MagicMock(return_value=MagicMock())
+    store.get_s3_filesystem = MagicMock(
+        side_effect=AssertionError("S3 credentials must not be requested"),
+    )
+
+    captured = {}
+
+    def fake_open_files(url_mapping, fs, **_kwargs):
+        captured["mapping"] = url_mapping
+        captured["fs"] = fs
+        return ["opened"]
+
+    monkeypatch.setattr("earthaccess.store._open_files", fake_open_files)
+
+    assert store.open([granule]) == ["opened"]
+    assert captured["fs"] is store.get_fsspec_session.return_value
+    assert list(captured["mapping"]) == ["https://example.com/file.nc"]
+    store.get_s3_filesystem.assert_not_called()
+
+
+def test_open_s3_uses_expected_filesystem_and_urls(monkeypatch):
+    granule = _make_granule(s3=["s3://bucket/file.nc"])
+    store = Store.__new__(Store)
+    store.auth = MagicMock()
+    s3_fs = MagicMock(name="s3_filesystem")
+    store.get_s3_filesystem = MagicMock(return_value=s3_fs)
+
+    captured = {}
+
+    def fake_open_files(url_mapping, fs, **_kwargs):
+        captured["mapping"] = url_mapping
+        captured["fs"] = fs
+        return ["opened"]
+
+    monkeypatch.setattr("earthaccess.store._open_files", fake_open_files)
+
+    assert store.open([granule], access="s3") == ["opened"]
+    assert captured["fs"] is s3_fs
+    assert list(captured["mapping"]) == ["s3://bucket/file.nc"]
+
+
+class _PicklableAuth:
+    authenticated = True
+
+
+def test_earthaccess_file_pickle_round_trip_preserves_second_file(monkeypatch):
+    fs = fsspec.filesystem("memory")
+    with fs.open("first.nc", "wb") as f:
+        f.write(b"first")
+    with fs.open("second.nc", "wb") as f:
+        f.write(b"second")
+
+    granule = _make_granule(
+        s3=["s3://bucket/first.nc", "s3://bucket/second.nc"],
+    )
+    monkeypatch.setattr(earthaccess, "__auth__", _PicklableAuth())
+
+    handle = fs.open("second.nc", "rb")
+    restored = loads(dumps(EarthAccessFile(handle, granule)))
+
+    assert restored.read() == b"second"
+    assert restored.granule["meta"]["concept-id"] == granule["meta"]["concept-id"]
+    handle.close()
+    fs.store.clear()
+
+
+@pytest.mark.parametrize(
+    ("access", "expected"),
+    [
+        ("S3", "s3"),
+        ("HTTPS", "https"),
+        ("Direct", "s3"),
+        ("Indirect", "https"),
+    ],
+)
+def test_normalize_access_is_case_insensitive(access, expected):
+    assert normalize_access(access) == expected
+
+
+@pytest.mark.parametrize("access", ["bogus", "on_prem", 1])
+def test_normalize_access_rejects_invalid_values(access):
+    with pytest.raises(ValueError, match="Unknown access"):
+        normalize_access(access)
