@@ -13,6 +13,6 @@ Once we have found data using `earthaccess.search_data` we can download that dat
 files = earthaccess.download(results, local_path="./local_folder")
 ```
 
-By default, data are downloaded to the current working directory.  We can select an alternative dowload folder with the `local_path` keyword argument.  
+By default, data are downloaded to the current working directory.  We can select an alternative download folder with the `local_path` keyword argument.
 
 See the [Download](../../user/explanation/access.md#downloading-data) explanation page for more details
