@@ -16,7 +16,7 @@ from cmr import CollectionQuery, GranuleQuery
 
 from .auth import Auth
 from .daac import find_provider, find_provider_by_shortname
-from .results import DataCollection, DataGranule
+from .results import DataCollection, DataGranule, Results
 from .utils._search import get_results
 
 if TYPE_CHECKING:
@@ -85,7 +85,7 @@ class DataCollectionsQuery(CollectionQuery):
         return int(response.headers["CMR-Hits"])
 
     @override
-    def get(self, limit: int = 2000) -> list[DataCollection]:
+    def get(self, limit: int = 2000) -> Results[DataCollection]:
         """Get all the collections (datasets) that match with our current parameters
         up to some limit, even if spanning multiple pages.
 
@@ -104,10 +104,17 @@ class DataCollectionsQuery(CollectionQuery):
         Raises:
             RuntimeError: The CMR query failed.
         """
-        return [
-            DataCollection(collection, self._fields)
-            for collection in get_results(self.session, self, limit)
-        ]
+        return Results(
+            [
+                DataCollection(collection, self._fields)
+                for collection in get_results(self.session, self, limit)
+            ],
+            query=self,
+        )
+
+    @override
+    def get_all(self) -> Results[DataCollection]:
+        return Results(super().get_all(), query=self)
 
     @override
     def concept_id(self, IDs: Sequence[str]) -> Self:
@@ -422,11 +429,11 @@ class DataCollectionsQuery(CollectionQuery):
         return super().temporal(date_from, date_to, exclude_boundary)
 
     @staticmethod
-    def to_geopandas(collections: list[DataCollection]) -> "gpd.GeoDataFrame":
-        """Convert a list of DataCollection objects to a GeoPandas GeoDataFrame.
+    def to_geopandas(collections: Iterable[DataCollection]) -> "gpd.GeoDataFrame":
+        """Convert collection results to a GeoPandas GeoDataFrame.
 
         Parameters:
-            collections: A list of DataCollection objects.
+            collections: An iterable of DataCollection objects, including a Results object.
 
         Returns:
             A GeoPandas GeoDataFrame containing the collection data.
@@ -455,6 +462,8 @@ class DataCollectionsQuery(CollectionQuery):
                 "(or `pip install geopandas`)."
             )
             raise ModuleNotFoundError(msg) from e
+
+        collections = list(collections)
 
         def _geometry(collection: DataCollection) -> BaseGeometry | None:
             """Extracts the geometry from a DataCollection object.
@@ -545,7 +554,7 @@ class DataGranulesQuery(GranuleQuery):
         return int(response.headers["CMR-Hits"])
 
     @override
-    def get(self, limit: int = 2000) -> list[DataGranule]:
+    def get(self, limit: int = 2000) -> Results[DataGranule]:
         """Get all the collections (datasets) that match with our current parameters
         up to some limit, even if spanning multiple pages.
 
@@ -567,7 +576,14 @@ class DataGranulesQuery(GranuleQuery):
         response = get_results(self.session, self, limit)
         cloud = len(response) > 0 and self._is_cloud_hosted(response[0])
 
-        return [DataGranule(granule, cloud_hosted=cloud) for granule in response]
+        return Results(
+            [DataGranule(granule, cloud_hosted=cloud) for granule in response],
+            query=self,
+        )
+
+    @override
+    def get_all(self) -> Results[DataGranule]:
+        return Results(super().get_all(), query=self)
 
     @override
     def parameters(self, **kwargs: Any) -> Self:
@@ -1041,11 +1057,11 @@ class DataGranulesQuery(GranuleQuery):
         return self
 
     @staticmethod
-    def to_geopandas(granules: list[DataGranule]) -> "gpd.GeoDataFrame":
-        """Convert a list of DataGranule objects to a GeoPandas GeoDataFrame.
+    def to_geopandas(granules: Iterable[DataGranule]) -> "gpd.GeoDataFrame":
+        """Convert granule results to a GeoPandas GeoDataFrame.
 
         Parameters:
-            granules: A list of DataGranule objects.
+            granules: An iterable of DataGranule objects, including a Results object.
 
         Returns:
             A GeoPandas GeoDataFrame containing the granule data.
@@ -1075,6 +1091,8 @@ class DataGranulesQuery(GranuleQuery):
                 "(or `pip install geopandas`)."
             )
             raise ModuleNotFoundError(msg) from e
+
+        granules = list(granules)
 
         def _geometry(granule: DataGranule) -> BaseGeometry | None:
             """Extracts the geometry from a DataGranule object.

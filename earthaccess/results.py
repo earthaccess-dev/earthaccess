@@ -1,8 +1,19 @@
+from __future__ import annotations
+
 import json
+import pprint
 import uuid
 import warnings
 from functools import cache
-from typing import Any, ClassVar
+from textwrap import dedent, indent
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from geopandas import GeoDataFrame
+
+    from .search import DataCollections, DataGranules
 
 import requests
 
@@ -151,10 +162,15 @@ class CustomDict(dict):
         else:
             self.render_dict = self._filter_fields_(fields)
 
+    def _umm_record(self) -> dict[str, Any]:
+        umm = self.get("umm")
+        return umm if isinstance(umm, dict) else {}
+
     def _filter_fields_(self, fields: list[str]) -> dict[str, Any]:
+        umm = self._umm_record()
         filtered_dict = {
             "umm": {
-                (field, self["umm"][field]) for field in fields if field in self["umm"]
+                (field, umm[field]) for field in fields if field in umm
             },
         }
         basic_dict = {
@@ -171,7 +187,7 @@ class CustomDict(dict):
         """Filter RelatedUrls from the UMM fields on CMR."""
         return [
             link["URL"]
-            for link in self["umm"].get("RelatedUrls", [])
+            for link in self._umm_record().get("RelatedUrls", [])
             if link.get("Type") == link_type
         ]
 
@@ -226,7 +242,7 @@ class DataCollection(CustomDict):
         Returns:
             The value of a given field inside the UMM (Unified Metadata Model).
         """
-        return self["umm"].get(umm_field, "")
+        return self._umm_record().get(umm_field, "")
 
     @property
     def doi(self) -> str | None:
@@ -235,7 +251,7 @@ class DataCollection(CustomDict):
         Returns:
             This collection's DOI information, or `None`, if it has none.
         """
-        doi = self["umm"].get("DOI", {})
+        doi = self._umm_record().get("DOI", {})
         if isinstance(doi, dict):
             return doi.get("DOI", None)
         return None
@@ -277,11 +293,10 @@ class DataCollection(CustomDict):
         Returns:
             The collection data type, i.e. HDF5, CSV etc., if available.
         """
-        return str(
-            self["umm"]
-            .get("ArchiveAndDistributionInformation", {})
-            .get("FileDistributionInformation", ""),
-        )
+        archive_info = self._umm_record().get("ArchiveAndDistributionInformation")
+        if not isinstance(archive_info, dict):
+            return ""
+        return str(archive_info.get("FileDistributionInformation", ""))
 
     @property
     def version(self) -> str:
@@ -290,7 +305,7 @@ class DataCollection(CustomDict):
         Returns:
             The collection's version.
         """
-        return self["umm"].get("Version", "")
+        return self._umm_record().get("Version", "")
 
     @property
     def abstract(self) -> str:
@@ -299,7 +314,7 @@ class DataCollection(CustomDict):
         Returns:
             The abstract of a collection.
         """
-        return self["umm"].get("Abstract", "")
+        return self._umm_record().get("Abstract", "")
 
     @property
     def landing_page(self) -> str:
@@ -327,7 +342,8 @@ class DataCollection(CustomDict):
         Returns:
             The S3 bucket information if the collection has it (**cloud hosted collections only**).
         """
-        return self["umm"].get("DirectDistributionInformation", {})
+        info = self._umm_record().get("DirectDistributionInformation")
+        return info if isinstance(info, dict) else {}
 
     @property
     def services(self) -> dict[Any, list[dict[str, Any]]]:
@@ -605,4 +621,99 @@ class DataGranule(CustomDict):
             msg = "Granule has no horizontal spatial extent"
             raise ValueError(msg) from None
 
-        return _geometry_to_geojson(geometry)
+
+class Results:
+    """An immutable iterable of search results with convenience methods."""
+
+    # TODO: Needs to support both a lazy generator approach and an in-memory approach where
+    #       items are never consumed.
+    def __init__(
+        self,
+        items: list[DataGranule] | list[DataCollection],
+        *,
+        query: DataGranules | DataCollections,
+    ) -> None:
+        self._items = items
+        self._query = query
+
+    def __iter__(self) -> Iterator[DataGranule | DataCollection]:
+        return iter(self._items)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"params={self.query.params!r}, "
+            f"options={self.query.options!r})"
+        )
+
+    def _repr_html_(self) -> str:
+        return dedent(f"""
+            <table>
+                <tr>
+                    <td>Query Type</td>
+                    <td style="text-align: left;">{self.query.__class__.__name__}</td>
+                </tr>
+                <tr>
+                    <td>Number of Results</td>
+                    <td style="text-align: left;">{self.query.hits()}</td>
+                </tr>
+                <tr>
+                    <td>Query parameters</td>
+                    <td style="text-align: left;">{self.query.params}</td>
+                </tr>
+                <tr>
+                    <td>Query options</td>
+                    <td style="text-align: left;">{self.query.options}</td>
+                </tr>
+            </table>
+        """)
+
+    def __str__(self) -> str:
+        return (
+            f"Number of results: {self.query.hits()}\n"
+            f"Query parameters:\n"
+            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
+            f"Query parameter options:\n"
+            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
+        )
+
+    @property
+    def query(self) -> DataGranules | DataCollections:
+        return self._query
+
+
+class GranuleResults(Results):
+    def __init__(
+        self,
+        items: list[DataGranule],
+        *,
+        query: DataGranules,  # TODO: DataGranules is a bad name! Should be DataGranuleQuery.
+    ) -> None:
+        super().__init__(items, query=query)
+
+    def to_gdf(self) -> GeoDataFrame:
+        # TODO: Allow user to receive the raw normalized gdf and rename columns?
+        # TODO: Pre-massage the GDF to a small set of "known useful" columns and
+        #       give them more reader-friendly names. Avoid future breaking changes
+        #       that might arise from selecting too many columns.
+        try:
+            import pandas as pd  # noqa: PLC0415
+            from geopandas import GeoDataFrame  # noqa: PLC0415
+        except ImportError as e:
+            msg = "GeoPandas must be installed"
+            raise ImportError(msg) from e
+        return GeoDataFrame(
+            pd.json_normalize(self),
+            geometry=self,
+            crs="EPSG:4326",
+        )
+
+
+class CollectionResults(Results):
+    def __init__(
+        self,
+        items: list[DataCollection],
+        *,
+        query: DataCollections,
+    ) -> None:
+        super().__init__(items, query=query)

@@ -2,6 +2,7 @@ import pytest
 from earthaccess.results import (
     DataCollection,
     DataGranule,
+    Results,
 )
 from earthaccess.search import DataCollectionsQuery, DataGranulesQuery
 
@@ -333,6 +334,24 @@ def test_to_geopandas_returns_geodataframe():
         "MultiLineString",
     ]
     assert gdf.geometry.notna().all()
+
+
+def test_to_geopandas_accepts_results_objects():
+    pytest.importorskip("geopandas")
+    granules = Results(
+        [_make_granule(TEST_CASES["points"], "point")],
+        query=DataGranulesQuery(),
+    )
+    collections = Results(
+        [_make_collection(TEST_CASES["points"], "collection")],
+        query=DataCollectionsQuery(),
+    )
+
+    granule_gdf = DataGranulesQuery.to_geopandas(granules)
+    collection_gdf = DataCollectionsQuery.to_geopandas(collections)
+
+    assert len(granule_gdf) == 1
+    assert len(collection_gdf) == 1
 
 
 def test_to_geopandas_includes_attribute_columns():
