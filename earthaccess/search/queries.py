@@ -1,6 +1,6 @@
 """Query classes for CMR search.
 
-This module provides the DataCollections and DataGranules classes for building
+This module provides the DataCollectionsQuery and DataGranulesQuery classes for building
 queries against NASA's Common Metadata Repository (CMR).
 """
 
@@ -97,7 +97,7 @@ def _items_to_geopandas(
     )
 
 
-class DataCollections(CmrCollectionQuery):
+class DataCollectionsQuery(CmrCollectionQuery):
     """Placeholder.
 
     ???+ Info
@@ -110,7 +110,7 @@ class DataCollections(CmrCollectionQuery):
     _format = "umm_json"
 
     def __init__(self, auth: Optional[Auth] = None, *args: Any, **kwargs: Any) -> None:
-        """Builds an instance of DataCollections to query the CMR.
+        """Builds an instance of DataCollectionsQuery to query the CMR.
 
         Parameters:
             auth: An authenticated `Auth` instance. This is an optional parameter
@@ -342,7 +342,7 @@ class DataCollections(CmrCollectionQuery):
 
         ???+ Example
             ```python
-            query = DataCollections.parameters(
+            query = DataCollectionsQuery.parameters(
                 short_name="AST_L1T",
                 temporal=("2015-01","2015-02"),
                 point=(42.5, -101.25)
@@ -554,12 +554,12 @@ class DataCollections(CmrCollectionQuery):
 
         Examples:
             >>> collections = earthaccess.search_datasets(keyword="ozone")
-            >>> gdf = earthaccess.DataCollections.to_geopandas(collections)
+            >>> gdf = earthaccess.DataCollectionsQuery.to_geopandas(collections)
         """
         return _items_to_geopandas(collections)
 
 
-class DataGranules(CmrGranuleQuery):
+class DataGranulesQuery(CmrGranuleQuery):
     """A Granule oriented client for NASA CMR.
 
     API: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html
@@ -626,7 +626,7 @@ class DataGranules(CmrGranuleQuery):
             limit: The number of results to return.
 
         Returns:
-            Query results as a (possibly empty) list of `DataGranules` instances.
+            Query results as a (possibly empty) list of `DataGranulesQuery` instances.
 
         Raises:
             RuntimeError: The CMR query failed.
@@ -646,7 +646,7 @@ class DataGranules(CmrGranuleQuery):
 
         ???+ Example
             ```python
-            query = DataCollections.parameters(
+            query = DataCollectionsQuery.parameters(
                 short_name="AST_L1T",
                 temporal=("2015-01","2015-02"),
                 point=(42.5, -101.25)
@@ -1131,7 +1131,7 @@ class DataGranules(CmrGranuleQuery):
         Raises:
             RuntimeError: The CMR query to get the collection for the DOI fails.
         """
-        collection = DataCollections().doi(doi).get()
+        collection = DataCollectionsQuery().doi(doi).get()
 
         if not collection:
             logger.warning(
@@ -1172,6 +1172,6 @@ class DataGranules(CmrGranuleQuery):
 
         Examples:
             >>> granules = earthaccess.search_data(short_name="ATL06", count=100)
-            >>> gdf = earthaccess.DataGranules.to_geopandas(granules)
+            >>> gdf = earthaccess.DataGranulesQuery.to_geopandas(granules)
         """
         return _items_to_geopandas(granules)

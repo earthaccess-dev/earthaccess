@@ -1354,9 +1354,9 @@ def test_query_bounding_box_legacy_params():
     from types import SimpleNamespace
 
     from earthaccess.formatting.widgets import _query_bounding_box
-    from earthaccess.search import DataGranules
+    from earthaccess.search import DataGranulesQuery
 
-    q = DataGranules().parameters(
+    q = DataGranulesQuery().parameters(
         short_name="ATL06", bounding_box=(40.19, 6.24, 42.18, 7.24)
     )
     assert _query_bounding_box(SimpleNamespace(query=q)) == [40.19, 6.24, 42.18, 7.24]
@@ -1378,10 +1378,10 @@ def test_query_bounding_box_returns_none_without_bbox():
     from types import SimpleNamespace
 
     from earthaccess.formatting.widgets import _query_bounding_box
-    from earthaccess.search import DataGranules
+    from earthaccess.search import DataGranulesQuery
 
     assert _query_bounding_box(SimpleNamespace(query=None)) is None
-    q_no_bbox = DataGranules().parameters(short_name="ATL06")
+    q_no_bbox = DataGranulesQuery().parameters(short_name="ATL06")
     assert _query_bounding_box(SimpleNamespace(query=q_no_bbox)) is None
-    q_point = DataGranules().parameters(short_name="ATL06", point=(40.0, 7.0))
+    q_point = DataGranulesQuery().parameters(short_name="ATL06", point=(40.0, 7.0))
     assert _query_bounding_box(SimpleNamespace(query=q_point)) is None

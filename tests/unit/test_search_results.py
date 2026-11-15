@@ -315,7 +315,7 @@ class TestAPIIntegrationWithSearchResults:
     def test_search_data_returns_search_results(self) -> None:
         """Test that search_data returns SearchResults."""
         with (
-            patch("earthaccess.api.DataGranules") as mock_dg,
+            patch("earthaccess.api.DataGranulesQuery") as mock_dg,
             patch.object(SearchResults, "_fetch_page", return_value=[]),
         ):
             mock_query = Mock()
@@ -335,7 +335,7 @@ class TestAPIIntegrationWithSearchResults:
     def test_search_datasets_returns_search_results(self) -> None:
         """Test that search_datasets returns SearchResults."""
         with (
-            patch("earthaccess.api.DataCollections") as mock_dc,
+            patch("earthaccess.api.DataCollectionsQuery") as mock_dc,
             patch.object(SearchResults, "_fetch_page", return_value=[]),
         ):
             mock_query = Mock()

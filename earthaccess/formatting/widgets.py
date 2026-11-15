@@ -173,7 +173,7 @@ def _query_bounding_box(results: "SearchResults") -> Optional[List[float]]:
 
     Reads the ``bounding_box`` parameter off the query object so the ROI can
     be drawn alongside the results for contrast. Supports both the legacy
-    ``DataGranules``/``DataCollections`` param dicts (``"west,south,east,north"``)
+    ``DataGranulesQuery``/``DataCollectionsQuery`` param dicts (``"west,south,east,north"``)
     and the new ``GranuleQuery``/``CollectionQuery`` builders (``_spatial``).
 
     Args:

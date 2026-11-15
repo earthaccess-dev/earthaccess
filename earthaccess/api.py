@@ -25,10 +25,10 @@ from earthaccess.search import (
     CollectionQuery,
     CollectionResults,
     DataCollection,
-    DataCollections,
+    DataCollectionsQuery,
     DataGranule,
-    DataGranules,
-    DataServices,
+    DataGranulesQuery,
+    DataServicesQuery,
     GranuleQuery,
     GranuleResults,
 )
@@ -222,7 +222,7 @@ def search_datasets(
             errors = "; ".join(f"{e.field}: {e.message}" for e in validation.errors)
             raise ValueError(f"Invalid query: {errors}")
         # Use clean, replayable kwargs from the query builder; the legacy
-        # query layer (DataCollections.parameters) accepts these directly.
+        # query layer (DataCollectionsQuery.parameters) accepts these directly.
         kwargs = query.to_kwargs()
         replay_kwargs = kwargs
 
@@ -230,12 +230,12 @@ def search_datasets(
         logger.warning(
             "A valid set of parameters is needed to search for datasets on CMR"
         )
-        return CollectionResults(DataCollections(), limit=0)
+        return CollectionResults(DataCollectionsQuery(), limit=0)
     auth = earthaccess.__auth__
     if auth and isinstance(auth, Auth) and auth.authenticated:
-        cmr_query = DataCollections(auth).parameters(**kwargs)
+        cmr_query = DataCollectionsQuery(auth).parameters(**kwargs)
     else:
-        cmr_query = DataCollections().parameters(**kwargs)
+        cmr_query = DataCollectionsQuery().parameters(**kwargs)
     datasets_found = cmr_query.hits()
     logger.info(f"Datasets found: {datasets_found}")
     return CollectionResults(
@@ -365,7 +365,7 @@ def search_data(
             errors = "; ".join(f"{e.field}: {e.message}" for e in validation.errors)
             raise ValueError(f"Invalid query: {errors}")
         # Use clean, replayable kwargs from the query builder; the legacy
-        # query layer (DataGranules.parameters) accepts these directly.
+        # query layer (DataGranulesQuery.parameters) accepts these directly.
         kwargs = query.to_kwargs()
         replay_kwargs = kwargs
 
@@ -375,9 +375,9 @@ def search_data(
 
     auth = earthaccess.__auth__
     if auth and auth.authenticated:
-        cmr_query = DataGranules(auth).parameters(**kwargs)
+        cmr_query = DataGranulesQuery(auth).parameters(**kwargs)
     else:
-        cmr_query = DataGranules().parameters(**kwargs)
+        cmr_query = DataGranulesQuery().parameters(**kwargs)
     granules_found = cmr_query.hits()
     logger.info(f"Granules found: {granules_found}")
     return GranuleResults(
@@ -412,9 +412,9 @@ def search_services(count: int = -1, **kwargs: Any) -> List[Any]:
     """
     auth = earthaccess.__auth__
     if auth and isinstance(auth, Auth):
-        query = DataServices(auth=auth).parameters(**kwargs)
+        query = DataServicesQuery(auth=auth).parameters(**kwargs)
     else:
-        query = DataServices(auth=None).parameters(**kwargs)
+        query = DataServicesQuery(auth=None).parameters(**kwargs)
     hits = query.hits()
     logger.info(f"Services found: {hits}")
 
@@ -969,9 +969,9 @@ def collection_query() -> CollectionQuery:
     """
     auth = earthaccess.__auth__
     if auth and isinstance(auth, Auth) and auth.authenticated:
-        query_builder = DataCollections(auth)
+        query_builder = DataCollectionsQuery(auth)
     else:
-        query_builder = DataCollections()
+        query_builder = DataCollectionsQuery()
     return query_builder
 
 
@@ -1014,9 +1014,9 @@ def granule_query() -> GranuleQuery:
     """
     auth = earthaccess.__auth__
     if auth and isinstance(auth, Auth) and auth.authenticated:
-        query_builder = DataGranules(auth)
+        query_builder = DataGranulesQuery(auth)
     else:
-        query_builder = DataGranules()
+        query_builder = DataGranulesQuery()
     return query_builder
 
 

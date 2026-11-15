@@ -18,9 +18,9 @@ import pytest
 import responses
 from earthaccess.search import (
     DataCollection,
-    DataCollections,
+    DataCollectionsQuery,
     DataGranule,
-    DataGranules,
+    DataGranulesQuery,
 )
 from earthaccess.search._utils import get_results
 
@@ -246,7 +246,7 @@ def test_get_paginates_past_short_first_page():
         status=200,
     )
 
-    query = DataGranules()
+    query = DataGranulesQuery()
     query.concept_id("C3974616058-LPCLOUD")
     query.temporal("2024-01-01", "2024-12-31")
 
@@ -259,7 +259,7 @@ def test_get_paginates_past_short_first_page():
 @pytest.mark.vcr
 def test_collections_less_than_2k(vcr):
     """Test collection search with fewer than 2000 results."""
-    query = DataCollections().daac("PODAAC").cloud_hosted(True)
+    query = DataCollectionsQuery().daac("PODAAC").cloud_hosted(True)
     collections = query.get(20)
 
     # Assert that we performed a single search results query
@@ -272,7 +272,7 @@ def test_collections_less_than_2k(vcr):
 @pytest.mark.vcr
 def test_collections_more_than_2k(vcr):
     """Test collection search pagination with more than 2000 results."""
-    query = DataCollections()
+    query = DataCollectionsQuery()
     collections = query.get(3000)
 
     # Assert that we performed two search results queries

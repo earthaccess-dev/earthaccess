@@ -145,7 +145,7 @@ def _restore_query_params(params: Any) -> Optional[Dict[str, Any]]:
 def _normalize_flattened_params(params: Dict[str, Any]) -> Dict[str, Any]:
     """Reverse the CMR flattening of multi-value params for replay.
 
-    ``DataGranules``/``DataCollections`` store e.g. ``bounding_box`` as the
+    ``DataGranulesQuery``/``DataCollectionsQuery`` store e.g. ``bounding_box`` as the
     string ``"-46.5,61.0,-42.5,63.0"``, which cannot be passed back to
     ``search_data(bounding_box=...)``. Convert them back to the tuple/list form
     the API accepts.

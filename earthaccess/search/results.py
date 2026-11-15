@@ -25,7 +25,7 @@ from earthaccess.formatting import (
     _repr_granule_html,
     _repr_search_results_html,
 )
-from earthaccess.search.services import DataServices
+from earthaccess.search.services import DataServicesQuery
 
 
 @cache
@@ -453,7 +453,7 @@ class DataCollection(CustomDict):
         """Return list of services available for this collection."""
         services = self.get("meta", {}).get("associations", {}).get("services", [])
         queries = (
-            DataServices(auth=earthaccess.__auth__).parameters(concept_id=service)
+            DataServicesQuery(auth=earthaccess.__auth__).parameters(concept_id=service)
             for service in services
         )
 
@@ -1693,7 +1693,7 @@ class SearchResults:
     processing of large result sets that may contain thousands of items.
 
     Attributes:
-        query: The CMR query object (DataGranules or DataCollections)
+        query: The CMR query object (DataGranulesQuery or DataCollectionsQuery)
         limit: Maximum number of results to fetch (None for unlimited)
 
     Examples:
@@ -2149,7 +2149,7 @@ class SearchResults:
         if search_after:
             headers["cmr-search-after"] = search_after
 
-        # Use getattr to safely access session (available on DataGranules/DataCollections subclasses)
+        # Use getattr to safely access session (available on DataGranulesQuery/DataCollectionsQuery subclasses)
         session = getattr(self.query, "session", requests.session())
         response = session.get(url, headers=headers, params={"page_size": page_size})
 
@@ -2184,9 +2184,9 @@ class SearchResults:
             List of DataGranule or DataCollection instances
         """
         # Import here to avoid circular imports
-        from earthaccess.search.queries import DataGranules, is_cloud_hosted
+        from earthaccess.search.queries import DataGranulesQuery, is_cloud_hosted
 
-        if isinstance(self.query, DataGranules):
+        if isinstance(self.query, DataGranulesQuery):
             return [
                 DataGranule(item, cloud_hosted=is_cloud_hosted(item))
                 for item in results_data

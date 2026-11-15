@@ -11,7 +11,7 @@ from earthaccess.auth.system import (
     get_proxy,
     set_proxy,
 )
-from earthaccess.search import DataGranules
+from earthaccess.search import DataGranulesQuery
 
 PROXY = "https://earthdata-proxy.example.workers.dev"
 
@@ -96,14 +96,14 @@ class TestAuthHookProxy:
 class TestProxiedCMR:
     def test_granule_query_targets_proxy(self):
         set_proxy(PROXY)
-        query = DataGranules(Auth()).short_name("ATL08")
+        query = DataGranulesQuery(Auth()).short_name("ATL08")
         assert query._build_url().startswith(
             f"{PROXY}/https://cmr.earthdata.nasa.gov/search/granules"
         )
 
     def test_granule_query_targets_proxy_without_auth(self):
         set_proxy(PROXY)
-        query = DataGranules().short_name("ATL08")
+        query = DataGranulesQuery().short_name("ATL08")
         assert query._build_url().startswith(
             f"{PROXY}/https://cmr.earthdata.nasa.gov/search/granules"
         )

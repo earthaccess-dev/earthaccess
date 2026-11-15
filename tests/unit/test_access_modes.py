@@ -250,12 +250,12 @@ def test_get_defaults_to_https_without_s3_credentials():
         https=("https://example.com/a.nc",),
         s3=("s3://bucket/a.nc",),
     )
-    store._download_onprem_granules = MagicMock(return_value=["local"])
+    store._download_https_granules = MagicMock(return_value=["local"])
     store.get_s3_filesystem = MagicMock()
 
     assert store.get([granule], "/tmp") == ["local"]
     store.get_s3_filesystem.assert_not_called()
-    assert store._download_onprem_granules.call_args.args[0] == [
+    assert store._download_https_granules.call_args.args[0] == [
         "https://example.com/a.nc"
     ]
 
@@ -299,7 +299,7 @@ def test_get_cloud_s3_urls_require_provider_or_endpoint():
     with pytest.raises(ValueError, match="can't yet guess the provider"):
         store.get(["s3://cumulus/a.nc"], "/tmp")
 
-    store._download_onprem_granules = MagicMock(return_value=["local"])
+    store._download_https_granules = MagicMock(return_value=["local"])
     store.download_cloud_file = MagicMock(return_value="/tmp/a.nc")
     with patch("earthaccess.store.core.get_executor") as executor:
         executor.return_value.map.return_value = ["/tmp/a.nc"]

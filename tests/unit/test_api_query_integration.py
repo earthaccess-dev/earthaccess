@@ -19,7 +19,7 @@ class TestSearchDataWithGranuleQuery:
         """search_data() should accept a GranuleQuery object as first positional arg."""
         query = GranuleQuery().short_name("ATL03").temporal("2020-01", "2020-02")
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -40,7 +40,7 @@ class TestSearchDataWithGranuleQuery:
         """search_data() should respect count parameter when using query object."""
         query = GranuleQuery().short_name("ATL08")
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 100
             mock_query.get.return_value = [MagicMock() for _ in range(10)]
@@ -61,7 +61,7 @@ class TestSearchDataWithGranuleQuery:
         """search_data() should pass clean bounding_box tuple from query object."""
         query = GranuleQuery().short_name("ATL03").bounding_box(-180, -90, 180, 90)
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -82,7 +82,7 @@ class TestSearchDataWithGranuleQuery:
             .polygon([(-10, 40), (-8, 40), (-8, 42), (-10, 42), (-10, 40)])
         )
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -104,7 +104,7 @@ class TestSearchDataWithGranuleQuery:
         """search_data() should pass temporal parameters from query object."""
         query = GranuleQuery().short_name("ATL03").temporal("2020-01-01", "2020-12-31")
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -118,7 +118,7 @@ class TestSearchDataWithGranuleQuery:
 
     def test_search_data_kwargs_still_works(self):
         """search_data() should still accept kwargs for backward compatibility."""
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -148,7 +148,7 @@ class TestSearchDatasetsWithCollectionQuery:
         """search_datasets() should accept a CollectionQuery object."""
         query = CollectionQuery().keyword("temperature").cloud_hosted(True)
 
-        with patch("earthaccess.api.DataCollections") as mock_dc:
+        with patch("earthaccess.api.DataCollectionsQuery") as mock_dc:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -168,7 +168,7 @@ class TestSearchDatasetsWithCollectionQuery:
         """search_datasets() should respect count parameter with query object."""
         query = CollectionQuery().keyword("ocean")
 
-        with patch("earthaccess.api.DataCollections") as mock_dc:
+        with patch("earthaccess.api.DataCollectionsQuery") as mock_dc:
             mock_query = MagicMock()
             mock_query.hits.return_value = 100
             mock_query.get.return_value = [MagicMock() for _ in range(5)]
@@ -189,7 +189,7 @@ class TestSearchDatasetsWithCollectionQuery:
         """search_datasets() should pass daac from query object."""
         query = CollectionQuery().daac("NSIDC")
 
-        with patch("earthaccess.api.DataCollections") as mock_dc:
+        with patch("earthaccess.api.DataCollectionsQuery") as mock_dc:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -204,7 +204,7 @@ class TestSearchDatasetsWithCollectionQuery:
 
     def test_search_datasets_kwargs_still_works(self):
         """search_datasets() should still accept kwargs for backward compatibility."""
-        with patch("earthaccess.api.DataCollections") as mock_dc:
+        with patch("earthaccess.api.DataCollectionsQuery") as mock_dc:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []
@@ -277,7 +277,7 @@ class TestQueryValidation:
         """Valid GranuleQuery should not raise validation errors."""
         query = GranuleQuery().short_name("ATL03").bounding_box(-180, -90, 180, 90)
 
-        with patch("earthaccess.api.DataGranules") as mock_dg:
+        with patch("earthaccess.api.DataGranulesQuery") as mock_dg:
             mock_query = MagicMock()
             mock_query.hits.return_value = 0
             mock_query.get_all.return_value = []

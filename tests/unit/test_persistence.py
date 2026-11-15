@@ -14,7 +14,7 @@ import pytest
 from earthaccess.search import (
     DataCollection,
     DataGranule,
-    DataGranules,
+    DataGranulesQuery,
     GranuleResults,
     SearchResults,
     load_search,
@@ -47,7 +47,7 @@ def make_results(concept_ids, query=None, limit=10, hits=12070):
 
 
 def make_query(**kwargs):
-    return DataGranules().parameters(**kwargs)
+    return DataGranulesQuery().parameters(**kwargs)
 
 
 # =============================================================================

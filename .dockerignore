@@ -1,0 +1,17 @@
+.git
+.github
+.idea
+.ipynb_checkpoints
+.mypy_cache
+.nox
+.pytest_cache
+.ruff_cache
+.venv
+__pycache__
+build
+dist
+docs
+htmlcov
+notebooks
+site
+tests

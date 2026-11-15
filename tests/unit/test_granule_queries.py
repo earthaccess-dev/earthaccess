@@ -3,7 +3,7 @@ import datetime as dt
 from unittest import mock
 
 import pytest
-from earthaccess.search import DataGranules
+from earthaccess.search import DataGranulesQuery
 from earthaccess.search.queries import is_cloud_hosted
 
 valid_single_dates = [
@@ -43,13 +43,13 @@ bbox_queries = [
 
 @pytest.mark.parametrize("start,end,expected", valid_single_dates)
 def test_query_can_parse_single_dates(start, end, expected):
-    granules = DataGranules().short_name("MODIS").temporal(start, end)
+    granules = DataGranulesQuery().short_name("MODIS").temporal(start, end)
     assert granules.params["temporal"][0] == expected
 
 
 @pytest.mark.parametrize("start,end,expected", invalid_single_dates)
 def test_query_can_handle_invalid_dates(start, end, expected):  # noqa: ARG001
-    granules = DataGranules().short_name("MODIS")
+    granules = DataGranulesQuery().short_name("MODIS")
     assert "temporal" not in granules.params
     with pytest.raises(ValueError):
         granules.temporal(start, end)
@@ -57,7 +57,7 @@ def test_query_can_handle_invalid_dates(start, end, expected):  # noqa: ARG001
 
 @pytest.mark.parametrize("bbox,expected", bbox_queries)
 def test_query_handles_bbox(bbox, expected):
-    granules = DataGranules().short_name("MODIS").bounding_box(*bbox)
+    granules = DataGranulesQuery().short_name("MODIS").bounding_box(*bbox)
     assert ("bounding_box" in granules.params) == expected
 
 
@@ -66,27 +66,27 @@ def _collection(concept_id: str):
 
 
 def test_doi_single_collection_sets_concept_id():
-    with mock.patch("earthaccess.search.queries.DataCollections") as dc:
+    with mock.patch("earthaccess.search.queries.DataCollectionsQuery") as dc:
         dc.return_value.doi.return_value.get.return_value = [_collection("C1-FOO")]
-        granules = DataGranules().doi("10.5067/AQR50-3Q7CS")
+        granules = DataGranulesQuery().doi("10.5067/AQR50-3Q7CS")
     assert granules.params["concept_id"] == "C1-FOO"
 
 
 def test_doi_no_collection_warns_and_sets_nothing(caplog):
-    with mock.patch("earthaccess.search.queries.DataCollections") as dc:
+    with mock.patch("earthaccess.search.queries.DataCollectionsQuery") as dc:
         dc.return_value.doi.return_value.get.return_value = []
-        granules = DataGranules().doi("10.5067/NOPE")
+        granules = DataGranulesQuery().doi("10.5067/NOPE")
     assert "concept_id" not in granules.params
     assert "couldn't find any associated collections" in caplog.text
 
 
 def test_doi_multiple_collections_warns_and_picks_first(caplog):
-    with mock.patch("earthaccess.search.queries.DataCollections") as dc:
+    with mock.patch("earthaccess.search.queries.DataCollectionsQuery") as dc:
         dc.return_value.doi.return_value.get.return_value = [
             _collection("C1-FOO"),
             _collection("C2-BAR"),
         ]
-        granules = DataGranules().doi("10.5067/MULTI")
+        granules = DataGranulesQuery().doi("10.5067/MULTI")
     assert granules.params["concept_id"] == "C1-FOO"
     assert "maps to 2 collections" in caplog.text
 

@@ -71,10 +71,10 @@ from .auth.system import PROD, UAT, get_proxy, set_proxy
 from .plugins import list_plugins, list_services
 from .search import (
     DataCollection,
-    DataCollections,
+    DataCollectionsQuery,
     DataGranule,
-    DataGranules,
-    DataServices,
+    DataGranulesQuery,
+    DataServicesQuery,
     SearchResults,
     load_search,
     save_search,
@@ -103,10 +103,10 @@ __all__ = [
     "distribute_credentials",
     # search.py
     "DataCollection",
-    "DataCollections",
+    "DataCollectionsQuery",
     "DataGranule",
-    "DataGranules",
-    "DataServices",
+    "DataGranulesQuery",
+    "DataServicesQuery",
     "SearchResults",
     # query package (new query builders)
     "GranuleQuery",

@@ -39,7 +39,7 @@ from typing_extensions import deprecated
 
 from .._access import AccessType, CanonicalAccessType, normalize_access
 from ..auth.system import route
-from ..search import DataCollections, DataGranule, GranuleResults
+from ..search import DataCollectionsQuery, DataGranule, GranuleResults
 from .daac import DAAC_TEST_URLS, find_provider
 
 # Import from new modular components
@@ -162,7 +162,7 @@ class Store:
         return provider
 
     def _is_cloud_collection(self, concept_id: List[str]) -> bool:
-        collection = DataCollections(self.auth).concept_id(concept_id).get()
+        collection = DataCollectionsQuery(self.auth).concept_id(concept_id).get()
         if len(collection) > 0 and "s3-links" in collection[0]["meta"]:
             return True
         return False
@@ -401,7 +401,7 @@ class Store:
         """Fetches the S3 credentials endpoint from the collection metadata."""
         try:
             # We can use the internal search module or just a direct request
-            # Using DataCollections might be cleaner if available, but a direct request is also fine.
+            # Using DataCollectionsQuery might be cleaner if available, but a direct request is also fine.
             # Let's use the auth session to query CMR.
             base_url = route(self.auth.system.cmr_base_url)
             url = f"{base_url}/search/collections.umm_json?concept_id={concept_id}"
@@ -807,7 +807,7 @@ class Store:
             finally:
                 executor.shutdown(wait=True)
 
-        return self._download_onprem_granules(
+        return self._download_https_granules(
             data_links,
             path,
             max_workers=max_workers,
@@ -881,7 +881,7 @@ class Store:
             finally:
                 executor.shutdown(wait=True)
 
-        return self._download_onprem_granules(
+        return self._download_https_granules(
             data_links,
             path,
             max_workers=max_workers,
@@ -1015,7 +1015,7 @@ class Store:
                 logger.info(f"File {local_filename} already downloaded")
             return path
 
-    def _download_onprem_granules(
+    def _download_https_granules(
         self,
         urls: List[str],
         directory: Union[Path, TargetLocation],

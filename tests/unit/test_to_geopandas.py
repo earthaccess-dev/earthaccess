@@ -1,9 +1,9 @@
 """Tests for DataGranule/DataCollection.to_geopandas() and the bulk variants
-on DataGranules/DataCollections.
+on DataGranulesQuery/DataCollectionsQuery.
 """
 
 import pytest
-from earthaccess.search.queries import DataCollections, DataGranules
+from earthaccess.search.queries import DataCollectionsQuery, DataGranulesQuery
 from earthaccess.search.results import DataCollection, DataGranule
 
 pytest.importorskip("geopandas")
@@ -104,7 +104,7 @@ def test_data_granules_to_geopandas_bulk():
         _granule(POINT_GEOMETRY, granule_ur="g2"),
     ]
 
-    gdf = DataGranules.to_geopandas(granules)
+    gdf = DataGranulesQuery.to_geopandas(granules)
 
     assert len(gdf) == 2
     assert list(gdf["umm.GranuleUR"]) == ["g1", "g2"]
@@ -130,7 +130,7 @@ def test_data_collections_to_geopandas_bulk():
 
     collections = [_collection("A"), _collection("B")]
 
-    gdf = DataCollections.to_geopandas(collections)
+    gdf = DataCollectionsQuery.to_geopandas(collections)
 
     assert len(gdf) == 2
     assert list(gdf["umm.ShortName"]) == ["A", "B"]
@@ -141,7 +141,7 @@ def test_data_granules_to_geopandas_missing_spatial_extent_raises():
     granules = [DataGranule({"meta": {"concept-id": "G1"}, "umm": {"GranuleUR": "x"}})]
 
     with pytest.raises(ValueError):
-        DataGranules.to_geopandas(granules)
+        DataGranulesQuery.to_geopandas(granules)
 
 
 def test_data_granules_to_geopandas_without_geopandas_raises(monkeypatch):
@@ -157,4 +157,4 @@ def test_data_granules_to_geopandas_without_geopandas_raises(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
     with pytest.raises(ImportError, match="pip install earthaccess\\[geo\\]"):
-        DataGranules.to_geopandas([_granule(POINT_GEOMETRY)])
+        DataGranulesQuery.to_geopandas([_granule(POINT_GEOMETRY)])

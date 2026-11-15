@@ -85,10 +85,6 @@ results = earthaccess.search_data(
 )
 ```
 
-!!! tip "Rich Display in Jupyter"
-
-    When working in Jupyter notebooks, search results display rich HTML representations automatically. Just evaluate a result in a cell to see formatted metadata, file sizes, and links. You can also visualize spatial coverage with `results.explore()` (requires `pip install earthaccess[widgets]`).
-
 ### Step 3. Download the files
 
 Once you have found the files you want, you can download them to your local machine.
@@ -104,8 +100,7 @@ files = earthaccess.download(results, "./local_folder")
     `.`).  If that directory doesn't exist, it will be created automatically.
 
 Downloads use HTTPS by default. If you are running in the AWS `us-west-2` region, you can
-use `access="s3"` for direct S3 access:
-`earthaccess.download(results, "./local_folder", access="s3")`.
+use `access="s3"` for direct S3 access: `earthaccess.download(results, "./local_folder", access="s3")`.
 If you previously relied on earthaccess automatically choosing S3 in us-west-2 (for
 example, on a cloud JupyterHub), add `access="s3"` to keep that behavior.
 

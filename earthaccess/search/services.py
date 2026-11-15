@@ -1,6 +1,6 @@
 """Service query client for NASA CMR.
 
-This module provides the DataServices class for querying collection services
+This module provides the DataServicesQuery class for querying collection services
 from NASA's Common Metadata Repository (CMR).
 """
 
@@ -13,7 +13,7 @@ from earthaccess.auth import Auth
 from earthaccess.search._utils import get_results
 
 
-class DataServices(CmrServiceQuery):
+class DataServicesQuery(CmrServiceQuery):
     """A Service client for NASA CMR that returns data on collection services.
 
     API: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#service

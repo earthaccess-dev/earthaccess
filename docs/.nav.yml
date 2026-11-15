@@ -33,11 +33,16 @@ nav:
       - "Quick start": "user/quick-start.md"
       - How-to:
           - "Authenticate with Earthdata Login": "user/howto/authenticate.md"
-          - "Search for data using filters": "user/howto/search-granules.md"
-          - "Access data": "user/howto/access-data.md"
-          - "Reproduce, save, and verify searches": "user/howto/reproduce-search.md"
-          # - "Download data from on-prem location": "user/howto/onprem.md"
-          - "Direct S3 access - Open/stream files in the cloud": "user/howto/cloud.md"
+          - "Authenticate with Earthdata Login using environment variables": "user/howto/authenticate-with-environment-variables.md"
+          - "Authenticate with Earthdata Login using `.netrc`": "user/howto/authenticate-using-a-netrc.md"
+          - "Search for datasets using keywords": "user/howto/search-datasets-using-keywords.md"
+          - "Search for datasets by instrument": "user/howto/search-datasets-by-instrument.md"
+          - "Search for data by temporal range": "user/howto/search-data-datasets-by-timerange.md"
+          - "Search for data using a polygon": "user/howto/search-data-datasets-using-polygon.md"
+          - "Download data to a local machine": "user/howto/download-to-local-machine.md"
+          - "Stream data directly to xarray": "user/howto/stream-data-to-xarray.md"
+          - "Get URLs for granules": "user/howto/get-urls-for-granules.md"
+          - "Get OPeNDAP URLs for granules": "user/howto/get-opendap-links.md"
           - "Search for services": "user/howto/search-services.md"
       - Tutorials:
           - STAC:
@@ -54,7 +59,6 @@ nav:
           - Advanced Search:
               - "Advanced Search tutorials": "tutorials/advanced-search/index.md"
               - "Filtering granules by file (band) patterns": "tutorials/advanced-search/filter-bands.ipynb"
-              - "Search and access of restricted datasets": "user/tutorials/restricted-datasets.ipynb"
           - Results Class:
               - "Results Class tutorials": "tutorials/results/index.md"
               - "Results Class Overview": "tutorials/results/results-class.ipynb"
@@ -81,7 +85,6 @@ nav:
           - Glossary:
               - "NASA glossary": "user/reference/glossary/nasa-glossary.md"
               - "Cloud computing terminology": "user/reference/glossary/cloud-glossary.md"
-
   - Contributor guide:
       - "contributor/index.md" # << Link target of the parent node
       - "Code of conduct": "contributor/code-of-conduct.md"
@@ -96,6 +99,8 @@ nav:
           - "Integration tests": "contributor/explanation/integration-tests.md"
       - Reference:
           - "Naming conventions": "contributor/reference/naming-convention.md"
+          - "Documentation style guide": "contributor/reference/documentation-style-guide.md"
+          - "Code style guide": "contributor/reference/code-style-guide.md"
 
   - Architecture & Design:
       - "Overview": "refactoring.md"

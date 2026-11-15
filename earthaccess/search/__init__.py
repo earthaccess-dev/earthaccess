@@ -5,10 +5,10 @@ and working with search results.
 """
 
 # Re-export base query classes from cmr package for backward compatibility
-# These are used internally by DataCollections and DataGranules
+# These are used internally by DataCollectionsQuery and DataGranulesQuery
 from cmr import CollectionQuery as CmrCollectionQuery, GranuleQuery as CmrGranuleQuery
 from earthaccess.search.persistence import load_search, save_search
-from earthaccess.search.queries import DataCollections, DataGranules
+from earthaccess.search.queries import DataCollectionsQuery, DataGranulesQuery
 
 # New query builder classes (earthaccess-native, no cmr dependency)
 from earthaccess.search.query import (
@@ -32,7 +32,7 @@ from earthaccess.search.results import (
     GranuleResults,
     SearchResults,
 )
-from earthaccess.search.services import DataServices
+from earthaccess.search.services import DataServicesQuery
 
 __all__ = [
     # New query builder classes (earthaccess-native)
@@ -50,8 +50,8 @@ __all__ = [
     "CmrCollectionQuery",
     "CmrGranuleQuery",
     # Query executor classes
-    "DataCollections",
-    "DataGranules",
+    "DataCollectionsQuery",
+    "DataGranulesQuery",
     # Result classes
     "CustomDict",
     "DataCollection",
@@ -61,7 +61,7 @@ __all__ = [
     "GranuleResults",
     "CollectionResults",
     # Service class
-    "DataServices",
+    "DataServicesQuery",
     # Persistence
     "save_search",
     "load_search",
