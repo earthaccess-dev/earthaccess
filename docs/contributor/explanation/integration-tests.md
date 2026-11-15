@@ -27,4 +27,3 @@ configured. Credentials are read from the environment, or from a gitignored
 
 - `EARTHDATA_TOKEN`, or `EARTHDATA_USERNAME`/`EARTHDATA_PASSWORD`, for PROD
 - `EARTHDATA_UAT_TOKEN`, or `EARTHDATA_UAT_USERNAME`/`EARTHDATA_UAT_PASSWORD`, for UAT
-

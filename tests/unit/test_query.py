@@ -334,9 +334,9 @@ class TestGranuleQuery:
         "query_builder,is_valid",
         [
             (
-                lambda: GranuleQuery()
-                .short_name("ATL03")
-                .bounding_box(-180, -90, 180, 90),
+                lambda: (
+                    GranuleQuery().short_name("ATL03").bounding_box(-180, -90, 180, 90)
+                ),
                 True,
             ),
             (lambda: GranuleQuery().bounding_box(-180, -90, 180, 90), False),

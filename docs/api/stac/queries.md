@@ -266,7 +266,7 @@ try:
     validation = query.validate()
     if not validation.is_valid():
         raise ValueError(f"Invalid query: {validation.errors}")
-    
+
     results = earthaccess.search_data(query=query)
 except ValueError as e:
     print(f"Error: {e}")
