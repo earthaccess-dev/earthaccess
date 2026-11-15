@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Any, cast
 from unittest.mock import patch
 
 import earthaccess
@@ -206,7 +207,7 @@ def test_download_immediate_failure(tmp_path: Path):
             # By default, we use immediate exception behavior so that
             # it simply propagates the first download error it encounters, halting
             # any further downloads.
-            earthaccess.download(results, tmp_path, show_progress=False)
+            earthaccess.download(cast(Any, results), tmp_path, show_progress=False)
 
 
 def test_download_deferred_failure(tmp_path: Path):
@@ -223,7 +224,7 @@ def test_download_deferred_failure(tmp_path: Path):
         # The test behavior is different now - we expect immediate exceptions.
         with pytest.raises(IOError, match="Download failed"):
             earthaccess.download(
-                results,
+                cast(Any, results),
                 tmp_path,
                 show_progress=False,
             )

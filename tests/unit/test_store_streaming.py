@@ -69,7 +69,7 @@ class TestWorkerContextSerialization:
         """WorkerContext should have serializable structure with real credentials."""
         auth_context = Mock(spec=AuthContext)
         # Make the mock pickleable by setting reduce explicitly
-        auth_context.__reduce__ = Mock(return_value=(Mock, ()))
+        setattr(auth_context, "__reduce__", Mock(return_value=(Mock, ())))
 
         worker_context = WorkerContext(
             auth_context=auth_context,

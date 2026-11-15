@@ -228,8 +228,11 @@ module = [
   "h5netcdf.*",
   "dask.*",
   "kerchunk.*",
+  "anywidget",
+  "lonboard",
   "obspec_utils.*",
   "pqdm.*",
+  "tqdm.*",
   "s3fs",
   "tinynetrc.*", # TODO: generate stubs for tinynetrc and remove this line
   "vcr.*", # TODO: generate stubs for vcr and remove this line

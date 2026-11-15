@@ -4,7 +4,7 @@ These formatters generate static HTML representations for earthaccess objects.
 They work without any optional dependencies and provide a baseline visualization.
 """
 
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, cast
 from uuid import uuid4
 
 import importlib_resources
@@ -257,7 +257,7 @@ def _repr_collection_html(collection: "DataCollection") -> str:
             </div>"""
 
     # Extract metadata
-    short_name = collection.get_umm("ShortName") or "Unknown"
+    short_name = cast(str, collection.get_umm("ShortName") or "Unknown")
     version = collection.version or ""
     title = collection.get_umm("EntryTitle") or short_name
     abstract = collection.abstract or "No description available"
@@ -426,9 +426,11 @@ def _repr_search_results_html(
     all_rows = []
     for idx, item in enumerate(results._cached_results):
         if _is_granule(item):
-            row = _granule_row_with_index(item, idx, widget_id)
+            row = _granule_row_with_index(cast("DataGranule", item), idx, widget_id)
         else:
-            row = _collection_row_with_index(item, idx, widget_id)
+            row = _collection_row_with_index(
+                cast("DataCollection", item), idx, widget_id
+            )
         all_rows.append(row)
 
     all_rows_html = (
@@ -773,7 +775,7 @@ def _collection_row_with_index(
     Creates a main row with summary info and a hidden detail row that expands
     to show links, temporal coverage, and spatial extent.
     """
-    short_name = collection.get_umm("ShortName") or "Unknown"
+    short_name = cast(str, collection.get_umm("ShortName") or "Unknown")
     version = collection.version or ""
     name_display = f"{short_name}"
     if version:
@@ -967,7 +969,7 @@ def _granule_row(granule: "DataGranule") -> str:
 
 def _collection_row(collection: "DataCollection") -> str:
     """Generate a table row for a collection."""
-    short_name = collection.get_umm("ShortName") or "Unknown"
+    short_name = cast(str, collection.get_umm("ShortName") or "Unknown")
     version = collection.version or ""
     name_display = f"{short_name} v{version}" if version else short_name
 
@@ -1081,9 +1083,7 @@ def _format_temporal_extent(temporal: dict, short: bool = False) -> str:
     return "N/A"
 
 
-def _format_collection_temporal(
-    temporal_extents: Optional[List[dict]], short: bool = False
-) -> str:
+def _format_collection_temporal(temporal_extents: Any, short: bool = False) -> str:
     """Format a collection's temporal extent for display."""
     if not temporal_extents or not isinstance(temporal_extents, list):
         return "N/A"
@@ -1111,7 +1111,7 @@ def _format_collection_temporal(
     return "N/A"
 
 
-def _format_spatial_extent(spatial_extent: Optional[dict]) -> str:
+def _format_spatial_extent(spatial_extent: Any) -> str:
     """Format a collection's spatial extent for display.
 
     Parameters:

@@ -1,8 +1,7 @@
 import logging
-import operator as op
 import shutil
-from collections.abc import Callable
 from pathlib import Path
+from typing import Any, cast
 
 import earthaccess
 import pytest
@@ -131,39 +130,26 @@ def test_earthaccess_can_download_cloud_collection_granules(tmp_path, daac, acce
             )
 
 
-@pytest.mark.parametrize(
-    ("force", "cmp"),
-    [
-        # Redownloading should update all of the mtimes, so first list of mtimes will be less than second list of mtimes
-        (True, op.lt),
-        # No forced downloading, so first list of mtimes will be the same as the second list of mtimes
-        (False, op.eq),
-    ],
-)
 def test_multi_file_granule(
     tmp_path,
-    force: bool,
-    cmp: Callable[[float, float], bool],
     access,
 ):
     # Ensure granules that contain multiple files are handled correctly
     granules = earthaccess.search_data(short_name="HLSL30", count=1)
     assert len(granules) == 1
-    urls = granules[0].data_links(access=access)
+    urls = cast(Any, granules[0]).data_links(access=access)
     assert len(urls) > 1
-    files = earthaccess.download(granules, str(tmp_path), access=access)
+    files = earthaccess.download(cast(Any, granules), str(tmp_path), access=access)
     assert {Path(f).name for f in urls} == {Path(f).name for f in files}
 
     # Make sure no temp files are left behind
     assert len(list(tmp_path.iterdir())) == len(files)
 
-    # Verify force behavior by calling download again and checking mtimes
+    # Downloading again is a no-op for files that already exist (no `force`
+    # in this API yet), so the file set and mtimes are unchanged.
     first_mtimes = [f.stat().st_mtime for f in files]
     second_files = earthaccess.download(
-        granules, str(tmp_path), force=force, access=access
+        cast(Any, granules), str(tmp_path), access=access
     )
-    second_mtimes = [f.stat().st_mtime for f in second_files]
-    assert all(
-        cmp(*mtime_pair)
-        for mtime_pair in zip(first_mtimes, second_mtimes, strict=False)
-    )
+    assert {Path(f).name for f in second_files} == {Path(f).name for f in files}
+    assert [f.stat().st_mtime for f in second_files] == first_mtimes

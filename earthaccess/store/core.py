@@ -740,13 +740,13 @@ class Store:
                 return Path(target_path)
         else:
             # Original Path-based logic
-            file_name = path / Path(file).name
-            if file_name.exists():
-                return file_name  # Skip if already exists
+            local_file = path / Path(file).name
+            if local_file.exists():
+                return local_file  # Skip if already exists
 
             s3_fs.get([file], str(path), recursive=False)
-            logger.info(f"Downloading: {file_name}")
-            return file_name
+            logger.info(f"Downloading: {local_file}")
+            return local_file
 
     @_get.register
     def _get_urls(

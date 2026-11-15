@@ -247,7 +247,9 @@ class TestSimplifyGeometry:
         saved_modules = {key: sys.modules.pop(key) for key in shapely_modules}
 
         # Mock import to fail
-        original_import = __builtins__["__import__"]
+        import builtins
+
+        original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
             if name.startswith("shapely"):

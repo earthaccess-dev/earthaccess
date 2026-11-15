@@ -579,7 +579,7 @@ def stream_process(
         >>> for path in results:
         ...     print(f"Downloaded: {path}")
     """
-    executor = StreamingExecutor(
+    executor: Any = StreamingExecutor(
         max_workers=max_workers,
         buffer_size=buffer_size,
         auth_context=auth_context,

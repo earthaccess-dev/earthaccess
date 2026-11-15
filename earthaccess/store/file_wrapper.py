@@ -5,7 +5,7 @@ and associates them with their source granule metadata.
 """
 
 from pickle import dumps, loads
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union, cast
 
 import fsspec
 
@@ -211,7 +211,7 @@ def get_url_granule_mapping(
     """
     url_mapping = {}
     for granule in granules:
-        for url in granule.data_links(access=access):
+        for url in granule.data_links(access=cast(Any, access)):
             url_mapping[url] = granule
     return url_mapping
 

@@ -6,6 +6,7 @@ and associates them with their source granule metadata.
 
 import pickle
 from io import BytesIO
+from typing import Any
 from unittest.mock import Mock, patch
 
 
@@ -40,7 +41,7 @@ class TestEarthAccessFileCreation:
         from earthaccess.store.file_wrapper import EarthAccessFile
 
         mock_file = Mock()
-        mock_granule = {"meta": {"concept-id": "G123456"}}
+        mock_granule: Any = {"meta": {"concept-id": "G123456"}}
 
         wrapper = EarthAccessFile(mock_file, mock_granule)
 
@@ -125,7 +126,7 @@ class TestEarthAccessFileProxy:
         mock_file = Mock()
         mock_file.f = "should not get this"
         mock_file.granule = "should not get this either"
-        mock_granule = {"id": "granule123"}
+        mock_granule: Any = {"id": "granule123"}
 
         wrapper = EarthAccessFile(mock_file, mock_granule)
 
@@ -142,7 +143,7 @@ class TestEarthAccessFileRepr:
         from earthaccess.store.file_wrapper import EarthAccessFile
 
         mock_file = Mock()
-        mock_file.__repr__ = Mock(return_value="<MockFile>")
+        setattr(mock_file, "__repr__", Mock(return_value="<MockFile>"))
         mock_granule = Mock()
 
         wrapper = EarthAccessFile(mock_file, mock_granule)
@@ -160,7 +161,7 @@ class TestEarthAccessFileSerialization:
 
         # Create a simple file-like object that can be pickled
         mock_file = BytesIO(b"test content")
-        mock_granule = {"meta": {"concept-id": "G123"}}
+        mock_granule: Any = {"meta": {"concept-id": "G123"}}
 
         wrapper = EarthAccessFile(mock_file, mock_granule)
 
@@ -173,7 +174,7 @@ class TestEarthAccessFileSerialization:
         from earthaccess.store.file_wrapper import EarthAccessFile
 
         mock_file = BytesIO(b"test content")
-        mock_granule = {"meta": {"concept-id": "G123"}}
+        mock_granule: Any = {"meta": {"concept-id": "G123"}}
 
         wrapper = EarthAccessFile(mock_file, mock_granule)
 
@@ -195,7 +196,7 @@ class TestMakeInstance:
         from earthaccess.store.file_wrapper import EarthAccessFile, make_instance
 
         mock_file = BytesIO(b"test content")
-        mock_granule = {"meta": {"concept-id": "G123"}}
+        mock_granule: Any = {"meta": {"concept-id": "G123"}}
 
         # Pickle the file
         pickled_file = pickle.dumps(mock_file)
@@ -271,7 +272,7 @@ class TestOpenFilesHelper:
         mock_fs.open.return_value = BytesIO(b"content")
 
         # Create URL mapping
-        url_mapping = {"s3://bucket/file1.nc": {"meta": {"concept-id": "G1"}}}
+        url_mapping: Any = {"s3://bucket/file1.nc": {"meta": {"concept-id": "G1"}}}
 
         with patch("earthaccess.store.file_wrapper.get_executor") as mock_get_executor:
             mock_executor = Mock()
@@ -301,7 +302,7 @@ class TestUrlGranuleMapping:
             "s3://bucket/file3.nc",
         ]
 
-        granules = [mock_granule1, mock_granule2]
+        granules: Any = [mock_granule1, mock_granule2]
 
         result = get_url_granule_mapping(granules, access="direct")
 

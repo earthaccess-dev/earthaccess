@@ -1,11 +1,11 @@
 import logging
 
 import earthaccess
-import earthaccess.daac
 import pytest
 import requests
 import s3fs
 from earthaccess.exceptions import LoginStrategyUnavailable
+from earthaccess.store import daac as daac_module
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def test_auth_can_create_authenticated_requests_sessions():
 
 @pytest.mark.parametrize(
     "daac",
-    [daac for daac in earthaccess.daac.DAACS if daac["s3-credentials"]],
+    [entry for entry in daac_module.DAACS if entry["s3-credentials"]],
 )
 def test_auth_can_fetch_s3_credentials(daac):
     auth = earthaccess.login(strategy="environment")

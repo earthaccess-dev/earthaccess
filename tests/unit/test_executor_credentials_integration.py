@@ -463,7 +463,7 @@ class TestCredentialPerformance:
 
         def complex_operation(item: int, context: AuthContext) -> dict:
             """Complex operation accessing all credential types."""
-            cred_dict = {}
+            cred_dict: dict[str, Any] = {}
             if context.s3_credentials:
                 cred_dict["s3"] = {
                     "has_session_token": context.s3_credentials.session_token

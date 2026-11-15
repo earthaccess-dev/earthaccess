@@ -12,7 +12,7 @@ import tempfile
 import warnings
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import earthaccess
 from earthaccess._access import AccessType, CanonicalAccessType, normalize_access
@@ -522,7 +522,7 @@ def _is_kerchunk_uri(uri: str) -> bool:
 def _edl_bearer_token() -> str | None:
     """Return the user's EDL access token, or ``None`` when not authenticated."""
     try:
-        token = earthaccess.__auth__.token["access_token"]
+        token = cast(Any, earthaccess.__auth__.token)["access_token"]
     except (AttributeError, TypeError, KeyError):
         return None
     return token
@@ -1187,7 +1187,7 @@ def _build_registry_for_url(url: str) -> Any:
         stores[f"s3://{parsed.netloc}"] = S3Store(bucket=parsed.netloc)
     if parsed.scheme == "https":
         try:
-            token = earthaccess.__auth__.token["access_token"]
+            token = cast(Any, earthaccess.__auth__.token)["access_token"]
         except (AttributeError, TypeError, KeyError):
             pass
         else:

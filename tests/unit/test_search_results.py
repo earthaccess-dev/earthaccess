@@ -52,7 +52,7 @@ class PagedQuery:
     def __init__(self, total_items: int, page_size: int = 2000):
         self.total_items = total_items
         self.page_size = page_size
-        self.headers = {}
+        self.headers: dict[str, str] = {}
         self.calls: list[int] = []
 
     def hits(self) -> int:

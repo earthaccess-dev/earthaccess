@@ -3,7 +3,7 @@ import json
 import logging
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
 import requests
@@ -40,11 +40,12 @@ from .search.query import (
     CollectionQuery as NewCollectionQuery,
     GranuleQuery as NewGranuleQuery,
 )
-from .store import Store
+from .store import Store as _Store
 from .store.target import TargetLocation
 
 if TYPE_CHECKING:
     # Type checking stubs to help the type checker understand __getattr__ behavior
+    from earthaccess.store.core import Store
 
     _auth: Auth
     _store: Optional[Store]
@@ -505,7 +506,7 @@ def login(
                 continue
 
             if auth.authenticated:
-                earthaccess._store = Store(auth)
+                earthaccess._store = cast("type[Store]", _Store)(auth)
                 break
     else:
         auth.login(
@@ -514,7 +515,7 @@ def login(
             system=system,
         )
         if auth.authenticated:
-            earthaccess._store = Store(auth)
+            earthaccess._store = cast("type[Store]", _Store)(auth)
 
     return auth
 
@@ -851,7 +852,7 @@ def open(
         )
 
     return store.open(
-        granules=granules,
+        granules=cast(Any, granules),
         provider=_normalize_location(provider),
         access=normalize_access(access),
         credentials_endpoint=credentials_endpoint,
@@ -972,7 +973,7 @@ def collection_query() -> CollectionQuery:
         query_builder = DataCollectionsQuery(auth)
     else:
         query_builder = DataCollectionsQuery()
-    return query_builder
+    return cast("CollectionQuery", query_builder)
 
 
 def granule_query() -> GranuleQuery:
@@ -1017,7 +1018,7 @@ def granule_query() -> GranuleQuery:
         query_builder = DataGranulesQuery(auth)
     else:
         query_builder = DataGranulesQuery()
-    return query_builder
+    return cast("GranuleQuery", query_builder)
 
 
 def get_fsspec_https_session() -> AbstractFileSystem:

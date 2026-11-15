@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache, cached_property
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Union, cast
 
 import pystac
 import requests
@@ -175,7 +175,7 @@ class CustomDict(dict):
         }
 
         frame = pd.json_normalize({"umm": umm, "meta": meta})
-        frame["geometry"] = geometry
+        cast(Any, frame)["geometry"] = geometry
         return gpd.GeoDataFrame(frame, geometry="geometry", crs="EPSG:4326")
 
 

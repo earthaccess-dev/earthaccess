@@ -5,6 +5,7 @@ It tests both the abstract factory interface and concrete implementations.
 """
 
 import datetime
+from typing import Any, cast
 from unittest.mock import Mock, patch
 
 import pytest
@@ -207,7 +208,7 @@ class TestDefaultFileSystemFactoryHTTPS:
         """Should handle None headers gracefully."""
         factory = DefaultFileSystemFactory()
 
-        headers = HTTPHeaders(headers=None, cookies=None)
+        headers = HTTPHeaders(headers=cast(Any, None), cookies=cast(Any, None))
 
         with patch("earthaccess.store.filesystems.fsspec.filesystem") as mock_fsspec:
             factory.create_https_filesystem(headers)

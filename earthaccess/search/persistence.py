@@ -152,7 +152,7 @@ def _normalize_flattened_params(params: Dict[str, Any]) -> Dict[str, Any]:
     """
     params = dict(params)
 
-    def _to_float_pair(s: str):
+    def _to_float_pair(s: str) -> tuple[float, float]:
         parts = s.split(",")
         return (float(parts[0]), float(parts[1]))
 
@@ -512,6 +512,7 @@ def _rebuild_from_payload(
         SearchResults,
     )
 
+    cls: Any
     if kind == "collections":
         cls = CollectionResults
         items: List[Any] = [DataCollection(item) for item in payload["results"]]
@@ -560,6 +561,7 @@ def _verify(payload: Dict[str, Any], kind: str, limit: Optional[int]) -> Dict[st
     saved_cmr_hits = payload.get("cmr_hits")
     saved_ids = {r.get("meta", {}).get("concept-id") for r in payload["results"]}
 
+    fresh: Any
     if kind == "collections":
         fresh = earthaccess.search_datasets(**query_params, count=limit or -1)
     else:

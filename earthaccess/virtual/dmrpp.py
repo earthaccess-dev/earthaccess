@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 from urllib.parse import urlparse
 
 import earthaccess
@@ -230,6 +230,8 @@ def open_virtual_mfdataset(
     parsed_url = urlparse(granules[0].data_links(access=canonical_access)[0])
     fs = earthaccess.get_fsspec_https_session()
 
+    obstore_registry: Any
+
     if canonical_access == "s3":
         credentials_endpoint, region = get_granule_credentials_endpoint_and_region(
             granules[0]
@@ -425,7 +427,7 @@ def get_granule_credentials_endpoint_and_region(
             count=1,
             concept_id=granule["meta"]["collection-concept-id"],
         )
-        collection_s3_bucket = collection_results[0].s3_bucket
+        collection_s3_bucket = cast(Any, collection_results[0]).s3_bucket
         credentials_endpoint = collection_s3_bucket.get("S3CredentialsAPIEndpoint")
         region = collection_s3_bucket.get("Region", "us-west-2")
 

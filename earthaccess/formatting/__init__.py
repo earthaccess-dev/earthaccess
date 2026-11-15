@@ -8,7 +8,7 @@ Submodules:
     - widgets: Interactive anywidget-based formatters (optional, requires [widgets] extra)
 """
 
-from typing import List
+from typing import Any, List
 
 import importlib_resources
 
@@ -66,7 +66,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """Lazy import for widget functions to avoid import errors when deps missing."""
     if name in ("plot", "plot_granule", "plot_collection"):
         from earthaccess.formatting.widgets import (
