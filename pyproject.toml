@@ -47,7 +47,7 @@ dependencies = [
   "typing_extensions >=4.10.0",
   "pystac >=1.8",
   "tqdm >=4.66",
-  "earthaccess-plugin-spec @ git+https://github.com/betolink/earthaccess-plugin-spec.git@vds-contract",
+  "earthaccess-plugin-spec @ git+https://github.com/earthaccess-dev/earthaccess-plugin-spec.git@v0.3.0",
 ]
 
 # The plugin contract lives on GitHub until it is published to PyPI. A direct

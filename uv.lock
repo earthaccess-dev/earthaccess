@@ -1698,7 +1698,7 @@ requires-dist = [
     { name = "earthaccess", extras = ["stac"], marker = "extra == 'all'" },
     { name = "earthaccess", extras = ["virtualizarr"], marker = "extra == 'all'" },
     { name = "earthaccess", extras = ["widgets"], marker = "extra == 'all'" },
-    { name = "earthaccess-plugin-spec", git = "https://github.com/betolink/earthaccess-plugin-spec.git?rev=vds-contract" },
+    { name = "earthaccess-plugin-spec", git = "https://github.com/earthaccess-dev/earthaccess-plugin-spec.git?rev=v0.3.0" },
     { name = "fastparquet", marker = "extra == 'virtualizarr'", specifier = ">=2023.4.0" },
     { name = "fsspec", specifier = ">=2025.2" },
     { name = "geopandas", marker = "python_full_version < '3.14' and platform_python_implementation != 'PyPy' and extra == 'widgets'", specifier = ">=0.14" },
@@ -1797,7 +1797,7 @@ test = [
 [[package]]
 name = "earthaccess-plugin-spec"
 version = "0.3.0"
-source = { git = "https://github.com/betolink/earthaccess-plugin-spec.git?rev=vds-contract#d793d8c31cdf6f236577a73a3e0d1c7c529bf5ad" }
+source = { git = "https://github.com/earthaccess-dev/earthaccess-plugin-spec.git?rev=v0.3.0#1131fbc97381d05837aa3062e35c65a4984ecef1" }
 
 [[package]]
 name = "editorconfig"
