@@ -14,7 +14,6 @@ Internal Modules:
     store: Store class (internal, used by earthaccess.open/download)
     file_wrapper: EarthAccessFile class and file handling utilities
     download: Download operations for HTTP and S3
-    access: S3 access probing and strategy determination
     assets: Asset model and filtering
     daac: DAAC mappings and endpoints
     parallel: Executor abstraction for parallel operations
@@ -76,12 +75,6 @@ from earthaccess.store.target import (
 
 # These are loaded lazily to avoid circular imports with earthaccess.auth
 _lazy_imports = {
-    # access module
-    "AccessMethod": "earthaccess.store.access",
-    "determine_access_method": "earthaccess.store.access",
-    "extract_s3_credentials_endpoint": "earthaccess.store.access",
-    "get_data_links": "earthaccess.store.access",
-    "probe_s3_access": "earthaccess.store.access",
     # download module
     "DEFAULT_CHUNK_SIZE": "earthaccess.store.download",
     "clone_session": "earthaccess.store.download",
@@ -153,12 +146,6 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     # Legacy exports
     "Store",
-    # Access utilities
-    "AccessMethod",
-    "probe_s3_access",
-    "determine_access_method",
-    "extract_s3_credentials_endpoint",
-    "get_data_links",
     # Assets
     "Asset",
     "AssetFilter",

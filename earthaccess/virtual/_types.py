@@ -18,7 +18,6 @@ ParserType = (
     | Any
 )
 
-AccessType = Literal["direct", "indirect"]
 ParallelType = Literal["dask", "lithops", False]
 ReferenceFormatType = Literal["json", "parquet"]
 

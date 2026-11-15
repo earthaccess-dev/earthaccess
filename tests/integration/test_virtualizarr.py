@@ -43,7 +43,7 @@ def test_virtualize_materialize_indexable(granules):
         granules,
         concat_dim="time",
         load=True,
-        access="indirect",
+        access="https",
     )
     # We can use fancy indexing
     assert vds.isel(time=0) is not None
@@ -55,7 +55,7 @@ def test_virtualize_non_materialize(granules):
         granules,
         concat_dim="time",
         load=False,
-        access="indirect",
+        access="https",
     )
     # we are not materializing the data
     for name in vds.data_vars:
@@ -66,7 +66,7 @@ def test_virtualize_non_materialize(granules):
     "short_name,count",
     [
         ("TEMPO_NO2_L3", 1),  # TEMPO: HDF5, good for testing parser diversity
-        ("M2T1NXSLV", 1),      # MERRA2: NetCDF4, good for testing parser diversity
+        ("M2T1NXSLV", 1),  # MERRA2: NetCDF4, good for testing parser diversity
     ],
 )
 def test_virtualize_tempo_and_merra2(short_name, count):
@@ -77,15 +77,15 @@ def test_virtualize_tempo_and_merra2(short_name, count):
         short_name=short_name,
     )
     assert len(granules) > 0, f"No granules found for {short_name}"
-    
+
     # Virtualize without loading (direct virtual dataset)
     vds = earthaccess.virtualize(
         granules,
         concat_dim="time" if len(granules) > 1 else None,
         load=False,
-        access="indirect",
+        access="https",
     )
-    
+
     assert vds is not None
     assert len(vds.data_vars) > 0
     # Verify manifest arrays are present
@@ -97,7 +97,7 @@ def test_virtualize_tempo_and_merra2(short_name, count):
     "short_name",
     [
         "TEMPO_NO2_L3",  # TEMPO: HDF5
-        "M2T1NXSLV",      # MERRA2: NetCDF4
+        "M2T1NXSLV",  # MERRA2: NetCDF4
     ],
 )
 def test_write_virtual_icechunk_roundtrip(short_name):
@@ -108,27 +108,27 @@ def test_write_virtual_icechunk_roundtrip(short_name):
         short_name=short_name,
     )
     assert len(granules) > 0
-    
+
     # Create virtual dataset
     vds = earthaccess.virtualize(
         granules,
-        access="indirect",
+        access="https",
         load=False,
     )
-    
+
     # Write to temporary Icechunk store
     with tempfile.TemporaryDirectory() as tmpdir:
         store_path = Path(tmpdir) / f"{short_name}_icechunk"
-        
+
         # Write virtual dataset to Icechunk
         earthaccess.write_virtual(vds, str(store_path))
-        
+
         # Verify store was created
         assert store_path.exists()
-        
+
         # Read the virtual dataset back from the Icechunk store
         ds_restored = earthaccess.open_virtual(str(store_path))
-        
+
         # Verify the restored dataset has the same structure
         assert ds_restored is not None
         assert set(ds_restored.data_vars) == set(vds.data_vars)

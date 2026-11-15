@@ -6,11 +6,12 @@ If we already have a workflow in place for downloading our data, we can use *ear
 
 ```python
 
-# if the data set is cloud-hosted there will be S3 links available. The access parameter accepts "direct" or "external". Direct access is only possible if you are in the us-west-2 region in the cloud.
-data_links = [granule.data_links(access="direct") for granule in results]
+# By default, data_links() returns HTTPS links, which work from anywhere.
+data_links = [granule.data_links() for granule in results]
 
-# or if the data is an on-prem dataset
-data_links = [granule.data_links(access="external") for granule in results]
+# If the data are cloud-hosted, request direct S3 links explicitly. Direct
+# access only works from AWS us-west-2 (or wherever the bucket is accessible).
+s3_links = [granule.data_links(access="s3") for granule in results]
 
 # retrieve OPeNDAP service URLs when the collection provides them
 opendap_links = [
@@ -36,14 +37,17 @@ files = earthaccess.download(results, "./local_folder")
 
 ```
 
-**Option 3: Direct S3 Access - Stream data directly to xarray**
+**Option 3: Stream data directly to xarray**
 
-This method works best if you are in the same Amazon Web Services (AWS) region as the data (us-west-2) and you are working with gridded (processing level 3 and above) datasets without nested or hierarchical data variables.
+By default, `earthaccess.open` uses HTTPS, which works from anywhere. If you are
+in the same Amazon Web Services (AWS) region as the data (us-west-2) and want
+direct S3 access, pass `access="s3"`.
 
 ```python
 import xarray as xr
 
-files = earthaccess.open(results)
+files = earthaccess.open(results)  # HTTPS (default)
+# files = earthaccess.open(results, access="s3")  # direct S3
 
 ds = xr.open_mfdataset(files)
 

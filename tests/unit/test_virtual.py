@@ -24,7 +24,7 @@ from earthaccess.virtual._parser import (
     get_urls_for_parser,
     resolve_parser,
 )
-from earthaccess.virtual.core import virtualize
+from earthaccess.virtual.core import _load_via_kerchunk, virtualize
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -159,6 +159,125 @@ def test_virtualize_load_true_delegates_to_kerchunk(tmp_path) -> None:
 
     mock_load.assert_called_once()
     assert result is expected_ds
+
+
+@pytest.mark.parametrize(
+    ("access", "expected"),
+    [
+        (None, "https"),
+        ("https", "https"),
+        ("indirect", "https"),
+        ("s3", "s3"),
+        ("direct", "s3"),
+    ],
+)
+def test_virtualize_normalizes_access(access, expected) -> None:
+    """virtualize() defaults to HTTPS and canonicalizes legacy aliases."""
+    with (
+        patch(
+            "earthaccess.virtual.core.build_obstore_registry",
+            return_value=MagicMock(),
+        ) as registry,
+        patch(
+            "earthaccess.virtual.core._open_virtual_dataset_single",
+            return_value=MagicMock(),
+        ),
+    ):
+        if access is None:
+            virtualize(_make_granules(1))
+        else:
+            virtualize(_make_granules(1), access=access)
+
+    assert registry.call_args.kwargs["access"] == expected
+
+
+def _make_kerchunk_granule() -> DataGranule:
+    return DataGranule(
+        {
+            "meta": {"collection-concept-id": "C1-TEST"},
+            "umm": {
+                "RelatedUrls": [
+                    {
+                        "URL": "s3://bucket/file.nc",
+                        "Type": "GET DATA VIA DIRECT ACCESS",
+                    },
+                ],
+            },
+        },
+        cloud_hosted=True,
+    )
+
+
+def test_load_via_kerchunk_s3_uses_s3_storage_options(monkeypatch, tmp_path) -> None:
+    """access='s3' must use S3 credentials, not the HTTPS session's options."""
+    s3_fs = MagicMock()
+    s3_fs.storage_options = {"key": "key", "secret": "secret", "token": "token"}
+    endpoint = "https://example.com/s3credentials"
+
+    monkeypatch.setattr(
+        "earthaccess.virtual.core.get_granule_credentials_endpoint_and_region",
+        lambda _granule: (endpoint, "us-west-2"),
+    )
+    get_s3_filesystem = MagicMock(return_value=s3_fs)
+    monkeypatch.setattr("earthaccess.get_s3_filesystem", get_s3_filesystem)
+    monkeypatch.setattr(
+        "earthaccess.get_fsspec_https_session",
+        MagicMock(side_effect=AssertionError("HTTPS session must not be used")),
+    )
+
+    captured = {}
+
+    def fake_open_dataset(path, *, engine, storage_options):
+        captured["path"] = path
+        captured["engine"] = engine
+        captured["storage_options"] = storage_options
+        return "dataset"
+
+    monkeypatch.setattr("xarray.open_dataset", fake_open_dataset)
+
+    result = _load_via_kerchunk(
+        vds=MagicMock(),
+        granules=[_make_kerchunk_granule()],
+        group="/",
+        access="s3",
+        reference_dir=str(tmp_path),
+        reference_format="json",
+    )
+
+    assert result == "dataset"
+    get_s3_filesystem.assert_called_once_with(endpoint=endpoint)
+    assert captured["storage_options"] == {
+        "remote_protocol": "s3",
+        "remote_options": s3_fs.storage_options,
+    }
+
+
+def test_load_via_kerchunk_https_uses_https_storage_options(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """The default HTTPS path must keep using the HTTPS session's options."""
+    https_fs = MagicMock()
+    https_fs.storage_options = {"client_kwargs": {"trust_env": False}}
+    get_https_session = MagicMock(return_value=https_fs)
+    monkeypatch.setattr("earthaccess.get_fsspec_https_session", get_https_session)
+    monkeypatch.setattr(
+        "earthaccess.get_s3_filesystem",
+        MagicMock(side_effect=AssertionError("S3 credentials must not be used")),
+    )
+    monkeypatch.setattr("xarray.open_dataset", MagicMock(return_value="dataset"))
+
+    result = _load_via_kerchunk(
+        vds=MagicMock(),
+        granules=[_make_kerchunk_granule()],
+        group="/",
+        access="https",
+        reference_dir=str(tmp_path),
+        reference_format="json",
+    )
+
+    assert result == "dataset"
+    get_https_session.assert_called_once_with()
 
 
 # ---------------------------------------------------------------------------
@@ -356,7 +475,7 @@ def test_get_urls_passes_access_to_data_links() -> None:
     mock.data_links.return_value = ["https://example.com/file.h5"]
     granule = cast("DataGranule", mock)
     get_urls_for_parser([granule], resolve_parser("HDFParser"), access="indirect")
-    mock.data_links.assert_called_once_with(access="indirect")
+    mock.data_links.assert_called_once_with(access="https")
 
 
 # ---------------------------------------------------------------------------

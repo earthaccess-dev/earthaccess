@@ -5,6 +5,8 @@ Each plugin is a small, independently installable package that registers itself
 with earthaccess through the `earthaccess.plugins` entry-point group and appears
 under `ea.plugins` once installed.
 
+<img src="./earthaccess-v2.png" width="80%">
+
 ```bash
 # The plugins are not on PyPI yet; install them from GitHub.
 pip install "earthaccess-plugin-harmony @ git+https://github.com/betolink/earthaccess-plugin-harmony"   # subset/transform with Harmony

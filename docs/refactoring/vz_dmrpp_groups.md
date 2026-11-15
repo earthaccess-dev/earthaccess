@@ -8,7 +8,7 @@ using `DMRPPParser`, even for files with multiple nested HDF5/NetCDF4 groups
 `/support_data`, ...). The same file opened locally with `xr.open_datatree()`
 (or virtualized with `HDFParser`) correctly exposes the full group hierarchy.
 
-This means `earthaccess.virtualize([granule], access="indirect", group="/",
+This means `earthaccess.virtualize([granule], access="https", group="/",
 tree=True)` silently drops all subgroups when the default `parser="DMRPPParser"`
 is used (the common case, since most NASA collections ship DMR++ sidecars).
 
@@ -47,7 +47,7 @@ correctly for nested groups:
 ## Proposed fix
 
 Make `_parse_dataset` recurse into child `<Group>` elements and attach them
-as subgroups, rather than requiring the caller to pre-select a single group
+as subgroups, rather than requiring the caller to preselect a single group
 via `group_path` lookup:
 
 ```python
@@ -140,7 +140,7 @@ the full tree for free.
    import earthaccess
    g = earthaccess.search_data(short_name="TEMPO_NO2_L3", version="V03",
                                 temporal=("2025-01-11", "2025-01-18"), count=1)
-   vdt = earthaccess.virtualize([g[0]], access="indirect", tree=True)
+   vdt = earthaccess.virtualize([g[0]], access="https", tree=True)
    print(vdt)  # only root group present, expected /product, /geolocation, etc.
    ```
    Reference this plan / the root-cause analysis above.

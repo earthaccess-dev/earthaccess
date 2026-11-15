@@ -182,7 +182,7 @@ def test_download(tmp_path, selection, use_url):
     )
     if use_url:
         # Download via file URL string instead of DataGranule object
-        results = [link for r in results for link in r.data_links(access="indirect")]
+        results = [link for r in results for link in r.data_links(access="https")]
     result = results[selection]
     files = earthaccess.download(result, str(tmp_path))
     assert isinstance(files, list)

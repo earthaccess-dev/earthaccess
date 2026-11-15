@@ -193,9 +193,7 @@ def make_instance(
         setattr(earthaccess, "__auth__", auth)
         earthaccess.login()
 
-    # When sending EarthAccessFiles between processes, it's possible that
-    # we will need to switch between s3 <--> https protocols. For now, we
-    # return the object as is; revisit once the S3 probe mechanism is final.
+    # Access mode is explicit, so the serialized file object is returned as-is.
     return EarthAccessFile(loads(data), granule)
 
 
@@ -206,7 +204,7 @@ def get_url_granule_mapping(
 
     Parameters:
         granules: List of granule objects.
-        access: Access type ('direct' for S3, 'external' for HTTPS).
+        access: Access type ('s3' or 'https'; legacy aliases are accepted).
 
     Returns:
         Mapping of URLs to their source granule objects.

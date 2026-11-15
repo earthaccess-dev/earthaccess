@@ -6,6 +6,7 @@ for representing and working with NASA CMR search results.
 
 import os
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache, cached_property
@@ -18,6 +19,7 @@ import s3fs
 from typing_extensions import deprecated
 
 import earthaccess
+from earthaccess._access import AccessType, normalize_access
 from earthaccess.formatting import (
     _repr_collection_html,
     _repr_granule_html,
@@ -1095,40 +1097,52 @@ class DataGranule(CustomDict):
             elif link.startswith("https://") and (
                 "cumulus" in link or "protected" in link
             ):
-                s3_links.append(f"s3://{links[0].split('nasa.gov/')[1]}")
+                _, separator, suffix = link.partition("nasa.gov/")
+                if separator:
+                    s3_links.append(f"s3://{suffix}")
         return s3_links
 
-    def data_links(self, access: Optional[str] = None) -> List[str]:
-        """Returns the data links from a granule.
+    def data_links(
+        self,
+        access: AccessType | None = None,
+        in_region: bool | None = None,  # noqa: FBT001
+    ) -> List[str]:
+        """Return data links for the requested granule access mode.
 
         Parameters:
-            access: direct or external.
-                Direct means in-region access for cloud-hosted collections.
+            access: ``"https"`` (default) or ``"s3"``. Legacy values
+                ``"external"`` and ``"indirect"`` map to HTTPS, and ``"direct"``
+                maps to S3.
+            in_region: Deprecated. Use ``access`` instead.
 
         Returns:
             The data links for the requested access type.
         """
+        if in_region is not None:
+            warnings.warn(
+                "`in_region` is deprecated; use `access='s3'` or "
+                "`access='https'` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if access is None:
+                access = "s3" if in_region and self.cloud_hosted else "https"
+
+        canonical_access = normalize_access(access)
         https_links = self._filter_related_links("GET DATA")
         s3_links = self._filter_related_links("GET DATA VIA DIRECT ACCESS")
 
-        if access == "direct":
-            return s3_links
-        elif access in ("external", "indirect", "on_prem"):
+        if canonical_access == "https":
             return https_links
-        else:
-            # Default behavior: return all links? Or prefer HTTPS?
-            # The previous logic was complex and depended on in_region.
-            # Now, if we want to let the Store decide, we should probably provide what is asked.
-            # If access is None, let's return HTTPS links as they are more universally usable,
-            # BUT the Store will explicitly ask for "direct" if it wants to try S3.
 
-            # If the user asks for links without specifying access, they probably want the download links.
-            if self.cloud_hosted:
-                if len(s3_links) > 0:
-                    return s3_links + https_links
-                else:
-                    return https_links
-            return https_links
+        if s3_links:
+            return s3_links
+
+        if self.cloud_hosted:
+            # Some cloud collections advertise only HTTPS links; derive S3
+            # links from each HTTPS link when possible.
+            return self._derive_s3_link(https_links)
+        return []
 
     @property
     def dataviz_links(self) -> List[str]:

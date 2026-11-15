@@ -709,7 +709,7 @@ def _granule_row_with_index(granule: "DataGranule", idx: int, widget_id: str) ->
             f'title="Show {len(assets)} files" style="cursor: pointer;">📁</span>'
         )
     else:
-        data_links = granule.data_links(access="external")
+        data_links = granule.data_links(access="https")
         if data_links:
             first_link = data_links[0]
             link_html = (

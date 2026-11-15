@@ -9,11 +9,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from earthaccess.virtual._types import AccessType, ParserType
+from earthaccess._access import AccessType, normalize_access
+from earthaccess.virtual._types import ParserType
 
 if TYPE_CHECKING:
     import earthaccess
-    from earthaccess.virtual._types import AccessType, ParserType
+    from earthaccess.virtual._types import ParserType
 
 
 logger = logging.getLogger(__name__)
@@ -118,17 +119,19 @@ def get_urls_for_parser(
     Parameters:
         granules: The granules to generate URLs for.
         parser: A resolved (instantiated) parser object.
-        access: ``"direct"`` (S3) or ``"indirect"`` (HTTPS).  Forwarded to
+        access: ``"https"`` (default) or ``"s3"``. Legacy ``"indirect"`` and
+            ``"direct"`` values are accepted. Forwarded to
             ``DataGranule.data_links()``.
 
     Returns:
         A list of URL strings, one per granule.
     """
     is_dmrpp = type(parser).__name__ == "DMRPPParser"
+    canonical_access = normalize_access(access)
 
     urls: list[str] = []
     for granule in granules:
-        url = granule.data_links(access=access)[0]
+        url = granule.data_links(access=canonical_access)[0]
         if is_dmrpp:
             url = url + ".dmrpp"
         urls.append(url)

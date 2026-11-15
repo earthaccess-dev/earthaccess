@@ -103,6 +103,12 @@ files = earthaccess.download(results, "./local_folder")
     working directory (the directory from which you are running this code, also known as
     `.`).  If that directory doesn't exist, it will be created automatically.
 
+Downloads use HTTPS by default. If you are running in the AWS `us-west-2` region, you can
+use `access="s3"` for direct S3 access:
+`earthaccess.download(results, "./local_folder", access="s3")`.
+If you previously relied on earthaccess automatically choosing S3 in us-west-2 (for
+example, on a cloud JupyterHub), add `access="s3"` to keep that behavior.
+
 Data can also be opened in-memory with `earthaccess.open()`. See [our API
 docs](../api/index.md) for more.
 

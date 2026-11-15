@@ -7,6 +7,17 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Breaking changes
+
+- `earthaccess.open()`, `earthaccess.download()`, and `earthaccess.virtualize()`
+  now default to HTTPS. Direct S3 access is explicit via `access="s3"`. Legacy
+  `"direct"`, `"indirect"`, and `"external"` values remain accepted as aliases.
+  Runtime S3 access probing and automatic fallback have been removed.
+- Requests are validated before any credentials are fetched or files are
+  opened. A request raises `ValueError` when any granule lacks links for the
+  requested access mode, when raw URLs mix S3 and HTTPS, or when an S3 request
+  spans multiple providers.
+
 ### Added
 
 - New `earthaccess.set_proxy()` (and `earthaccess.get_proxy()`) route Earthdata

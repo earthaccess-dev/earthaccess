@@ -15,7 +15,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import earthaccess
-from earthaccess.virtual._credentials import build_obstore_registry
+from earthaccess._access import AccessType, CanonicalAccessType, normalize_access
+from earthaccess.virtual._credentials import (
+    build_obstore_registry,
+    get_granule_credentials_endpoint_and_region,
+)
 from earthaccess.virtual._parser import get_urls_for_parser, resolve_parser
 
 if TYPE_CHECKING:
@@ -24,7 +28,6 @@ if TYPE_CHECKING:
     import xarray as xr
 
     from earthaccess.virtual._types import (
-        AccessType,
         CombineAttrsType,
         CombineType,
         CompatType,
@@ -42,7 +45,7 @@ logger = logging.getLogger(__name__)
 def virtualize(  # noqa: PLR0913, C901
     granules: list[earthaccess.DataGranule],
     *,
-    access: AccessType = "direct",
+    access: AccessType | None = "https",
     load: bool = False,
     group: str = "/",
     concat_dim: str | None = None,
@@ -77,8 +80,9 @@ def virtualize(  # noqa: PLR0913, C901
     Parameters:
         granules: One or more ``DataGranule`` objects from
             ``earthaccess.search_data()``.
-        access: Cloud access mode.  ``"direct"`` uses S3 (fastest inside AWS
-            us-west-2); ``"indirect"`` uses HTTPS (works anywhere).
+        access: Access method. ``"https"`` (default) works anywhere; ``"s3"``
+            uses direct S3 access. Legacy values ``"direct"`` and ``"indirect"``
+            are accepted.
         load: When ``False`` (default) returns a virtual dataset with
             ``ManifestArray`` variables.  When ``True`` materialises the
             references via a kerchunk round-trip and returns a concrete,
@@ -149,13 +153,15 @@ def virtualize(  # noqa: PLR0913, C901
         )
 
         # Virtual dataset (no data downloaded)
-        vds = earthaccess.virtualize(granules, access="indirect", concat_dim="time")
+        vds = earthaccess.virtualize(granules, access="https", concat_dim="time")
         vds.virtualize.to_kerchunk("mur_combined.json", format="json")
 
         # Loaded dataset (kerchunk round-trip, lazy dask arrays)
-        ds = earthaccess.virtualize(granules, access="direct", load=True, concat_dim="time")
+        ds = earthaccess.virtualize(granules, access="s3", load=True, concat_dim="time")
         ```
     """
+    access = normalize_access(access)
+
     if len(granules) == 0:
         msg = "No granules provided. At least one granule is required."
         raise ValueError(msg)
@@ -261,7 +267,7 @@ def _open_virtual_dispatch(  # noqa: PLR0913
     granules: list[earthaccess.DataGranule],
     parser: Any,
     registry: Any,
-    access: AccessType,
+    access: CanonicalAccessType,
     concat_dim: str | None,
     combine: CombineType,
     join: JoinType,
@@ -385,7 +391,7 @@ def _open_virtual_mfdataset(  # noqa: PLR0913
     granules: list[earthaccess.DataGranule],
     parser: Any,
     registry: Any,
-    access: AccessType,
+    access: CanonicalAccessType,
     concat_dim: str | None,
     combine: CombineType,
     join: JoinType,
@@ -439,7 +445,7 @@ def _load_via_kerchunk(  # noqa: PLR0913
     vds: xr.Dataset,
     granules: list[earthaccess.DataGranule],
     group: str,
-    access: AccessType,
+    access: CanonicalAccessType,
     reference_dir: str | None,
     reference_format: ReferenceFormatType,
 ) -> xr.Dataset:
@@ -450,7 +456,13 @@ def _load_via_kerchunk(  # noqa: PLR0913
     """
     import xarray as xr  # noqa: PLC0415
 
-    fs = earthaccess.get_fsspec_https_session()
+    if access == "s3":
+        credentials_endpoint, _ = get_granule_credentials_endpoint_and_region(
+            granules[0],
+        )
+        fs = earthaccess.get_s3_filesystem(endpoint=credentials_endpoint)
+    else:
+        fs = earthaccess.get_fsspec_https_session()
 
     if reference_dir is None:
         ref_dir = Path(tempfile.gettempdir())
@@ -471,7 +483,7 @@ def _load_via_kerchunk(  # noqa: PLR0913
     vds.virtualize.to_kerchunk(str(ref_path), format=reference_format)
 
     storage_options = {
-        "remote_protocol": "s3" if access == "direct" else "https",
+        "remote_protocol": access,
         "remote_options": fs.storage_options,
     }
     return xr.open_dataset(
@@ -649,17 +661,17 @@ def _authorize_vccs(
 def _icechunk_storage(
     uri: str,
     storage_options: dict[str, Any] | None = None,
-    access: str = "indirect",
+    access: AccessType | None = "https",
 ) -> Any:
     """Resolve *uri* to the icechunk ``Storage`` for its repository."""
+    from urllib.parse import urlparse
 
     import icechunk
 
-    from urllib.parse import urlparse
-
     parsed = urlparse(uri)
+    canonical_access = normalize_access(access)
 
-    if access == "direct" or parsed.scheme == "s3":
+    if canonical_access == "s3" or parsed.scheme == "s3":
         opts = dict(storage_options) if storage_options else {}
         return icechunk.s3_storage(
             bucket=parsed.netloc,
@@ -682,7 +694,6 @@ def _icechunk_storage(
 
 def _as_url(uri: str) -> str:
     """Return a URL VirtualiZarr accepts (local paths become ``file://``)."""
-
     from urllib.parse import urlparse
 
     if urlparse(uri).scheme:
@@ -693,7 +704,7 @@ def _as_url(uri: str) -> str:
 def _open_icechunk(
     uri: str,
     storage_options: dict[str, Any] | None = None,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     authorize_virtual_chunk_access: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> xr.Dataset:
@@ -729,7 +740,7 @@ def _open_icechunk(
 def _open_icechunk_virtual(
     uri: str,
     storage_options: dict[str, Any] | None = None,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     authorize_virtual_chunk_access: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> xr.Dataset:
@@ -739,7 +750,6 @@ def _open_icechunk_virtual(
     written again without reading chunk bytes. Coordinate values are attached
     concretely because xarray needs them to concatenate.
     """
-
     try:
         import icechunk
         import virtualizarr as vz
@@ -867,7 +877,7 @@ def _sanitize_references_for_external(url: str) -> str:
 def _open_kerchunk_from_collection(
     collection: earthaccess.DataCollection,
     url: str,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     **kwargs: Any,
 ) -> xr.Dataset:
     try:
@@ -880,7 +890,8 @@ def _open_kerchunk_from_collection(
             msg,
         ) from exc
 
-    if access == "direct":
+    canonical_access = normalize_access(access)
+    if canonical_access == "s3":
         daac_fs = collection.get_s3_filesystem()
         remote_protocol = "s3"
     else:
@@ -902,7 +913,7 @@ def _open_kerchunk_from_collection(
 def _open_icechunk_from_collection(
     collection: earthaccess.DataCollection,
     url: str,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     authorize_virtual_chunk_access: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> xr.Dataset:
@@ -920,7 +931,8 @@ def _open_icechunk_from_collection(
             msg,
         ) from exc
 
-    if access == "direct":
+    canonical_access = normalize_access(access)
+    if canonical_access == "s3":
         from urllib.parse import urlparse
 
         creds = collection.get_s3_credentials()
@@ -1327,7 +1339,7 @@ def _validate_virtual_uri(uri: object, url: str) -> None:
 def open_virtual(  # noqa: PLR0913
     uri: str | Path | earthaccess.DataCollection,
     *,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     storage_options: dict[str, Any] | None = None,
     force_external: bool = False,
     load: bool = True,
@@ -1348,7 +1360,8 @@ def open_virtual(  # noqa: PLR0913
     Parameters:
         uri: A ``DataCollection``, or a path/URI to the virtual store
             (``.icechunk``, ``.parquet``, or ``.json``).
-        access: ``"indirect"`` (HTTPS, default) or ``"direct"`` (S3).
+        access: ``"https"`` (default) or ``"s3"``. Legacy values ``"indirect"``
+            and ``"direct"`` are accepted.
         storage_options: Additional options forwarded to the storage backend.
             Ignored when ``uri`` is a ``DataCollection``.
         force_external: When ``True``, download kerchunk reference files and
@@ -1379,10 +1392,11 @@ def open_virtual(  # noqa: PLR0913
         >>> import earthaccess
         >>> ds = earthaccess.open_virtual("s3://bucket/refs.parquet")
         >>> ds = earthaccess.open_virtual("/local/store.icechunk")
-        >>> ds = earthaccess.open_virtual("s3://bucket/store.icechunk", access="direct")
+        >>> ds = earthaccess.open_virtual("s3://bucket/store.icechunk", access="s3")
         >>> ds = earthaccess.open_virtual(collection)
         >>> ds = earthaccess.open_virtual(collection, force_external=True)
     """
+    access = normalize_access(access)
     url, collection = _resolve_virtual_url(uri)
     _validate_virtual_uri(uri, url)
 

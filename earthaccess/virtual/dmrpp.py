@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, Union
 from urllib.parse import urlparse
 
 import earthaccess
+from earthaccess._access import AccessType, normalize_access
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -72,7 +73,7 @@ def _get_parser(parser: ParserType, group: str | None = None) -> Any:
 def _get_urls_for_parser(
     granules: list[earthaccess.DataGranule],
     parser: ParserType,
-    access: str,
+    access: AccessType | None,
 ) -> list[str]:
     """Get the appropriate URLs based on the parser type.
 
@@ -85,12 +86,13 @@ def _get_urls_for_parser(
         parser:
             The parser being used (string name or instance).
         access:
-            Access method ("direct" or "indirect").
+            Access method ("https" or "s3"). Legacy "direct"/"indirect" are accepted.
 
     Returns:
         List of URLs appropriate for the parser.
     """
-    data_urls = [granule.data_links(access=access)[0] for granule in granules]
+    canonical_access = normalize_access(access)
+    data_urls = [granule.data_links(access=canonical_access)[0] for granule in granules]
 
     # Check if this is a DMRPPParser (either by string name or class name)
     is_dmrpp = False
@@ -109,7 +111,7 @@ def _get_urls_for_parser(
 def open_virtual_mfdataset(
     granules: list[earthaccess.DataGranule],
     group: str | None = None,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     preprocess: callable | None = None,  # type: ignore
     parallel: Literal["dask", "lithops", False] = "dask",
     load: bool = True,
@@ -135,8 +137,8 @@ def open_virtual_mfdataset(
             group will be opened. If the file does not have groups, this parameter
             is ignored.
         access:
-            The access method to use. One of "direct" or "indirect". Use direct when
-            running on AWS, use indirect when running on a local machine.
+            The access method to use. One of "https" (default) or "s3". Legacy
+            "direct"/"indirect" values are also accepted.
         preprocess:
             A function to apply to each virtual dataset before combining
         parallel:
@@ -167,7 +169,7 @@ def open_virtual_mfdataset(
     Examples:
         ```python
         >>> results = earthaccess.search_data(count=5, temporal=("2024"), short_name="MUR-JPL-L4-GLOB-v4.1")
-        >>> vds = earthaccess.open_virtual_mfdataset(results, access="indirect", load=False, concat_dim="time", coords="minimal", compat="override", combine_attrs="drop_conflicts")
+        >>> vds = earthaccess.open_virtual_mfdataset(results, access="https", load=False, concat_dim="time", coords="minimal", compat="override", combine_attrs="drop_conflicts")
         >>> vds
         <xarray.Dataset> Size: 29GB
         Dimensions:           (time: 5, lat: 17999, lon: 36000)
@@ -187,7 +189,7 @@ def open_virtual_mfdataset(
             title:                      Daily MUR SST, Final product
 
         >>> vds.virtualize.to_kerchunk("mur_combined.json", format="json")
-        >>> vds = open_virtual_mfdataset(results, access="indirect", concat_dim="time", coords='minimal', compat='override', combine_attrs="drop_conflicts")
+        >>> vds = open_virtual_mfdataset(results, access="https", concat_dim="time", coords='minimal', compat='override', combine_attrs="drop_conflicts")
         >>> vds
         <xarray.Dataset> Size: 143GB
         Dimensions:           (time: 5, lat: 17999, lon: 36000)
@@ -224,10 +226,11 @@ def open_virtual_mfdataset(
     # Get collection ID for reference file naming
     collection_id = granules[0]["meta"]["collection-concept-id"]
 
-    parsed_url = urlparse(granules[0].data_links(access=access)[0])
+    canonical_access = normalize_access(access)
+    parsed_url = urlparse(granules[0].data_links(access=canonical_access)[0])
     fs = earthaccess.get_fsspec_https_session()
 
-    if access == "direct":
+    if canonical_access == "s3":
         credentials_endpoint, region = get_granule_credentials_endpoint_and_region(
             granules[0]
         )
@@ -268,7 +271,7 @@ def open_virtual_mfdataset(
 
     # Get the parser instance and appropriate URLs
     parser_instance = _get_parser(parser, group=group)
-    granule_urls = _get_urls_for_parser(granules, parser, access)
+    granule_urls = _get_urls_for_parser(granules, parser, canonical_access)
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -303,7 +306,7 @@ def open_virtual_mfdataset(
         vmfdataset.virtualize.to_kerchunk(str(ref_), format=reference_format)
 
         storage_options = {
-            "remote_protocol": "s3" if access == "direct" else "https",
+            "remote_protocol": canonical_access,
             "remote_options": fs.storage_options,
         }
         vds = xr.open_dataset(
@@ -319,7 +322,7 @@ def open_virtual_mfdataset(
 def open_virtual_dataset(
     granule: earthaccess.DataGranule,
     group: str | None = None,
-    access: str = "indirect",
+    access: AccessType | None = "https",
     load: bool = True,
     reference_dir: str | None = None,
     reference_format: Literal["json", "parquet"] = "json",
@@ -342,8 +345,8 @@ def open_virtual_dataset(
             group will be opened. If the file does not have groups, this parameter
             is ignored.
         access:
-            The access method to use. One of "direct" or "indirect". Use direct when
-            running on AWS, use indirect when running on a local machine.
+            The access method to use. One of "https" (default) or "s3". Legacy
+            "direct"/"indirect" values are also accepted.
         load:
             If load is True, earthaccess will serialize the virtual references in
             order to use lazy indexing on the resulting xarray virtual ds. If False,
@@ -368,7 +371,7 @@ def open_virtual_dataset(
         Using the default DMRPPParser:
         ```python
         >>> results = earthaccess.search_data(count=2, temporal=("2023"), short_name="SWOT_L2_LR_SSH_Expert_2.0")
-        >>> vds = earthaccess.open_virtual_dataset(results[0], access="indirect")
+        >>> vds = earthaccess.open_virtual_dataset(results[0], access="https")
         >>> vds
         <xarray.Dataset> Size: 149MB
         ...
@@ -376,7 +379,7 @@ def open_virtual_dataset(
 
         Getting the raw virtual dataset without loading (for custom serialization):
         ```python
-        >>> vds = earthaccess.open_virtual_dataset(results[0], access="indirect", load=False)
+        >>> vds = earthaccess.open_virtual_dataset(results[0], access="https", load=False)
         >>> vds.virtualize.to_kerchunk("my_refs.json", format="json")
         ```
 

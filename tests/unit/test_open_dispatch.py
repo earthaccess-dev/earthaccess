@@ -46,7 +46,7 @@ def test_open_asset_dispatches_icechunk_to_open_virtual() -> None:
         opened = earthaccess.open([asset])
 
     assert opened == [sentinel]
-    opener.assert_called_once_with("s3://bucket/store", load=True)
+    opener.assert_called_once_with("s3://bucket/store", load=True, access="https")
 
 
 def test_open_asset_dispatches_kerchunk_and_forwards_load() -> None:
@@ -59,7 +59,9 @@ def test_open_asset_dispatches_kerchunk_and_forwards_load() -> None:
         opened = earthaccess.open(asset, load=False)
 
     assert opened is sentinel
-    opener.assert_called_once_with("s3://bucket/refs.parquet", load=False)
+    opener.assert_called_once_with(
+        "s3://bucket/refs.parquet", load=False, access="https"
+    )
 
 
 def test_open_job_assets_are_opened_as_datasets() -> None:
@@ -73,7 +75,9 @@ def test_open_job_assets_are_opened_as_datasets() -> None:
         opened = earthaccess.open(job)
 
     assert opened == [sentinel]
-    opener.assert_called_once_with("file:///tmp/sst.icechunk", load=True)
+    opener.assert_called_once_with(
+        "file:///tmp/sst.icechunk", load=True, access="https"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -89,13 +93,13 @@ def test_open_local_icechunk_store_dispatches_to_open_virtual(tmp_path: Path) ->
         opened = earthaccess.open(str(store))
 
     assert opened is sentinel
-    opener.assert_called_once_with(str(store), load=True)
+    opener.assert_called_once_with(str(store), load=True, access="https")
 
 
 def test_open_bare_parquet_is_not_intercepted(monkeypatch: Any) -> None:
     """Only Asset.format decides kerchunk; a bare path stays a file request."""
     store = MagicMock()
-    monkeypatch.setattr(earthaccess, "__store__", store)
+    monkeypatch.setattr(earthaccess, "_store", store)
 
     with patch("earthaccess.virtual.open_virtual") as opener:
         earthaccess.open(["s3://bucket/refs.parquet"], provider="POCLOUD")
@@ -120,7 +124,7 @@ def test_open_collection_dispatches_to_open_virtual() -> None:
         opened = earthaccess.open(collection)
 
     assert opened is sentinel
-    opener.assert_called_once_with(collection, load=True)
+    opener.assert_called_once_with(collection, load=True, access="https")
 
 
 # ---------------------------------------------------------------------------

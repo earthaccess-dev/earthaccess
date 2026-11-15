@@ -7,6 +7,7 @@ import fsspec.utils
 import s3fs
 
 import earthaccess
+from earthaccess._access import AccessType, normalize_access
 
 
 def _get_chunk_metadata(
@@ -21,7 +22,7 @@ def _get_chunk_metadata(
         granule = earthaccess.DataGranule(granule)
 
     metadata = []
-    access = "direct" if isinstance(fs, s3fs.S3FileSystem) else "indirect"
+    access: AccessType = "s3" if isinstance(fs, s3fs.S3FileSystem) else "https"
 
     for url in granule.data_links(access=access):
         with fs.open(url) as inf:
@@ -35,7 +36,7 @@ def _get_chunk_metadata(
 def consolidate_metadata(
     granules: list[earthaccess.DataGranule],
     kerchunk_options: Optional[dict] = None,
-    access: str = "direct",
+    access: AccessType | None = "https",
     outfile: Optional[str] = None,
     storage_options: Optional[dict] = None,
 ) -> Union[str, dict]:
@@ -47,7 +48,8 @@ def consolidate_metadata(
             "`earthaccess.consolidate_metadata` requires `dask` and `kerchunk` to be be installed"
         ) from e
 
-    if access == "direct":
+    canonical_access = normalize_access(access)
+    if canonical_access == "s3":
         fs = earthaccess.get_s3_filesystem(provider=granules[0]["meta"]["provider-id"])
     else:
         fs = earthaccess.get_fsspec_https_session()

@@ -8,6 +8,24 @@ The are two **access** methods available in `earthaccess`.  The first method is 
 
     You need to authenticate using `earthaccess.login` to download or stream data.  See the [Access](./access.md) section of the User Guide for more information.
 
+## Choosing an access method
+
+`earthaccess.download()` and `earthaccess.open()` use **HTTPS by default**, so
+they work from local machines, HPC systems, and cloud environments. Direct S3
+access is opt-in:
+
+```python
+files = earthaccess.open(results, access="s3")
+paths = earthaccess.download(results, "./data", access="s3")
+```
+
+Use S3 only when your compute is in the same region as the data (NASA Earthdata
+is primarily in AWS `us-west-2`) and S3 credentials are available. Legacy
+`"direct"` and `"indirect"` values are accepted as aliases for `"s3"` and
+`"https"`. Requests that mix S3 and HTTPS URLs, or granules from multiple
+providers under `access="s3"`, raise an informative error instead of silently
+returning partial results.
+
 ## Downloading data
 
 ### Basic download
