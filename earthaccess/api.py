@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import warnings
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -611,6 +612,7 @@ def download(
     credentials_endpoint: Optional[str] = None,
     max_workers: Optional[int] = None,
     parallel: Union[str, bool, None] = None,
+    force: bool = False,
 ) -> List[Path]:
     """Retrieves data granules from a remote storage system.
 
@@ -636,6 +638,7 @@ def download(
             (i.e., in a notebook or a python REPL session), otherwise `False`.
         max_workers: Maximum number of worker threads for parallel processing. If not specified, defaults to the value of `threads`.
         parallel: Executor type for parallel downloads. Options: "threads" (default), "serial", "dask", "lithops".
+        force: Re-download files that already exist at the target location.
 
     Returns:
         List of downloaded files. For a plugin job whose assets are OPeNDAP URLs,
@@ -714,6 +717,7 @@ def download(
             show_progress=show_progress,
             max_workers=max_workers,
             parallel=parallel,
+            force=force,
         )
     except AttributeError as err:
         logger.error(
@@ -867,17 +871,23 @@ def get_s3_credentials(
     daac: Optional[str] = None,
     provider: Optional[str] = None,
     results: Optional[List[DataGranule]] = None,
+    *,
+    credentials_endpoint: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Returns temporary (1 hour) credentials for direct access to NASA S3 buckets.
 
-    We can use the daac name, the provider, or a list of results from earthaccess.search_data().
-    If we use results, earthaccess will use the metadata on the response to get the credentials,
-    which is useful for missions that do not use the same endpoint as their DAACs, e.g. SWOT.
+    Credentials are derived from granule/collection metadata (pass ``results=``)
+    or from an explicit ``credentials_endpoint=`` override.
+
+    .. deprecated::
+        Looking credentials up with ``daac=`` or ``provider=`` is deprecated: pass
+        ``results=`` (metadata) or ``credentials_endpoint=`` instead.
 
     Parameters:
-        daac: a DAAC short_name like NSIDC or PODAAC, etc.
-        provider: if we know the provider for the DAAC, e.g. POCLOUD, LPCLOUD etc.
-        results: List of results from search_data()
+        daac: Deprecated. A DAAC short_name like NSIDC or PODAAC, etc.
+        provider: Deprecated. The provider for the DAAC, e.g. POCLOUD, LPCLOUD etc.
+        results: List of results from search_data(); the endpoint comes from their metadata.
+        credentials_endpoint: Explicit S3 credentials endpoint; overrides metadata.
 
     Returns:
         A dictionary with S3 credentials for the DAAC or provider containing:
@@ -887,26 +897,28 @@ def get_s3_credentials(
         - expiration: Credential expiration time
 
     Examples:
-        Get credentials by DAAC:
+        Get credentials from search results (the endpoint comes from metadata):
         ```python
         import earthaccess
 
         earthaccess.login()
-        creds = earthaccess.get_s3_credentials(daac="PODAAC")
+        granules = earthaccess.search_data(short_name="SWOT_L2_LR_SSH_Expert_2.0", count=1)
+        creds = earthaccess.get_s3_credentials(results=granules)
         print(creds["accessKeyId"])
         ```
 
-        Get credentials from search results (recommended for dataset-specific endpoints):
+        Or override the endpoint explicitly:
         ```python
-        granules = earthaccess.search_data(short_name="SWOT_L2_LR_SSH_Expert_2.0", count=1)
-        creds = earthaccess.get_s3_credentials(results=granules)
+        creds = earthaccess.get_s3_credentials(
+            credentials_endpoint="https://data.lpdaac.earthdatacloud.nasa.gov/s3credentials"
+        )
         ```
 
         Use credentials with boto3:
         ```python
         import boto3
 
-        creds = earthaccess.get_s3_credentials(daac="NSIDC")
+        creds = earthaccess.get_s3_credentials(results=granules)
         s3 = boto3.client(
             "s3",
             aws_access_key_id=creds["accessKeyId"],
@@ -925,10 +937,26 @@ def get_s3_credentials(
     if not isinstance(auth, Auth):
         raise RuntimeError("Authentication object is not properly initialized")
 
+    if credentials_endpoint is not None:
+        return auth.get_s3_credentials(endpoint=credentials_endpoint)
+
     if results is not None:
         endpoint = results[0].get_s3_credentials_endpoint()
         return auth.get_s3_credentials(endpoint=endpoint)
-    return auth.get_s3_credentials(daac=daac, provider=provider)
+
+    if daac is not None or provider is not None:
+        warnings.warn(
+            "get_s3_credentials(daac=/provider=) is deprecated and will be removed; "
+            "pass results= (metadata) or credentials_endpoint= instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return auth.get_s3_credentials(daac=daac, provider=provider)
+
+    raise ValueError(
+        "Pass results= (credentials endpoint from metadata) or "
+        "credentials_endpoint= (explicit override)."
+    )
 
 
 def collection_query() -> CollectionQuery:

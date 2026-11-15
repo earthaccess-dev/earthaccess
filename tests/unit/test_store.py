@@ -112,7 +112,8 @@ class TestStoreSessions(unittest.TestCase):
             "OBDAAC",
             "ASDC",
         ]:
-            s3_fs = store.get_s3_filesystem(daac=daac)
+            with pytest.warns(DeprecationWarning):
+                s3_fs = store.get_s3_filesystem(daac=daac)
             assert isinstance(s3_fs, s3fs.S3FileSystem)
             assert s3_fs.storage_options == expected_storage_options
 
@@ -131,7 +132,8 @@ class TestStoreSessions(unittest.TestCase):
             "OB_CLOUD",
             "LARC_CLOUD",
         ]:
-            s3_fs = store.get_s3_filesystem(provider=provider)
+            with pytest.warns(DeprecationWarning):
+                s3_fs = store.get_s3_filesystem(provider=provider)
             assert isinstance(s3_fs, s3fs.S3FileSystem)
             assert s3_fs.storage_options == expected_storage_options
 

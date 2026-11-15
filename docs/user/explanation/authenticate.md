@@ -157,7 +157,13 @@ import xarray as xr
 import h5coro
 
 auth = earthaccess.login()
-s3_credentials = auth.get_s3_credentials(daac="NSIDC")
+# Derive the endpoint from granule metadata (preferred)...
+granules = earthaccess.search_data(short_name="ATL23", count=1)
+s3_credentials = earthaccess.get_s3_credentials(results=granules)
+# ...or override it explicitly:
+# s3_credentials = earthaccess.get_s3_credentials(
+#     credentials_endpoint="https://data.nsidc.earthdatacloud.nasa.gov/s3credentials"
+# )
 
 s3url_atl23 = 'nsidc-cumulus-prod-protected/ATLAS/ATL23/001/2023/03/' \
                 '01/ATL23_20230401000000_10761801_001_01.h5'

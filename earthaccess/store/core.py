@@ -19,6 +19,7 @@ Note:
 import datetime
 import logging
 import threading
+import warnings
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
@@ -239,9 +240,9 @@ class Store:
         """Return an `s3fs.S3FileSystem` instance for a given cloud provider / DAAC.
 
         Parameters:
-            daac: any of the DAACs, e.g. NSIDC, PODAAC
-            provider: a data provider if we know them, e.g. PODAAC -> POCLOUD
-            endpoint: pass the URL for the credentials directly
+            daac: Deprecated. Any of the DAACs, e.g. NSIDC, PODAAC.
+            provider: Deprecated. A data provider, e.g. PODAAC -> POCLOUD.
+            endpoint: The S3 credentials URL (preferred).
 
         Returns:
             a s3fs file instance
@@ -254,6 +255,14 @@ class Store:
             raise ValueError(
                 "At least one of the concept_id, daac, provider or endpoint"
                 "parameters must be specified. "
+            )
+
+        if endpoint is None and (daac is not None or provider is not None):
+            warnings.warn(
+                "Resolving S3 credentials from daac=/provider= is deprecated and "
+                "will be removed; pass endpoint= (or use granule metadata) instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
 
         if concept_id is not None:
@@ -451,8 +460,12 @@ class Store:
         if endpoint is not None:
             logger.info("using endpoint: %s", endpoint)
             return self.get_s3_filesystem(endpoint=endpoint)
-        logger.info("using provider: %s", provider)
-        return self.get_s3_filesystem(provider=provider)
+
+        msg = (
+            f"No S3 credentials endpoint found for provider {provider!r}. "
+            "Pass credentials_endpoint=..., or use access='https'."
+        )
+        raise ValueError(msg)
 
     @_open.register
     def _open_granules(
@@ -602,6 +615,7 @@ class Store:
         show_progress: Optional[bool] = None,
         max_workers: Optional[int] = None,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Path]:
         """Retrieves data granules from a remote storage system.
 
@@ -626,6 +640,7 @@ class Store:
             show_progress: whether or not to display a progress bar. If not specified, defaults to `True` for interactive sessions
                 (i.e., in a notebook or a python REPL session), otherwise `False`.
             max_workers: Maximum number of worker threads for parallel processing. If not specified, defaults to the value of `threads`.
+            force: Re-download files that already exist at the target location.
 
         Returns:
             List of downloaded files
@@ -658,6 +673,7 @@ class Store:
             max_workers=max_workers,
             show_progress=show_progress,
             parallel=parallel,
+            force=force,
         )
 
     @singledispatchmethod
@@ -672,6 +688,7 @@ class Store:
         max_workers: Optional[int] = None,
         show_progress: bool = True,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Path]:
         """Retrieves data granules from a remote storage system.
 
@@ -700,6 +717,7 @@ class Store:
         s3_fs: fsspec.AbstractFileSystem,
         file: str,
         path: Union[Path, TargetLocation],
+        force: bool = False,
     ) -> Path:
         """Download a single file from S3 to local path or cloud storage.
 
@@ -721,7 +739,7 @@ class Store:
             file_name = filesystem.basename(file)
             target_path = filesystem.join(file_name)
 
-            if filesystem.exists(target_path):
+            if filesystem.exists(target_path) and not force:
                 return Path(target_path)  # Skip if already exists
 
             # Download to temporary location, then copy to target
@@ -741,7 +759,7 @@ class Store:
         else:
             # Original Path-based logic
             local_file = path / Path(file).name
-            if local_file.exists():
+            if local_file.exists() and not force:
                 return local_file  # Skip if already exists
 
             s3_fs.get([file], str(path), recursive=False)
@@ -760,6 +778,7 @@ class Store:
         max_workers: Optional[int] = None,
         show_progress: bool = True,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Path]:
         data_links = granules
         protocol = validate_url_protocols(data_links)
@@ -789,7 +808,7 @@ class Store:
                 s3_fs = s3fs.S3FileSystem()
 
             def _download(file: str) -> Union[Path, None]:
-                return self.download_cloud_file(s3_fs, file, path)
+                return self.download_cloud_file(s3_fs, file, path, force=force)
 
             executor = get_executor(
                 parallel, max_workers=max_workers, show_progress=show_progress
@@ -813,6 +832,7 @@ class Store:
             max_workers=max_workers,
             show_progress=show_progress,
             parallel=parallel,
+            force=force,
         )
 
     @_get.register
@@ -827,6 +847,7 @@ class Store:
         max_workers: Optional[int] = None,
         show_progress: bool = True,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Path]:
         if self.auth is None:
             raise ValueError(
@@ -863,7 +884,7 @@ class Store:
             self._set_executor_type(parallel)
 
             def _download(file: str) -> Union[Path, None]:
-                return self.download_cloud_file(s3_fs, file, path)
+                return self.download_cloud_file(s3_fs, file, path, force=force)
 
             executor = get_executor(
                 parallel, max_workers=max_workers, show_progress=show_progress
@@ -901,6 +922,7 @@ class Store:
         max_workers: Optional[int] = None,
         show_progress: bool = True,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Path]:
         """Download GranuleResults (from search_data) by converting to list."""
         return self._get_granules(
@@ -912,6 +934,7 @@ class Store:
             max_workers=max_workers,
             show_progress=show_progress,
             parallel=parallel,
+            force=force,
         )
 
     def _clone_session_in_local_thread(
@@ -941,7 +964,9 @@ class Store:
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type(Exception),
     )
-    def _download_file(self, url: str, directory: Union[Path, TargetLocation]) -> Path:
+    def _download_file(
+        self, url: str, directory: Union[Path, TargetLocation], force: bool = False
+    ) -> Path:
         """Download a single file using a bearer token.
 
         Parameters:
@@ -961,7 +986,7 @@ class Store:
             filesystem = directory.get_filesystem()
             target_path = filesystem.join(local_filename)
 
-            if filesystem.exists(target_path):
+            if filesystem.exists(target_path) and not force:
                 logger.info(f"File {local_filename} already downloaded")
                 return Path(target_path)
 
@@ -990,7 +1015,7 @@ class Store:
         else:
             # Original Path-based logic
             path = directory / Path(local_filename)
-            if not path.exists():
+            if force or not path.exists():
                 # Use executor-aware session strategy
                 if self._use_session_cloning():
                     # Efficient session cloning for ThreadPoolExecutor
@@ -1023,6 +1048,7 @@ class Store:
         max_workers: Optional[int] = None,
         show_progress: bool = True,
         parallel: Union[str, bool, None] = None,
+        force: bool = False,
     ) -> List[Any]:
         """Downloads a list of URLS into the data directory.
 
@@ -1051,7 +1077,7 @@ class Store:
         # Set executor type for session strategy selection
         self._set_executor_type(parallel)
 
-        arguments = [(url, directory) for url in urls]
+        arguments = [(url, directory, force) for url in urls]
 
         # Get executor and execute
         executor = get_executor(

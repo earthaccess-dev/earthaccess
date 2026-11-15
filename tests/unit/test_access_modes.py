@@ -38,6 +38,12 @@ def _granule(
     )
 
 
+def _with_credentials_link(granule: DataGranule, url: str) -> DataGranule:
+    """Attach a granule-level S3 credentials link (metadata-driven endpoint)."""
+    granule["umm"]["RelatedUrls"].append({"URL": url, "Type": "GET DATA"})
+    return granule
+
+
 def _store() -> Store:
     store = Store.__new__(Store)
     store.auth = MagicMock(authenticated=True)
@@ -192,14 +198,19 @@ def test_open_defaults_to_https_without_s3_credentials():
 
 def test_open_s3_uses_s3_without_https_fallback():
     store = _store()
-    granule = _granule(s3=("s3://bucket/a.nc",), cloud_hosted=False)
+    granule = _with_credentials_link(
+        _granule(s3=("s3://bucket/a.nc",), cloud_hosted=False),
+        "https://example.com/s3credentials",
+    )
     store.get_s3_filesystem = MagicMock(return_value=MagicMock())
     store._open_urls_https = MagicMock()
 
     with patch("earthaccess.store.core._open_files", return_value=["s3-file"]) as rf:
         assert store.open([granule], access="s3") == ["s3-file"]
 
-    store.get_s3_filesystem.assert_called_once()
+    store.get_s3_filesystem.assert_called_once_with(
+        endpoint="https://example.com/s3credentials"
+    )
     store._open_urls_https.assert_not_called()
     assert list(rf.call_args.args[0]) == ["s3://bucket/a.nc"]
 
@@ -276,7 +287,10 @@ def test_get_s3_mixed_providers_fails_before_credentials():
 
 def test_get_s3_uses_links_without_cloud_hosted():
     store = _store()
-    granule = _granule(s3=("s3://bucket/a.nc",), cloud_hosted=False)
+    granule = _with_credentials_link(
+        _granule(s3=("s3://bucket/a.nc",), cloud_hosted=False),
+        "https://example.com/s3credentials",
+    )
     store.get_s3_filesystem = MagicMock(return_value=MagicMock())
     store.download_cloud_file = MagicMock(return_value="/tmp/a.nc")
 
@@ -286,6 +300,17 @@ def test_get_s3_uses_links_without_cloud_hosted():
         assert store.get([granule], "/tmp", access="s3") == ["/tmp/a.nc"]
 
     store.get_s3_filesystem.assert_called_once()
+
+
+def test_s3_without_credentials_endpoint_raises():
+    store = _store()
+    store.get_s3_filesystem = MagicMock()
+    granule = _granule(s3=("s3://bucket/a.nc",), cloud_hosted=False)
+
+    with pytest.raises(ValueError, match="No S3 credentials endpoint"):
+        store.get([granule], "/tmp", access="s3")
+
+    store.get_s3_filesystem.assert_not_called()
 
 
 def test_get_urls_mixed_protocols_raise():

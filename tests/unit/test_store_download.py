@@ -315,3 +315,74 @@ class TestChunkSize:
         from earthaccess.store.download import DEFAULT_CHUNK_SIZE
 
         assert DEFAULT_CHUNK_SIZE == 1024 * 1024  # 1MB
+
+
+class TestStoreForce:
+    """`force=True` re-downloads files that already exist."""
+
+    @staticmethod
+    def _store():
+        import threading
+
+        from earthaccess.store import Store
+
+        store = Store.__new__(Store)
+        store.auth = Mock(authenticated=True)
+        store._s3_credentials = {}
+        store.thread_locals = threading.local()
+        store._current_executor_type = "threads"
+        return store
+
+    def test_download_cloud_file_skips_existing_without_force(self, tmp_path) -> None:
+        store = self._store()
+        s3_fs = Mock()
+        (tmp_path / "a.nc").write_text("old")
+
+        result = store.download_cloud_file(s3_fs, "s3://bucket/a.nc", tmp_path)
+
+        assert result == tmp_path / "a.nc"
+        s3_fs.get.assert_not_called()
+
+    def test_download_cloud_file_force_redownloads(self, tmp_path) -> None:
+        store = self._store()
+        s3_fs = Mock()
+        (tmp_path / "a.nc").write_text("old")
+
+        store.download_cloud_file(s3_fs, "s3://bucket/a.nc", tmp_path, force=True)
+
+        s3_fs.get.assert_called_once_with(
+            ["s3://bucket/a.nc"], str(tmp_path), recursive=False
+        )
+
+    def _mock_https_session(self, store, payload: bytes):
+        session = Mock()
+        response = Mock()
+        response.iter_content.return_value = [payload]
+        response.raise_for_status.return_value = None
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+        session.get.return_value = response
+        store.get_requests_session = Mock(return_value=session)
+        store._clone_session_in_local_thread = Mock()
+        store.thread_locals.local_thread_session = session
+        return session
+
+    def test_download_file_skips_existing_without_force(self, tmp_path) -> None:
+        store = self._store()
+        session = self._mock_https_session(store, b"new")
+        (tmp_path / "a.nc").write_text("old")
+
+        result = store._download_file("https://example.com/a.nc", tmp_path)
+
+        assert result.read_text() == "old"
+        session.get.assert_not_called()
+
+    def test_download_file_force_redownloads(self, tmp_path) -> None:
+        store = self._store()
+        session = self._mock_https_session(store, b"new")
+        (tmp_path / "a.nc").write_text("old")
+
+        result = store._download_file("https://example.com/a.nc", tmp_path, force=True)
+
+        assert result.read_text() == "new"
+        session.get.assert_called_once()
