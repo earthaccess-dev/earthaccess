@@ -175,20 +175,55 @@ def test_granules_search_returns_valid_results(kwargs):
 
 @pytest.mark.parametrize("selection", [0, slice(None)])
 @pytest.mark.parametrize("use_url", [True, False])
-def test_download(tmp_path, selection, use_url):
+def test_download(tmp_path, selection, use_url, access):
+    earthaccess.login(strategy="environment")
     results = earthaccess.search_data(
         count=2,
         short_name="ATL08",
         cloud_hosted=True,
         bounding_box=(-92.86, 16.26, -91.58, 16.97),
     )
+    provider = results[0]["meta"]["provider-id"]
     if use_url:
         # Download via file URL string instead of DataGranule object
-        results = [link for r in results for link in r.data_links(access="indirect")]
+        results = [link for r in results for link in r.data_links(access=access)]
     result = results[selection]
-    files = earthaccess.download(result, str(tmp_path))
+    files = earthaccess.download(
+        result,
+        str(tmp_path),
+        provider=provider,
+        access=access,
+    )
     assert isinstance(files, list)
+    assert files
     assert all(Path(f).exists() for f in files)
+
+
+@pytest.mark.parametrize("selection", [0, slice(None)])
+@pytest.mark.parametrize("use_url", [True, False])
+def test_open(selection, use_url, access):
+    earthaccess.login(strategy="environment")
+    granules = earthaccess.search_data(
+        count=2,
+        short_name="ATL08",
+        cloud_hosted=True,
+        bounding_box=(-92.86, 16.26, -91.58, 16.97),
+    )
+    provider = granules[0]["meta"]["provider-id"]
+    if use_url:
+        results = [link for r in granules for link in r.data_links(access=access)]
+    else:
+        results = granules
+    selected = results[selection]
+    if not isinstance(selected, list):
+        selected = [selected]
+    files = earthaccess.open(selected, provider=provider, access=access)
+    assert isinstance(files, list)
+    assert files
+    for file in files:
+        assert not isinstance(file, Exception)
+        assert file.read(16)
+        file.close()
 
 
 @pytest.mark.parametrize(
@@ -200,14 +235,19 @@ def test_download(tmp_path, selection, use_url):
         (False, op.eq),
     ],
 )
-def test_force_download(tmp_path, force: bool, cmp: Callable[[float, float], bool]):
+def test_force_download(
+    tmp_path,
+    force: bool,
+    cmp: Callable[[float, float], bool],
+    access,
+):
     results = earthaccess.search_data(
         count=2,
         short_name="ATL08",
         cloud_hosted=True,
         bounding_box=(-92.86, 16.26, -91.58, 16.97),
     )
-    files = earthaccess.download(results, str(tmp_path), force=force)
+    files = earthaccess.download(results, str(tmp_path), force=force, access=access)
     assert isinstance(files, list)
     assert all(Path(f).exists() for f in files)
 
@@ -216,7 +256,9 @@ def test_force_download(tmp_path, force: bool, cmp: Callable[[float, float], boo
 
     # Verify force behavior by calling download again and checking mtimes
     first_mtimes = [f.stat().st_mtime for f in files]
-    second_files = earthaccess.download(results, str(tmp_path), force=force)
+    second_files = earthaccess.download(
+        results, str(tmp_path), force=force, access=access
+    )
     second_mtimes = [f.stat().st_mtime for f in second_files]
     assert all(
         cmp(*mtime_pair)
