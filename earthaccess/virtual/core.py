@@ -756,6 +756,10 @@ def _icechunk_storage(
 
     if canonical_access == "s3" or parsed.scheme == "s3":
         opts = dict(storage_options) if storage_options else {}
+        # NASA Earthdata S3 buckets live in us-west-2 and are only reachable
+        # from there; a store written elsewhere (or an S3-compatible target)
+        # overrides this through storage_options.
+        opts.setdefault("region", "us-west-2")
         return icechunk.s3_storage(
             bucket=parsed.netloc,
             prefix=parsed.path.lstrip("/"),

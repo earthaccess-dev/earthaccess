@@ -651,6 +651,7 @@ class TestOpenIcechunk:
         self.mock_s3.assert_called_once_with(
             bucket="bucket.daac",
             prefix="path/to/store.icechunk",
+            region="us-west-2",
         )
         self.mock_http.assert_not_called()
         self.mock_local.assert_not_called()
@@ -665,6 +666,7 @@ class TestOpenIcechunk:
         self.mock_s3.assert_called_once_with(
             bucket="my-bucket",
             prefix="key/store.icechunk",
+            region="us-west-2",
         )
         assert result is self.mock_dataset
 
