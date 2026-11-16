@@ -31,10 +31,6 @@ In this section you will learn to:
 - [Filtering granules by file (band) patterns](filter-bands.ipynb) — select
   specific files inside multi-file granules (e.g. HLS bands `B02`–`B04`) with
   `AssetFilter` glob patterns, and download only those files.
-- [Accessing datasets under an Access Control List (ACL)](../../user/tutorials/restricted-datasets.ipynb) —
-  anonymous vs authenticated queries, and how restricted granules behave.
-- [earthaccess and NASA EDL](../../user/howto/edl.ipynb) — authenticated HTTP /
-  S3 sessions for searches and access.
 
 ## Try it next
 

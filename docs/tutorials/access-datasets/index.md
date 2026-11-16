@@ -23,7 +23,5 @@ API in detail, see the [Results Class](../results/index.md) tutorials or the
 
 - [How data access works](../../user/explanation/access.md) — the two access
   methods: `download()` and `open()`.
-- [Using authenticated sessions](../../user/howto/edl.ipynb) — HTTP / S3
-  sessions used by the workflows above.
 - [Results Class tutorials](../results/index.md) — what the lazy result
   containers can do.

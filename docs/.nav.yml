@@ -73,6 +73,7 @@ nav:
               - "SlideRule: ICESat-2 and GEDI": "tutorials/plugins/sliderule.ipynb"
               - "VDS: virtual stores with the vds plugin": "tutorials/plugins/vds.ipynb"
               - "VDS in depth: composition and clusters": "tutorials/plugins/vds-in-depth.ipynb"
+              - "VDS on Coiled: HTTP chunks, S3 store": "tutorials/plugins/vds-coiled-s3.ipynb"
       - Explanation:
           - "Authentication": "user/explanation/authenticate.md"
           - "Status": "user/explanation/status.md"
