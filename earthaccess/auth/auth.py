@@ -321,8 +321,11 @@ class Auth(object):
             ```
         """
         if self.authenticated:
-            session = _create_earthdata_session(
-                self.system.edl_hostname, (self.username, self.password)
+            user, pwd = getattr(self, "username", None), getattr(self, "password", None)
+            session = (
+                _create_earthdata_session(self.system.edl_hostname, (user, pwd))
+                if user and pwd
+                else self.get_session()
             )
             if endpoint is None:
                 auth_url = self._get_cloud_auth_url(

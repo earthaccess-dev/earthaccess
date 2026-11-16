@@ -87,6 +87,26 @@ class TestCreateAuth(unittest.TestCase):
         self.assertEqual(auth.token, json_response)
 
     @responses.activate
+    @mock.patch.dict(os.environ, {"EARTHDATA_TOKEN": "ABCDEFGHIJKLMNOPQ"})
+    def test_s3_credentials_work_with_token_only_login(self):
+        """Token-only logins have no username/password attributes."""
+        auth = Auth()
+        auth.login(strategy="environment")
+        self.assertFalse(hasattr(auth, "username"))
+
+        creds = {
+            "accessKeyId": "key",
+            "secretAccessKey": "secret",
+            "sessionToken": "token",
+            "expiration": "2026-01-01T00:00:00Z",
+        }
+        endpoint = "https://data.podaac.earthdata.nasa.gov/s3credentials"
+        responses.add(responses.GET, endpoint, json=creds, status=200)
+        responses.add(responses.GET, endpoint, json=creds, status=200)
+
+        self.assertEqual(auth.get_s3_credentials(endpoint=endpoint), creds)
+
+    @responses.activate
     @mock.patch("getpass.getpass")
     @mock.patch("builtins.input")
     def test_auth_fails_for_wrong_credentials(self, user_input, user_password):
