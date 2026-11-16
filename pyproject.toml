@@ -42,7 +42,8 @@ dependencies = [
   "fsspec >=2025.2",
   "tinynetrc >=1.3.1",
   "tenacity >=9.0",
-  "multimethod >=1.8",
+  # 1.8 calls object.__getstate__() unbound, which breaks on Python 3.11+
+  "multimethod >=1.12",
   "importlib-resources >=6.3.2",
   "typing_extensions >=4.10.0",
   "pystac >=1.8",
@@ -85,7 +86,7 @@ kerchunk = [
 virtualizarr = [
   "numpy >=1.26.4",
   "zarr >=3.1.1",
-  "virtualizarr >=2.3.0",  # open_virtual_datatree() added in 2.3.0
+  "virtualizarr >=2.8.0",  # ManifestArray.iter_nonempty_paths()
   "icechunk>=2.1",
   "kerchunk>=0.2.9",
   "dask",
@@ -137,7 +138,11 @@ test = [
   "types-setuptools >=0.1",
   "types-geopandas",
   "geopandas",
-  "vcrpy >=7.0.0",
+  # lowest-direct would otherwise pick shapely 2.0.0/2.0.1 (no cp312 wheels,
+  # build fails) or 2.0.2-2.0.5 (compiled against numpy 1.x, broken with
+  # numpy 2)
+  "shapely >=2.0.6",
+  "vcrpy >=8.2.0",  # 7.x is incompatible with the minimum aiohttp
   "pytest-recording >=0.13.0",
   "earthaccess[kerchunk]",
   "earthaccess[virtualizarr]",
