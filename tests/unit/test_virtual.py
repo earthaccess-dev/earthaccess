@@ -860,7 +860,8 @@ class TestOpenIcechunkFromCollection:
 
         call_kwargs = self.mock_repo_cls.open.call_args.kwargs
         cred = call_kwargs["authorize_virtual_chunk_access"]["s3://podaac-bucket/"]
-        assert isinstance(cred, icechunk.S3Credentials.Refreshable)
+        # icechunk requires a Credentials wrapper around the S3 credential
+        assert isinstance(cred, icechunk.credentials.Credentials.S3)
 
 
 class TestVccAuthorization:
@@ -886,9 +887,10 @@ class TestVccAuthorization:
             self._vccs("s3://public-bucket/"),
             collection=None,
         )
+        # icechunk requires a Credentials wrapper around the S3 credential
         assert isinstance(
             mapping["s3://public-bucket/"],
-            icechunk.S3Credentials.FromEnv,
+            icechunk.credentials.Credentials.S3,
         )
 
     def test_s3_vcc_with_collection_uses_refreshable_creds(self):
@@ -909,7 +911,7 @@ class TestVccAuthorization:
         )
         assert isinstance(
             mapping["s3://nasa-bucket/"],
-            icechunk.S3Credentials.Refreshable,
+            icechunk.credentials.Credentials.S3,
         )
 
     def test_https_vcc_uses_http_access_sentinel(self):

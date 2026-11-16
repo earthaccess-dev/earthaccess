@@ -580,19 +580,24 @@ def _build_vcc_credentials(
         scheme = urlparse(prefix).scheme
         if scheme == "s3":
             if collection is not None:
-                mapping[prefix] = icechunk.s3_credentials(
+                s3_creds = icechunk.s3_credentials(
                     get_credentials=partial(_s3_static_credentials, collection),
                 )
             else:
-                mapping[prefix] = icechunk.s3_from_env_credentials()
+                s3_creds = icechunk.s3_from_env_credentials()
+            mapping[prefix] = icechunk.credentials.Credentials.S3(s3_creds)
         elif scheme in ("http", "https"):
             mapping[prefix] = icechunk.credentials.HttpAccess
         elif scheme in ("file", ""):
             mapping[prefix] = icechunk.credentials.LocalFileSystemAccess
         elif scheme in ("gs", "gcs"):
-            mapping[prefix] = icechunk.gcs_from_env_credentials()
+            mapping[prefix] = icechunk.credentials.Credentials.Gcs(
+                cast(Any, icechunk.gcs_from_env_credentials())
+            )
         elif scheme in ("az", "azure", "abfs"):
-            mapping[prefix] = icechunk.azure_from_env_credentials()
+            mapping[prefix] = icechunk.credentials.Credentials.Azure(
+                cast(Any, icechunk.azure_from_env_credentials())
+            )
     return mapping
 
 
@@ -656,6 +661,84 @@ def _authorize_vccs(
         mapping = {**mapping, **explicit}
 
     return config_to_pass, mapping
+
+
+_METADATA_CREDENTIALS_KEY = "earthaccess:virtual_chunk_credentials"
+"""Repository metadata key where the vds plugin records credential endpoints.
+
+Shape: ``{"version": 1, "containers": {"<url_prefix>": {
+"credentials_endpoint": ..., "provider": ..., "collection_concept_id": ...}}}``.
+Non-secret by design: it says *where* to fetch credentials, never the secrets.
+"""
+
+
+def _endpoint_credentials(endpoint: str) -> Any:
+    """Exchange the EDL token for S3 credentials at *endpoint*.
+
+    Module-level so icechunk can pickle it into a refreshable provider
+    (``S3Credentials.Refreshable``) that works in the process fetching chunks.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    import icechunk
+
+    auth = earthaccess.__auth__
+    if auth is None or not getattr(auth, "authenticated", False):
+        auth = earthaccess.login(strategy="environment")
+    creds = auth.get_s3_credentials(endpoint=endpoint)
+    return icechunk.S3StaticCredentials(
+        access_key_id=creds["accessKeyId"],
+        secret_access_key=creds["secretAccessKey"],
+        session_token=creds.get("sessionToken"),
+        expires_after=datetime.now(UTC) + timedelta(hours=1),
+    )
+
+
+def _metadata_credential_mapping(
+    metadata: dict[str, Any] | None,
+    vccs: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Build an authorization mapping from the hints recorded in repo metadata."""
+    import icechunk
+
+    spec = (metadata or {}).get(_METADATA_CREDENTIALS_KEY) or {}
+    containers = spec.get("containers") or {}
+    if not containers or not vccs:
+        return {}
+
+    mapping: dict[str, Any] = {}
+    for prefix, hint in containers.items():
+        if prefix not in vccs:
+            continue
+        endpoint = (hint or {}).get("credentials_endpoint")
+        if not endpoint:
+            continue
+        mapping[prefix] = icechunk.credentials.Credentials.S3(
+            icechunk.s3_credentials(
+                get_credentials=partial(_endpoint_credentials, endpoint),
+            ),
+        )
+    return mapping
+
+
+def _reopen_with_metadata_credentials(
+    repo: Any,
+    mapping: dict[str, Any],
+    explicit: dict[str, Any] | None,
+) -> Any:
+    """Reopen *repo* with the credential hints it carries, when it has any.
+
+    Precedence: explicit caller credentials > metadata hints > the defaults
+    already in *mapping* (environment or collection credentials).
+    """
+    hints = _metadata_credential_mapping(
+        getattr(repo, "metadata", None),
+        getattr(getattr(repo, "config", None), "virtual_chunk_containers", None),
+    )
+    if not hints:
+        return repo
+    merged = {**mapping, **hints, **(explicit or {})}
+    return repo.reopen(authorize_virtual_chunk_access=merged)
 
 
 def _icechunk_storage(
@@ -732,6 +815,9 @@ def _open_icechunk(
         config=config,
         authorize_virtual_chunk_access=vcc_map or None,
     )
+    repo = _reopen_with_metadata_credentials(
+        repo, vcc_map, authorize_virtual_chunk_access
+    )
     session = repo.readonly_session("main")
     store = session.store
     return xr.open_zarr(store, **kwargs)
@@ -774,6 +860,9 @@ def _open_icechunk_virtual(
         storage=storage,
         config=config,
         authorize_virtual_chunk_access=vcc_map or None,
+    )
+    repo = _reopen_with_metadata_credentials(
+        repo, vcc_map, authorize_virtual_chunk_access
     )
     concrete = xr.open_zarr(repo.readonly_session("main").store, consolidated=False)
 
