@@ -32,9 +32,9 @@ invalid_single_dates = [
 ]
 
 
-def test_no_default_params():
+def test_default_params():
     query = DataCollectionsQuery()
-    assert len(query.params) == 0
+    assert query.params == {"has_granules": True}
 
 
 def test_query_can_find_cloud_provider():
@@ -66,6 +66,17 @@ def test_querybuilder_can_handle_has_granules():
     assert query.params["has_granules"]
     query = DataCollectionsQuery().has_granules(None)
     assert "has_granules" not in query.params
+
+
+@pytest.mark.parametrize("has_granules", [True, False])
+def test_url_includes_default_or_explicit_has_granules(has_granules):
+    url = DataCollectionsQuery().parameters(has_granules=has_granules)._build_url()
+    assert f"has_granules={str(has_granules).lower()}" in url
+
+
+def test_url_omits_has_granules_when_none():
+    url = DataCollectionsQuery().parameters(has_granules=None)._build_url()
+    assert "has_granules" not in url
 
 
 @pytest.mark.parametrize("start,end,expected", valid_single_dates)
