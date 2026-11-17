@@ -621,6 +621,8 @@ class DataGranule(CustomDict):
             msg = "Granule has no horizontal spatial extent"
             raise ValueError(msg) from None
 
+        return _geometry_to_geojson(geometry)
+
 
 class Results:
     """An immutable iterable of search results with convenience methods."""
