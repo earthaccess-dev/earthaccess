@@ -639,6 +639,14 @@ class Results:
     def __iter__(self) -> Iterator[DataGranule | DataCollection]:
         return iter(self._items)
 
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def __getitem__(
+        self, index: int | slice,
+    ) -> DataGranule | DataCollection | list[DataGranule | DataCollection]:
+        return self._items[index]
+
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
