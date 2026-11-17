@@ -11,8 +11,6 @@ from typing import TYPE_CHECKING, Any, ClassVar
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from geopandas import GeoDataFrame
-
     from .search import DataCollectionsQuery, DataGranulesQuery
 
 import requests
@@ -169,9 +167,7 @@ class CustomDict(dict):
     def _filter_fields_(self, fields: list[str]) -> dict[str, Any]:
         umm = self._umm_record()
         filtered_dict = {
-            "umm": {
-                (field, umm[field]) for field in fields if field in umm
-            },
+            "umm": {(field, umm[field]) for field in fields if field in umm},
         }
         basic_dict = {
             "meta": {
@@ -645,7 +641,8 @@ class Results:
         return len(self._items)
 
     def __getitem__(
-        self, index: int | slice,
+        self,
+        index: int | slice,
     ) -> DataGranule | DataCollection | list[DataGranule | DataCollection]:
         return self._items[index]
 
