@@ -254,7 +254,7 @@ def search_data(count: int = -1, **kwargs: Any) -> Results[DataGranule]:
 
 
     Returns:
-        a Results object of DataGranules that can be used to access the granule
+        a Results object from a DataGranulesQuery that can be used to access the granule
             files by using `download()` or `open()`.
 
     Raises:

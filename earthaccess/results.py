@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from geopandas import GeoDataFrame
 
-    from .search import DataCollections, DataGranules
+    from .search import DataCollectionsQuery, DataGranulesQuery
 
 import requests
 
@@ -631,7 +631,7 @@ class Results:
         self,
         items: list[DataGranule] | list[DataCollection],
         *,
-        query: DataGranules | DataCollections,
+        query: DataGranulesQuery | DataCollectionsQuery,
     ) -> None:
         self._items = items
         self._query = query
@@ -678,7 +678,7 @@ class Results:
         )
 
     @property
-    def query(self) -> DataGranules | DataCollections:
+    def query(self) -> DataGranulesQuery | DataCollectionsQuery:
         return self._query
 
 
@@ -687,7 +687,7 @@ class GranuleResults(Results):
         self,
         items: list[DataGranule],
         *,
-        query: DataGranules,  # TODO: DataGranules is a bad name! Should be DataGranuleQuery.
+        query: DataGranulesQuery,
     ) -> None:
         super().__init__(items, query=query)
 
@@ -714,6 +714,6 @@ class CollectionResults(Results):
         self,
         items: list[DataCollection],
         *,
-        query: DataCollections,
+        query: DataCollectionsQuery,
     ) -> None:
         super().__init__(items, query=query)

@@ -447,7 +447,7 @@ class DataCollectionsQuery(CollectionQuery):
             collections = ea.search_datasets(
                 keyword="above ground biomass",
             )
-            gdf = ea.DataCollections.to_geopandas(collections)
+            gdf = ea.DataCollectionsQuery.to_geopandas(collections)
             ```
         """
         try:
