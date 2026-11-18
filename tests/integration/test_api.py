@@ -149,14 +149,14 @@ def test_auth_returns_valid_auth_class():
 
 def test_dataset_search_returns_none_with_no_parameters():
     results = earthaccess.search_datasets()
-    assert isinstance(results, list)
+    assert isinstance(results, earthaccess.CollectionResults)
     assert len(results) == 0
 
 
 @pytest.mark.parametrize("kwargs", dataset_valid_params)
 def test_dataset_search_returns_valid_results(kwargs):
     results = earthaccess.search_datasets(**kwargs)
-    assert isinstance(results, list)
+    assert isinstance(results, earthaccess.CollectionResults)
     assert isinstance(results[0], dict)
 
 
@@ -169,7 +169,7 @@ def test_dataset_search_summary_missing_file_dist_info():
 @pytest.mark.parametrize("kwargs", granules_valid_params)
 def test_granules_search_returns_valid_results(kwargs):
     results = earthaccess.search_data(count=10, **kwargs)
-    assert isinstance(results, list)
+    assert isinstance(results, earthaccess.GranuleResults)
     assert len(results) <= 10
 
 

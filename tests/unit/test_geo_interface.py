@@ -2,6 +2,7 @@ import pytest
 from earthaccess.results import (
     DataCollection,
     DataGranule,
+    GranuleResults,
 )
 from earthaccess.search import DataCollectionsQuery, DataGranulesQuery
 
@@ -332,6 +333,19 @@ def test_to_geopandas_returns_geodataframe():
         "MultiPoint",
         "MultiLineString",
     ]
+    assert gdf.geometry.notna().all()
+
+
+def test_to_geopandas_accepts_search_results():
+    pytest.importorskip("geopandas")
+    granules = [
+        _make_granule(TEST_CASES["points"], "point"),
+        _make_granule(TEST_CASES["lines"], "line"),
+    ]
+
+    gdf = DataGranulesQuery.to_geopandas(GranuleResults(iter(granules)))
+
+    assert len(gdf) == 2
     assert gdf.geometry.notna().all()
 
 

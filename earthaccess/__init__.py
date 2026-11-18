@@ -20,6 +20,7 @@ from .api import (
     status,
 )
 from .auth import Auth
+from .results import CollectionResults, GranuleResults, Results
 from .search import DataCollection, DataCollectionsQuery, DataGranule, DataGranulesQuery
 from .services import DataServicesQuery
 from .store import Store
@@ -34,12 +35,15 @@ __all__ = [
     "UAT",
     # auth.py
     "Auth",
-    # search.py
+    # results.py and search.py
+    "CollectionResults",
     "DataCollection",
     "DataCollectionsQuery",
     "DataGranule",
     "DataGranulesQuery",
     "DataServicesQuery",
+    "GranuleResults",
+    "Results",
     # store.py
     "Store",
     # api.py
