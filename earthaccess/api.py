@@ -17,7 +17,7 @@ from earthaccess.exceptions import LoginStrategyUnavailable, ServiceOutage
 from earthaccess.services import DataServicesQuery
 
 from .auth import Auth
-from .results import DataCollection, DataGranule, Results
+from .results import CollectionResults, DataGranule, GranuleResults
 from .search import (
     CollectionQuery,
     DataCollectionsQuery,
@@ -94,7 +94,7 @@ def _normalize_location(location: str | None) -> str | None:
     return location
 
 
-def search_datasets(count: int = -1, **kwargs: Any) -> Results[DataCollection]:
+def search_datasets(count: int = -1, **kwargs: Any) -> CollectionResults:
     """Search datasets (collections) using NASA's CMR.
 
     [https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html)
@@ -146,8 +146,10 @@ def search_datasets(count: int = -1, **kwargs: Any) -> Results[DataCollection]:
             * **debug**: (bool) If True prints CMR request.  Default: True
 
     Returns:
-        A Results object of DataCollection results that can be used to get information about a
-            dataset, e.g. concept_id, doi, etc.
+        The matching collections, as a `CollectionResults`. Each item can be used
+            to get information about a dataset, e.g. concept_id, doi, etc.
+            `query_params` holds this call's arguments, so
+            `search_datasets(**results.query_params)` repeats the search.
 
     Raises:
         RuntimeError: The CMR query failed.
@@ -176,24 +178,23 @@ def search_datasets(count: int = -1, **kwargs: Any) -> Results[DataCollection]:
         ```
 
     """
+    query_params = {"count": count, **kwargs}
     if not validate.valid_dataset_parameters(**kwargs):
         logger.warning(
             "A valid set of parameters is needed to search for datasets on CMR",
         )
-        return []
+        return CollectionResults([], query_params=query_params)
     if earthaccess.__auth__.authenticated:
         query = DataCollectionsQuery(auth=earthaccess.__auth__).parameters(**kwargs)
     else:
         query = DataCollectionsQuery().parameters(**kwargs)
     datasets_found = query.hits()
     logger.info("Datasets found: %s", datasets_found)
-    if count > 0:
-        return query.get(count)
-
-    return query.get_all()
+    items = query.get(count) if count > 0 else query.get_all()
+    return CollectionResults(items, query_params=query_params, hits=datasets_found)
 
 
-def search_data(count: int = -1, **kwargs: Any) -> Results[DataGranule]:
+def search_data(count: int = -1, **kwargs: Any) -> GranuleResults:
     """Search for dataset files (granules) using NASA's CMR.
 
     [https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html)
@@ -254,8 +255,9 @@ def search_data(count: int = -1, **kwargs: Any) -> Results[DataGranule]:
 
 
     Returns:
-        a Results object from a DataGranulesQuery that can be used to access the granule
-            files by using `download()` or `open()`.
+        The matching granules, as a `GranuleResults`, which can be passed to
+            `download()` or `open()`. `query_params` holds this call's arguments,
+            so `search_data(**results.query_params)` repeats the search.
 
     Raises:
         RuntimeError: The CMR query failed.
@@ -276,15 +278,15 @@ def search_data(count: int = -1, **kwargs: Any) -> Results[DataGranule]:
         )
         ```
     """
+    query_params = {"count": count, **kwargs}
     if earthaccess.__auth__.authenticated:
         query = DataGranulesQuery(earthaccess.__auth__).parameters(**kwargs)
     else:
         query = DataGranulesQuery().parameters(**kwargs)
     granules_found = query.hits()
     logger.info("Granules found: %s", granules_found)
-    if count > 0:
-        return query.get(count)
-    return query.get_all()
+    items = query.get(count) if count > 0 else query.get_all()
+    return GranuleResults(items, query_params=query_params, hits=granules_found)
 
 
 def search_services(count: int = -1, **kwargs: Any) -> list[Any]:
@@ -385,7 +387,7 @@ def login(
 
 
 def download(  # noqa: PLR0913
-    granules: DataGranule | list[DataGranule] | str | list[str],
+    granules: DataGranule | list[DataGranule] | GranuleResults | str | list[str],
     local_path: Path | str | None = None,
     provider: str | None = None,
     threads: int = 8,
@@ -402,7 +404,7 @@ def download(  # noqa: PLR0913
        directly from S3.
 
     Parameters:
-        granules: a granule, list of granules, a granule link (HTTP), or a list of granule links (HTTP)
+        granules: a granule, list of granules, results from `search_data()`, a granule link (HTTP), or a list of granule links (HTTP)
         local_path: Local directory to store the remote data granules.  If not
             supplied, defaults to a subdirectory of the current working directory
             of the form `data/YYYY-MM-DD-UUID`, where `YYYY-MM-DD` is the year,
@@ -436,6 +438,8 @@ def download(  # noqa: PLR0913
         granules = [granules]
     elif isinstance(granules, str):
         granules = [granules]
+    elif isinstance(granules, GranuleResults):
+        granules = granules.all()
     try:
         return earthaccess.__store__.get(
             granules,
@@ -457,7 +461,7 @@ def download(  # noqa: PLR0913
 
 
 def open(  # noqa: A001, PLR0913
-    granules: list[str] | list[DataGranule],
+    granules: list[str] | list[DataGranule] | GranuleResults,
     provider: str | None = None,
     *,
     access: AccessType | None = "https",
@@ -473,7 +477,7 @@ def open(  # noqa: A001, PLR0913
     directly from S3.
 
     Parameters:
-        granules: a list of granule instances **or** list of URLs, e.g. `s3://some-granule`.
+        granules: a list of granule instances, results from `search_data()`, **or** a list of URLs, e.g. `s3://some-granule`.
             If a list of URLs is passed, we need to specify the data provider.
         provider: e.g. POCLOUD, NSIDC_CPRD, etc.
         access: access method, either `"https"` (default) or `"s3"`. When URLs
@@ -490,6 +494,8 @@ def open(  # noqa: A001, PLR0913
     Returns:
         A list of "file pointers" to remote (i.e. s3 or https) files.
     """
+    if isinstance(granules, GranuleResults):
+        granules = granules.all()
     return earthaccess.__store__.open(
         granules=granules,
         provider=_normalize_location(provider),

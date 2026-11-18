@@ -1,17 +1,13 @@
-from __future__ import annotations
-
+import copy
+import html
 import json
 import pprint
 import uuid
 import warnings
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
-from textwrap import dedent, indent
-from typing import TYPE_CHECKING, Any, ClassVar
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-    from .search import DataCollectionsQuery, DataGranulesQuery
+from textwrap import indent
+from typing import Any, ClassVar, overload
 
 import requests
 
@@ -620,90 +616,166 @@ class DataGranule(CustomDict):
         return _geometry_to_geojson(geometry)
 
 
-class Results:
-    """An immutable iterable of search results with convenience methods."""
+class Results[T: CustomDict](Sequence[T]):
+    """Search results, together with the search inputs that produced them.
 
-    # TODO: Needs to support both a lazy generator approach and an in-memory approach where
-    #       items are never consumed.
+    `search_data()` returns a `GranuleResults` and `search_datasets()` returns a
+    `CollectionResults`. Both can be indexed, sliced, and iterated any number of
+    times, and both can be passed to `download()` and `open()` as before.
+
+    The keyword arguments of the search are kept in `query_params`, so the
+    search can be repeated later:
+
+    ```python
+    results = earthaccess.search_data(short_name="ATL06", count=10)
+    again = earthaccess.search_data(**results.query_params)
+    ```
+
+    Items can be supplied as a sequence (loaded up front) or as an iterator
+    (loaded the first time they are needed). Either way, each item is taken from
+    its source once and then kept, so later iterations return the same items
+    without searching again. A results object that is still loading from an
+    iterator is not safe to read from several threads at once; call `all()`
+    first.
+    """
+
+    _noun: ClassVar[str] = "results"
+
     def __init__(
         self,
-        items: list[DataGranule] | list[DataCollection],
+        items: Iterable[T],
         *,
-        query: DataGranulesQuery | DataCollectionsQuery,
+        query_params: Mapping[str, Any] | None = None,
+        hits: int | None = None,
     ) -> None:
-        self._items = items
-        self._query = query
+        """Create a results object.
 
-    def __iter__(self) -> Iterator[DataGranule | DataCollection]:
-        return iter(self._items)
+        Parameters:
+            items: The results, as a sequence or as an iterator.
+            query_params: The keyword arguments of the search that produced
+                these results. A deep copy is stored, so later changes to the
+                caller's objects do not change it.
+            hits: The number of matches CMR reported for the search. This can be
+                larger than the number of items when the search had a `count`.
+        """
+        self._items: list[T]
+        self._source: Iterator[T] | None
+        if isinstance(items, Sequence):
+            self._items, self._source = list(items), None
+        else:
+            self._items, self._source = [], iter(items)
+        self._query_params = (
+            None if query_params is None else copy.deepcopy(dict(query_params))
+        )
+        self._hits = hits
+
+    def _load(self, n: int | None = None) -> None:
+        """Take items from the source until `n` are loaded (`None` means all)."""
+        while self._source is not None and (n is None or len(self._items) < n):
+            try:
+                self._items.append(next(self._source))
+            except StopIteration:
+                self._source = None
+
+    @property
+    def query_params(self) -> dict[str, Any] | None:
+        """The keyword arguments of the search, or `None` if not known.
+
+        Pass them back to the same search function to repeat the search. A new
+        copy is returned on each access, so changing it does not change these
+        results.
+        """
+        return copy.deepcopy(self._query_params)
+
+    @property
+    def hits(self) -> int | None:
+        """The number of matches CMR reported for the search, if known."""
+        return self._hits
+
+    def all(self) -> list[T]:
+        """Return every result as a new list, loading any not yet loaded.
+
+        Returns:
+            A list of all results. Changing the list does not change these
+            results.
+        """
+        self._load()
+        return list(self._items)
+
+    def __iter__(self) -> Iterator[T]:
+        i = 0
+        while True:
+            self._load(i + 1)
+            if i >= len(self._items):
+                return
+            yield self._items[i]
+            i += 1
 
     def __len__(self) -> int:
+        self._load()
         return len(self._items)
 
-    def __getitem__(
-        self,
-        index: int | slice,
-    ) -> DataGranule | DataCollection | list[DataGranule | DataCollection]:
+    def __bool__(self) -> bool:
+        self._load(1)
+        return bool(self._items)
+
+    @overload
+    def __getitem__(self, index: int) -> T: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[T]: ...
+
+    def __getitem__(self, index: int | slice) -> T | list[T]:
+        if isinstance(index, slice) or index < 0:
+            self._load()
+        else:
+            self._load(index + 1)
         return self._items[index]
+
+    def __getstate__(self) -> dict[str, Any]:
+        # Iterators cannot be pickled, so load everything first.
+        self._load()
+        return self.__dict__.copy()
+
+    def _loaded_label(self) -> str:
+        label = f"{len(self._items)} {self._noun}"
+        return label if self._source is None else f"{label} loaded so far"
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}("
-            f"params={self.query.params!r}, "
-            f"options={self.query.options!r})"
+            f"{type(self).__name__}({self._loaded_label()}, hits={self._hits!r}, "
+            f"query_params={self._query_params!r})"
         )
-
-    def _repr_html_(self) -> str:
-        return dedent(f"""
-            <table>
-                <tr>
-                    <td>Query Type</td>
-                    <td style="text-align: left;">{self.query.__class__.__name__}</td>
-                </tr>
-                <tr>
-                    <td>Number of Results</td>
-                    <td style="text-align: left;">{self.query.hits()}</td>
-                </tr>
-                <tr>
-                    <td>Query parameters</td>
-                    <td style="text-align: left;">{self.query.params}</td>
-                </tr>
-                <tr>
-                    <td>Query options</td>
-                    <td style="text-align: left;">{self.query.options}</td>
-                </tr>
-            </table>
-        """)
 
     def __str__(self) -> str:
         return (
-            f"Number of results: {self.query.hits()}\n"
+            f"{type(self).__name__}: {self._loaded_label()}\n"
+            f"Matches in CMR: {self._hits if self._hits is not None else 'unknown'}\n"
             f"Query parameters:\n"
-            f"{indent(pprint.pformat(self.query.params), ' ' * 4)}\n"
-            f"Query parameter options:\n"
-            f"{indent(pprint.pformat(self.query.options), ' ' * 4)}"
+            f"{indent(pprint.pformat(self._query_params), ' ' * 4)}"
         )
 
-    @property
-    def query(self) -> DataGranulesQuery | DataCollectionsQuery:
-        return self._query
+    def _repr_html_(self) -> str:
+        rows = {
+            "Results": self._loaded_label(),
+            "Matches in CMR": "unknown" if self._hits is None else str(self._hits),
+            "Query parameters": pprint.pformat(self._query_params),
+        }
+        cells = "".join(
+            f"<tr><td>{html.escape(name)}</td>"
+            f'<td style="text-align: left;"><pre>{html.escape(value)}</pre></td></tr>'
+            for name, value in rows.items()
+        )
+        return f"<table>{cells}</table>"
 
 
-class GranuleResults(Results):
-    def __init__(
-        self,
-        items: list[DataGranule],
-        *,
-        query: DataGranulesQuery,
-    ) -> None:
-        super().__init__(items, query=query)
+class GranuleResults(Results[DataGranule]):
+    """Results of a granule search, as returned by `search_data()`."""
+
+    _noun: ClassVar[str] = "granules"
 
 
-class CollectionResults(Results):
-    def __init__(
-        self,
-        items: list[DataCollection],
-        *,
-        query: DataCollectionsQuery,
-    ) -> None:
-        super().__init__(items, query=query)
+class CollectionResults(Results[DataCollection]):
+    """Results of a collection search, as returned by `search_datasets()`."""
+
+    _noun: ClassVar[str] = "collections"
