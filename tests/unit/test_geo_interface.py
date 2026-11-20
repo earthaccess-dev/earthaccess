@@ -351,6 +351,26 @@ def test_to_geopandas_accepts_results_objects():
     assert len(collection_gdf) == 1
 
 
+def test_results_to_gdf_matches_to_geopandas():
+    pytest.importorskip("geopandas")
+    from geopandas.testing import assert_geodataframe_equal  # noqa: PLC0415
+
+    granules = [
+        _make_granule(TEST_CASES["points"], "point"),
+        _make_granule(TEST_CASES["bounding-rectangles"], "rect"),
+    ]
+    collections = [_make_collection(TEST_CASES["points"], "collection")]
+
+    assert_geodataframe_equal(
+        GranuleResults(granules).to_gdf(),
+        DataGranulesQuery.to_geopandas(granules),
+    )
+    assert_geodataframe_equal(
+        CollectionResults(collections).to_gdf(),
+        DataCollectionsQuery.to_geopandas(collections),
+    )
+
+
 def test_to_geopandas_includes_attribute_columns():
     pytest.importorskip("geopandas")
 

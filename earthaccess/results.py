@@ -7,13 +7,16 @@ import warnings
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
 from textwrap import dedent, indent
-from typing import Any, ClassVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 import requests
 
 import earthaccess
 
 from ._access import AccessType, normalize_access
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 from .formatters import _repr_granule_html
 from .services import DataServicesQuery
 
@@ -800,8 +803,50 @@ class GranuleResults(Results[DataGranule]):
 
     _query_type: ClassVar[str] = "DataGranulesQuery"
 
+    def to_gdf(self) -> "gpd.GeoDataFrame":
+        """Convert these granules to a GeoPandas GeoDataFrame.
+
+        This is the same as `DataGranulesQuery.to_geopandas(results)`.
+
+        Returns:
+            A GeoDataFrame with one row per granule.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            granules = earthaccess.search_data(short_name="MYD11A1", count=100)
+            gdf = granules.to_gdf()
+            ```
+        """
+        from .search import DataGranulesQuery  # noqa: PLC0415
+
+        return DataGranulesQuery.to_geopandas(self)
+
 
 class CollectionResults(Results[DataCollection]):
     """Results of a collection search, as returned by `search_datasets()`."""
 
     _query_type: ClassVar[str] = "DataCollectionsQuery"
+
+    def to_gdf(self) -> "gpd.GeoDataFrame":
+        """Convert these collections to a GeoPandas GeoDataFrame.
+
+        This is the same as `DataCollectionsQuery.to_geopandas(results)`.
+
+        Returns:
+            A GeoDataFrame with one row per collection.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            collections = earthaccess.search_datasets(keyword="above ground biomass")
+            gdf = collections.to_gdf()
+            ```
+        """
+        from .search import DataCollectionsQuery  # noqa: PLC0415
+
+        return DataCollectionsQuery.to_geopandas(self)
