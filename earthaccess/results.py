@@ -6,7 +6,7 @@ import uuid
 import warnings
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
-from textwrap import indent
+from textwrap import dedent, indent
 from typing import Any, ClassVar, overload
 
 import requests
@@ -616,7 +616,7 @@ class DataGranule(CustomDict):
         return _geometry_to_geojson(geometry)
 
 
-class Results[T: CustomDict](Sequence[T]):
+class Results[ResultItem: (DataGranule, DataCollection)](Sequence[ResultItem]):
     """Search results, together with the search inputs that produced them.
 
     `search_data()` returns a `GranuleResults` and `search_datasets()` returns a
@@ -637,15 +637,20 @@ class Results[T: CustomDict](Sequence[T]):
     without searching again. A results object that is still loading from an
     iterator is not safe to read from several threads at once; call `all()`
     first.
+
+    `ResultItem` is the type of each result: `DataGranule` for `GranuleResults`
+    and `DataCollection` for `CollectionResults`. It lets type checkers and
+    editors know that `search_data(...)[0]` is a `DataGranule`.
     """
 
-    _noun: ClassVar[str] = "results"
+    _query_type: ClassVar[str] = "unknown"
 
     def __init__(
         self,
-        items: Iterable[T],
+        items: Iterable[ResultItem],
         *,
         query_params: Mapping[str, Any] | None = None,
+        query_options: Mapping[str, Any] | None = None,
         hits: int | None = None,
     ) -> None:
         """Create a results object.
@@ -653,19 +658,26 @@ class Results[T: CustomDict](Sequence[T]):
         Parameters:
             items: The results, as a sequence or as an iterator.
             query_params: The keyword arguments of the search that produced
-                these results. A deep copy is stored, so later changes to the
-                caller's objects do not change it.
+                these results. Each search returns a new results object with its
+                own `query_params`. A copy is stored, so if a list or dict passed
+                to the search (a bounding box, say) is changed afterwards, the
+                stored value still matches the search that was run.
+            query_options: The CMR query options of the search, shown when the
+                results are displayed.
             hits: The number of matches CMR reported for the search. This can be
                 larger than the number of items when the search had a `count`.
         """
-        self._items: list[T]
-        self._source: Iterator[T] | None
+        self._items: list[ResultItem]
+        self._source: Iterator[ResultItem] | None
         if isinstance(items, Sequence):
             self._items, self._source = list(items), None
         else:
             self._items, self._source = [], iter(items)
         self._query_params = (
             None if query_params is None else copy.deepcopy(dict(query_params))
+        )
+        self._query_options = (
+            None if query_options is None else copy.deepcopy(dict(query_options))
         )
         self._hits = hits
 
@@ -692,7 +704,7 @@ class Results[T: CustomDict](Sequence[T]):
         """The number of matches CMR reported for the search, if known."""
         return self._hits
 
-    def all(self) -> list[T]:
+    def all(self) -> list[ResultItem]:
         """Return every result as a new list, loading any not yet loaded.
 
         Returns:
@@ -702,7 +714,7 @@ class Results[T: CustomDict](Sequence[T]):
         self._load()
         return list(self._items)
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[ResultItem]:
         i = 0
         while True:
             self._load(i + 1)
@@ -720,12 +732,12 @@ class Results[T: CustomDict](Sequence[T]):
         return bool(self._items)
 
     @overload
-    def __getitem__(self, index: int) -> T: ...
+    def __getitem__(self, index: int) -> ResultItem: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[T]: ...
+    def __getitem__(self, index: slice) -> list[ResultItem]: ...
 
-    def __getitem__(self, index: int | slice) -> T | list[T]:
+    def __getitem__(self, index: int | slice) -> ResultItem | list[ResultItem]:
         if isinstance(index, slice) or index < 0:
             self._load()
         else:
@@ -737,45 +749,59 @@ class Results[T: CustomDict](Sequence[T]):
         self._load()
         return self.__dict__.copy()
 
-    def _loaded_label(self) -> str:
-        label = f"{len(self._items)} {self._noun}"
-        return label if self._source is None else f"{label} loaded so far"
-
     def __repr__(self) -> str:
         return (
-            f"{type(self).__name__}({self._loaded_label()}, hits={self._hits!r}, "
-            f"query_params={self._query_params!r})"
-        )
-
-    def __str__(self) -> str:
-        return (
-            f"{type(self).__name__}: {self._loaded_label()}\n"
-            f"Matches in CMR: {self._hits if self._hits is not None else 'unknown'}\n"
-            f"Query parameters:\n"
-            f"{indent(pprint.pformat(self._query_params), ' ' * 4)}"
+            f"{self.__class__.__name__}("
+            f"params={self._query_params!r}, "
+            f"options={self._query_options!r})"
         )
 
     def _repr_html_(self) -> str:
-        rows = {
-            "Results": self._loaded_label(),
-            "Matches in CMR": "unknown" if self._hits is None else str(self._hits),
-            "Query parameters": pprint.pformat(self._query_params),
-        }
-        cells = "".join(
-            f"<tr><td>{html.escape(name)}</td>"
-            f'<td style="text-align: left;"><pre>{html.escape(value)}</pre></td></tr>'
-            for name, value in rows.items()
+        query_type = html.escape(self._query_type)
+        hits = html.escape(self._hits_label())
+        params = html.escape(str(self._query_params))
+        options = html.escape(str(self._query_options))
+        return dedent(f"""
+            <table>
+                <tr>
+                    <td>Query Type</td>
+                    <td style="text-align: left;">{query_type}</td>
+                </tr>
+                <tr>
+                    <td>Number of Results</td>
+                    <td style="text-align: left;">{hits}</td>
+                </tr>
+                <tr>
+                    <td>Query parameters</td>
+                    <td style="text-align: left;">{params}</td>
+                </tr>
+                <tr>
+                    <td>Query options</td>
+                    <td style="text-align: left;">{options}</td>
+                </tr>
+            </table>
+        """)
+
+    def __str__(self) -> str:
+        return (
+            f"Number of results: {self._hits_label()}\n"
+            f"Query parameters:\n"
+            f"{indent(pprint.pformat(self._query_params), ' ' * 4)}\n"
+            f"Query parameter options:\n"
+            f"{indent(pprint.pformat(self._query_options), ' ' * 4)}"
         )
-        return f"<table>{cells}</table>"
+
+    def _hits_label(self) -> str:
+        return "unknown" if self._hits is None else str(self._hits)
 
 
 class GranuleResults(Results[DataGranule]):
     """Results of a granule search, as returned by `search_data()`."""
 
-    _noun: ClassVar[str] = "granules"
+    _query_type: ClassVar[str] = "DataGranulesQuery"
 
 
 class CollectionResults(Results[DataCollection]):
     """Results of a collection search, as returned by `search_datasets()`."""
 
-    _noun: ClassVar[str] = "collections"
+    _query_type: ClassVar[str] = "DataCollectionsQuery"

@@ -559,16 +559,39 @@ def test_results_query_params_are_a_snapshot():
     }
 
 
-def test_results_repr_does_not_contact_cmr():
+def test_results_display_uses_stored_search_details_without_contacting_cmr():
     results = earthaccess.GranuleResults(
-        [_granule(0)], query_params={"short_name": "ATL06"}, hits=1234
+        [_granule(0)],
+        query_params={"short_name": "ATL06"},
+        query_options={"temporal": {"exclude_boundary": True}},
+        hits=1234,
     )
 
     with responses.RequestsMock():  # fails if any HTTP request is made
-        text = repr(results) + str(results) + results._repr_html_()
+        text_repr = repr(results)
+        text_str = str(results)
+        text_html = results._repr_html_()
 
-    assert "1 granules" in text
-    assert "1234" in text
+    assert text_repr == (
+        "GranuleResults(params={'short_name': 'ATL06'}, "
+        "options={'temporal': {'exclude_boundary': True}})"
+    )
+    assert text_str == (
+        "Number of results: 1234\n"
+        "Query parameters:\n"
+        "    {'short_name': 'ATL06'}\n"
+        "Query parameter options:\n"
+        "    {'temporal': {'exclude_boundary': True}}"
+    )
+    for row in [
+        "<td>Query Type</td>",
+        '<td style="text-align: left;">DataGranulesQuery</td>',
+        "<td>Number of Results</td>",
+        '<td style="text-align: left;">1234</td>',
+        "<td>Query parameters</td>",
+        "<td>Query options</td>",
+    ]:
+        assert row in text_html
 
 
 def test_lazy_results_can_be_pickled():
@@ -597,6 +620,25 @@ def test_search_data_records_replayable_query_params(monkeypatch):
 
     again = earthaccess.search_data(**results.query_params)
     assert again.query_params == results.query_params
+
+
+def test_each_search_returns_results_with_its_own_query_params(monkeypatch):
+    monkeypatch.setattr(DataGranulesQuery, "hits", lambda _self: 1)
+    monkeypatch.setattr(DataGranulesQuery, "get", lambda _self, _limit=0: [])
+
+    results = earthaccess.search_data(short_name="ATL06", count=1)
+    first = results
+    results = earthaccess.search_data(
+        short_name="ATL03", temporal=("2020-01-01", "2020-02-01", True), count=1
+    )
+
+    assert results.query_params == {
+        "count": 1,
+        "short_name": "ATL03",
+        "temporal": ("2020-01-01", "2020-02-01", True),
+    }
+    assert "{'temporal': {'exclude_boundary': True}}" in repr(results)
+    assert first.query_params == {"count": 1, "short_name": "ATL06"}
 
 
 def test_search_datasets_returns_collection_results(monkeypatch):
