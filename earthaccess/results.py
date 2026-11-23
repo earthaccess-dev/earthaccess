@@ -1,14 +1,22 @@
+import copy
+import html
 import json
+import pprint
 import uuid
 import warnings
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
-from typing import Any, ClassVar
+from textwrap import dedent, indent
+from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 import requests
 
 import earthaccess
 
 from ._access import AccessType, normalize_access
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 from .formatters import _repr_granule_html
 from .services import DataServicesQuery
 
@@ -151,11 +159,14 @@ class CustomDict(dict):
         else:
             self.render_dict = self._filter_fields_(fields)
 
+    def _umm_record(self) -> dict[str, Any]:
+        umm = self.get("umm")
+        return umm if isinstance(umm, dict) else {}
+
     def _filter_fields_(self, fields: list[str]) -> dict[str, Any]:
+        umm = self._umm_record()
         filtered_dict = {
-            "umm": {
-                (field, self["umm"][field]) for field in fields if field in self["umm"]
-            },
+            "umm": {(field, umm[field]) for field in fields if field in umm},
         }
         basic_dict = {
             "meta": {
@@ -171,7 +182,7 @@ class CustomDict(dict):
         """Filter RelatedUrls from the UMM fields on CMR."""
         return [
             link["URL"]
-            for link in self["umm"].get("RelatedUrls", [])
+            for link in self._umm_record().get("RelatedUrls", [])
             if link.get("Type") == link_type
         ]
 
@@ -226,7 +237,7 @@ class DataCollection(CustomDict):
         Returns:
             The value of a given field inside the UMM (Unified Metadata Model).
         """
-        return self["umm"].get(umm_field, "")
+        return self._umm_record().get(umm_field, "")
 
     @property
     def doi(self) -> str | None:
@@ -235,7 +246,7 @@ class DataCollection(CustomDict):
         Returns:
             This collection's DOI information, or `None`, if it has none.
         """
-        doi = self["umm"].get("DOI", {})
+        doi = self._umm_record().get("DOI", {})
         if isinstance(doi, dict):
             return doi.get("DOI", None)
         return None
@@ -277,11 +288,10 @@ class DataCollection(CustomDict):
         Returns:
             The collection data type, i.e. HDF5, CSV etc., if available.
         """
-        return str(
-            self["umm"]
-            .get("ArchiveAndDistributionInformation", {})
-            .get("FileDistributionInformation", ""),
-        )
+        archive_info = self._umm_record().get("ArchiveAndDistributionInformation")
+        if not isinstance(archive_info, dict):
+            return ""
+        return str(archive_info.get("FileDistributionInformation", ""))
 
     @property
     def version(self) -> str:
@@ -290,7 +300,7 @@ class DataCollection(CustomDict):
         Returns:
             The collection's version.
         """
-        return self["umm"].get("Version", "")
+        return self._umm_record().get("Version", "")
 
     @property
     def abstract(self) -> str:
@@ -299,7 +309,7 @@ class DataCollection(CustomDict):
         Returns:
             The abstract of a collection.
         """
-        return self["umm"].get("Abstract", "")
+        return self._umm_record().get("Abstract", "")
 
     @property
     def landing_page(self) -> str:
@@ -327,7 +337,8 @@ class DataCollection(CustomDict):
         Returns:
             The S3 bucket information if the collection has it (**cloud hosted collections only**).
         """
-        return self["umm"].get("DirectDistributionInformation", {})
+        info = self._umm_record().get("DirectDistributionInformation")
+        return info if isinstance(info, dict) else {}
 
     @property
     def services(self) -> dict[Any, list[dict[str, Any]]]:
@@ -606,3 +617,246 @@ class DataGranule(CustomDict):
             raise ValueError(msg) from None
 
         return _geometry_to_geojson(geometry)
+
+
+class Results[ResultItem: (DataGranule, DataCollection)](Sequence[ResultItem]):
+    """Search results, together with the search inputs that produced them.
+
+    `search_data()` returns a `GranuleResults` and `search_datasets()` returns a
+    `CollectionResults`. Both can be indexed, sliced, and iterated any number of
+    times, and both can be passed to `download()` and `open()` as before.
+
+    The keyword arguments of the search are kept in `query_params`, so the
+    search can be repeated later:
+
+    ```python
+    results = earthaccess.search_data(short_name="ATL06", count=10)
+    again = earthaccess.search_data(**results.query_params)
+    ```
+
+    Items can be supplied as a sequence (loaded up front) or as an iterator
+    (loaded the first time they are needed). Either way, each item is taken from
+    its source once and then kept, so later iterations return the same items
+    without searching again. A results object that is still loading from an
+    iterator is not safe to read from several threads at once; call `all()`
+    first.
+
+    `ResultItem` is the type of each result: `DataGranule` for `GranuleResults`
+    and `DataCollection` for `CollectionResults`. It lets type checkers and
+    editors know that `search_data(...)[0]` is a `DataGranule`.
+    """
+
+    _query_type: ClassVar[str] = "unknown"
+
+    def __init__(
+        self,
+        items: Iterable[ResultItem],
+        *,
+        query_params: Mapping[str, Any] | None = None,
+        query_options: Mapping[str, Any] | None = None,
+        hits: int | None = None,
+    ) -> None:
+        """Create a results object.
+
+        Parameters:
+            items: The results, as a sequence or as an iterator.
+            query_params: The keyword arguments of the search that produced
+                these results. Each search returns a new results object with its
+                own `query_params`. A copy is stored, so if a list or dict passed
+                to the search (a bounding box, say) is changed afterwards, the
+                stored value still matches the search that was run.
+            query_options: The CMR query options of the search, shown when the
+                results are displayed.
+            hits: The number of matches CMR reported for the search. This can be
+                larger than the number of items when the search had a `count`.
+        """
+        self._items: list[ResultItem]
+        self._source: Iterator[ResultItem] | None
+        if isinstance(items, Sequence):
+            self._items, self._source = list(items), None
+        else:
+            self._items, self._source = [], iter(items)
+        self._query_params = (
+            None if query_params is None else copy.deepcopy(dict(query_params))
+        )
+        self._query_options = (
+            None if query_options is None else copy.deepcopy(dict(query_options))
+        )
+        self._hits = hits
+
+    def _load(self, n: int | None = None) -> None:
+        """Take items from the source until `n` are loaded (`None` means all)."""
+        while self._source is not None and (n is None or len(self._items) < n):
+            try:
+                self._items.append(next(self._source))
+            except StopIteration:
+                self._source = None
+
+    @property
+    def query_params(self) -> dict[str, Any] | None:
+        """The keyword arguments of the search, or `None` if not known.
+
+        Pass them back to the same search function to repeat the search. A new
+        copy is returned on each access, so changing it does not change these
+        results.
+        """
+        return copy.deepcopy(self._query_params)
+
+    @property
+    def query_options(self) -> dict[str, Any] | None:
+        """The CMR query arguments of the search, or `None` if not known.
+
+        Pass them back to the same search function to repeat the search. A new
+        copy is returned on each access, so changing it does not change these
+        results.
+        """
+        return copy.deepcopy(self._query_options)
+
+    @property
+    def hits(self) -> int | None:
+        """The number of matches CMR reported for the search, if known."""
+        return self._hits
+
+    def all(self) -> list[ResultItem]:
+        """Return every result as a new list, loading any not yet loaded.
+
+        Returns:
+            A list of all results. Changing the list does not change these
+            results.
+        """
+        self._load()
+        return list(self._items)
+
+    def __iter__(self) -> Iterator[ResultItem]:
+        i = 0
+        while True:
+            self._load(i + 1)
+            if i >= len(self._items):
+                return
+            yield self._items[i]
+            i += 1
+
+    def __len__(self) -> int:
+        self._load()
+        return len(self._items)
+
+    def __bool__(self) -> bool:
+        self._load(1)
+        return bool(self._items)
+
+    @overload
+    def __getitem__(self, index: int) -> ResultItem: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[ResultItem]: ...
+
+    def __getitem__(self, index: int | slice) -> ResultItem | list[ResultItem]:
+        if isinstance(index, slice) or index < 0:
+            self._load()
+        else:
+            self._load(index + 1)
+        return self._items[index]
+
+    def __getstate__(self) -> dict[str, Any]:
+        # Iterators cannot be pickled, so load everything first.
+        self._load()
+        return self.__dict__.copy()
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"params={self._query_params!r}, "
+            f"options={self._query_options!r})"
+        )
+
+    def _repr_html_(self) -> str:
+        query_type = html.escape(self._query_type)
+        hits = html.escape(self._hits_label())
+        params = html.escape(str(self._query_params))
+        options = html.escape(str(self._query_options))
+        return dedent(f"""
+            <table>
+                <tr>
+                    <td>Query Type</td>
+                    <td style="text-align: left;">{query_type}</td>
+                </tr>
+                <tr>
+                    <td>Number of Results</td>
+                    <td style="text-align: left;">{hits}</td>
+                </tr>
+                <tr>
+                    <td>Query parameters</td>
+                    <td style="text-align: left;">{params}</td>
+                </tr>
+                <tr>
+                    <td>Query options</td>
+                    <td style="text-align: left;">{options}</td>
+                </tr>
+            </table>
+        """)
+
+    def __str__(self) -> str:
+        return (
+            f"Number of results: {self._hits_label()}\n"
+            f"Query parameters:\n"
+            f"{indent(pprint.pformat(self._query_params), ' ' * 4)}\n"
+            f"Query parameter options:\n"
+            f"{indent(pprint.pformat(self._query_options), ' ' * 4)}"
+        )
+
+    def _hits_label(self) -> str:
+        return "unknown" if self._hits is None else str(self._hits)
+
+
+class GranuleResults(Results[DataGranule]):
+    """Results of a granule search, as returned by `search_data()`."""
+
+    _query_type: ClassVar[str] = "DataGranulesQuery"
+
+    def to_gdf(self) -> "gpd.GeoDataFrame":
+        """Convert these granules to a GeoPandas GeoDataFrame.
+
+        This is the same as `DataGranulesQuery.to_geopandas(results)`.
+
+        Returns:
+            A GeoDataFrame with one row per granule.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            granules = earthaccess.search_data(short_name="MYD11A1", count=100)
+            gdf = granules.to_gdf()
+            ```
+        """
+        from .search import DataGranulesQuery  # noqa: PLC0415
+
+        return DataGranulesQuery.to_geopandas(self)
+
+
+class CollectionResults(Results[DataCollection]):
+    """Results of a collection search, as returned by `search_datasets()`."""
+
+    _query_type: ClassVar[str] = "DataCollectionsQuery"
+
+    def to_gdf(self) -> "gpd.GeoDataFrame":
+        """Convert these collections to a GeoPandas GeoDataFrame.
+
+        This is the same as `DataCollectionsQuery.to_geopandas(results)`.
+
+        Returns:
+            A GeoDataFrame with one row per collection.
+
+        Raises:
+            ModuleNotFoundError: If geopandas is not installed.
+
+        Example:
+            ```python
+            collections = earthaccess.search_datasets(keyword="above ground biomass")
+            gdf = collections.to_gdf()
+            ```
+        """
+        from .search import DataCollectionsQuery  # noqa: PLC0415
+
+        return DataCollectionsQuery.to_geopandas(self)

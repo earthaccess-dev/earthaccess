@@ -2,6 +2,7 @@ import contextlib
 import json
 import logging
 import os.path
+import pickle
 
 import earthaccess
 import pytest
@@ -473,3 +474,204 @@ def test_data_links_s3_uses_explicit_links_without_cloud_hosted():
     )
 
     assert granule.data_links(access="s3") == ["s3://bucket/file.nc"]
+
+
+# --- Results containers -------------------------------------------------------
+
+
+def _granule(n: int) -> DataGranule:
+    return DataGranule(
+        {
+            "meta": {"concept-id": f"G{n}-PROV", "provider-id": "PROV"},
+            "umm": {"GranuleUR": f"granule-{n}"},
+        }
+    )
+
+
+class _CountingSource:
+    """An iterator that records how many items have been taken from it."""
+
+    def __init__(self, items):
+        self._items = iter(items)
+        self.taken = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        item = next(self._items)
+        self.taken += 1
+        return item
+
+
+def test_results_from_list_can_be_iterated_repeatedly():
+    granules = [_granule(n) for n in range(3)]
+    results = earthaccess.GranuleResults(granules)
+
+    assert list(results) == granules
+    assert list(results) == granules
+    assert len(results) == 3
+    assert results[0] is granules[0]
+    assert results[-1] is granules[-1]
+    assert results[1:] == granules[1:]
+    assert bool(results)
+    assert not earthaccess.GranuleResults([])
+
+
+def test_results_from_iterator_load_once_and_only_as_needed():
+    granules = [_granule(n) for n in range(5)]
+    source = _CountingSource(granules)
+    results = earthaccess.GranuleResults(source)
+
+    assert source.taken == 0
+    assert results[1] is granules[1]
+    assert source.taken == 2
+
+    assert list(results) == granules
+    assert list(results) == granules
+    assert source.taken == 5
+
+
+def test_results_all_returns_an_independent_list():
+    granules = [_granule(n) for n in range(2)]
+    results = earthaccess.GranuleResults(iter(granules))
+
+    everything = results.all()
+    everything.clear()
+
+    assert results.all() == granules
+
+
+def test_results_query_params_are_a_snapshot():
+    bounding_box = [-10, 20, 10, 50]
+    results = earthaccess.GranuleResults(
+        [], query_params={"short_name": "ATL06", "bounding_box": bounding_box}
+    )
+
+    bounding_box.append(99)
+    returned = results.query_params
+    assert returned is not None
+    returned["short_name"] = "changed"
+
+    assert results.query_params == {
+        "short_name": "ATL06",
+        "bounding_box": [-10, 20, 10, 50],
+    }
+
+
+def test_results_display_uses_stored_search_details_without_contacting_cmr():
+    results = earthaccess.GranuleResults(
+        [_granule(0)],
+        query_params={"short_name": "ATL06"},
+        query_options={"temporal": {"exclude_boundary": True}},
+        hits=1234,
+    )
+
+    with responses.RequestsMock():  # fails if any HTTP request is made
+        text_repr = repr(results)
+        text_str = str(results)
+        text_html = results._repr_html_()
+
+    assert text_repr == (
+        "GranuleResults(params={'short_name': 'ATL06'}, "
+        "options={'temporal': {'exclude_boundary': True}})"
+    )
+    assert text_str == (
+        "Number of results: 1234\n"
+        "Query parameters:\n"
+        "    {'short_name': 'ATL06'}\n"
+        "Query parameter options:\n"
+        "    {'temporal': {'exclude_boundary': True}}"
+    )
+    for row in [
+        "<td>Query Type</td>",
+        '<td style="text-align: left;">DataGranulesQuery</td>',
+        "<td>Number of Results</td>",
+        '<td style="text-align: left;">1234</td>',
+        "<td>Query parameters</td>",
+        "<td>Query options</td>",
+    ]:
+        assert row in text_html
+
+
+def test_lazy_results_can_be_pickled():
+    granules = [_granule(n) for n in range(3)]
+    results = earthaccess.GranuleResults(iter(granules), query_params={"count": 3})
+
+    restored = pickle.loads(pickle.dumps(results))
+
+    assert [g["meta"]["concept-id"] for g in restored] == [
+        g["meta"]["concept-id"] for g in granules
+    ]
+    assert restored.query_params == {"count": 3}
+
+
+def test_search_data_records_replayable_query_params(monkeypatch):
+    granules = [_granule(n) for n in range(2)]
+    monkeypatch.setattr(DataGranulesQuery, "hits", lambda _self: 40)
+    monkeypatch.setattr(DataGranulesQuery, "get", lambda _self, _limit=0: granules)
+
+    results = earthaccess.search_data(short_name="ATL06", count=2)
+
+    assert isinstance(results, earthaccess.GranuleResults)
+    assert results.query_params == {"count": 2, "short_name": "ATL06"}
+    assert results.hits == 40
+    assert list(results) == granules
+
+    again = earthaccess.search_data(**results.query_params)
+    assert again.query_params == results.query_params
+
+
+def test_each_search_returns_results_with_its_own_query_params(monkeypatch):
+    monkeypatch.setattr(DataGranulesQuery, "hits", lambda _self: 1)
+    monkeypatch.setattr(DataGranulesQuery, "get", lambda _self, _limit=0: [])
+
+    results = earthaccess.search_data(short_name="ATL06", count=1)
+    first = results
+    results = earthaccess.search_data(
+        short_name="ATL03", temporal=("2020-01-01", "2020-02-01", True), count=1
+    )
+
+    assert results.query_params == {
+        "count": 1,
+        "short_name": "ATL03",
+        "temporal": ("2020-01-01", "2020-02-01", True),
+    }
+    assert "{'temporal': {'exclude_boundary': True}}" in repr(results)
+    assert first.query_params == {"count": 1, "short_name": "ATL06"}
+
+
+def test_search_datasets_returns_collection_results(monkeypatch):
+    collections = [DataCollection({"meta": {"concept-id": "C1-PROV"}, "umm": {}})]
+    monkeypatch.setattr(DataCollectionsQuery, "hits", lambda _self: 1)
+    monkeypatch.setattr(
+        DataCollectionsQuery, "get", lambda _self, _limit=0: collections
+    )
+
+    results = earthaccess.search_datasets(short_name="ATL06", count=1)
+
+    assert isinstance(results, earthaccess.CollectionResults)
+    assert results.query_params == {"count": 1, "short_name": "ATL06"}
+    assert results[0] is collections[0]
+
+
+@pytest.mark.parametrize("function", ["download", "open"])
+def test_download_and_open_pass_a_plain_list_to_the_store(monkeypatch, function):
+    received = []
+
+    class FakeStore:
+        def get(self, granules, *_args, **_kwargs):
+            received.append(granules)
+            return []
+
+        def open(self, granules, *_args, **_kwargs):
+            received.append(granules)
+            return []
+
+    monkeypatch.setattr(earthaccess, "__store__", FakeStore(), raising=False)
+    granules = [_granule(n) for n in range(2)]
+
+    getattr(earthaccess, function)(earthaccess.GranuleResults(iter(granules)))
+
+    assert type(received[0]) is list
+    assert received[0] == granules
