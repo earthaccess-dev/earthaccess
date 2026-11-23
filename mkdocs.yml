@@ -66,8 +66,6 @@ plugins:
       execute_ignore:
         - "user/tutorials/SSL.ipynb"
         - "user/tutorials/dmrpp-virtualizarr.ipynb"
-        - "user/tutorials/dask.ipynb"
-        - "user/howto/edl.ipynb"
         - "user/explanation/fsspec.ipynb"
       ignore:
         - "**/.ipynb_checkpoints/*"
