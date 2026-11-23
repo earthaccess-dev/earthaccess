@@ -8,8 +8,9 @@ import requests
 
 import earthaccess
 
+from ._access import AccessType, normalize_access
 from .formatters import _repr_granule_html
-from .services import DataServices
+from .services import DataServicesQuery
 
 
 @cache
@@ -20,6 +21,112 @@ def _citation(*, doi: str, format_: str, language: str) -> str:
     )
     response.raise_for_status()
     return response.text
+
+
+def _geometry_to_geojson(geometry: dict[str, Any]) -> dict[str, object]:
+    """Convert a UMM-G Geometry to a GeoJSON representation.
+
+    It is assumed that the `dict` contains only a single key-value pair,
+    and this property is the result of converting the value of that pair
+    into an equivalent GeoJSON structure, depending on the key, as follows:
+
+    |Key                   |Value converted to GeoJSON|
+    |:---------------------|:-------------------------|
+    |`"Lines"`             |`"MultiLineString"`       |
+    |`"Points"`            |`"MultiPoint"`            |
+    |`"BoundingRectangles"`|`"MultiPolygon"`          |
+    |`"GPolygons"`         |`"MultiPolygon"`          |
+
+    Parameters:
+        geometry: A UMM-G Geometry dictionary.
+
+    Returns:
+        A GeoJSON representation of the UMM-G Geometry.
+
+    Raises:
+        ValueError: If the UMM-G Geometry is invalid or unsupported.
+    """
+    if "GPolygons" in geometry:
+        return {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    # Outer ring (counterclockwise)
+                    [
+                        [point["Longitude"], point["Latitude"]]
+                        for point in poly["Boundary"]["Points"]
+                    ],
+                    # Inner rings (clockwise)
+                    *(
+                        [
+                            [point["Longitude"], point["Latitude"]]
+                            # In UMM-G, boundary points are always counterclockwise,
+                            # but GeoJSON wants inner rings to be clockwise, so we
+                            # must reverse the points in ExclusiveZone Boundaries.
+                            for point in reversed(boundary["Points"])
+                        ]
+                        # In UMM-G, ExclusiveZone is optional.
+                        for boundary in poly.get("ExclusiveZone", {}).get(
+                            "Boundaries",
+                            [],
+                        )
+                    ),
+                ]
+                for poly in geometry["GPolygons"]
+            ],
+        }
+
+    if "BoundingRectangles" in geometry:
+        return {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    [
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["EastBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["EastBoundingCoordinate"],
+                            rect["NorthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["NorthBoundingCoordinate"],
+                        ],
+                        [
+                            rect["WestBoundingCoordinate"],
+                            rect["SouthBoundingCoordinate"],
+                        ],
+                    ],
+                ]
+                for rect in geometry["BoundingRectangles"]
+            ],
+        }
+
+    if "Points" in geometry:
+        return {
+            "type": "MultiPoint",
+            "coordinates": [
+                [p["Longitude"], p["Latitude"]] for p in geometry["Points"]
+            ],
+        }
+
+    if "Lines" in geometry:
+        return {
+            "type": "MultiLineString",
+            "coordinates": [
+                [[p["Longitude"], p["Latitude"]] for p in line["Points"]]
+                for line in geometry["Lines"]
+            ],
+        }
+
+    msg = f"Invalid Geometry in granule's horizontal spatial extent: {geometry}"
+    raise ValueError(msg)
 
 
 class CustomDict(dict):
@@ -89,6 +196,7 @@ class DataCollection(CustomDict):
         "DirectDistributionInformation",
     ]
 
+    @property
     def summary(self) -> dict[str, Any]:
         """Summary containing short_name, concept-id, file-type, and cloud-info (if cloud-hosted).
 
@@ -96,29 +204,16 @@ class DataCollection(CustomDict):
             A summary of the collection metadata.
         """
         # we can print only the concept-id
-
-        warnings.warn(
-            "As of version 1.0, `DataCollection.summary` will be accessed as an "
-            "attribute; e.g. use `DataCollection.summary` **not** "
-            "`DataCollection.summary()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
-        # Only issue a single FutureWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=FutureWarning)
-
-            summary_dict: dict[str, Any]
-            summary_dict = {
-                "short-name": self.get_umm("ShortName"),
-                "concept-id": self.concept_id(),
-                "version": self.version(),
-                "file-type": self.data_type(),
-                "get-data": self.get_data(),
-            }
-            if "Region" in self.s3_bucket():
-                summary_dict["cloud-info"] = self.s3_bucket()
+        summary_dict: dict[str, Any]
+        summary_dict = {
+            "short-name": self.get_umm("ShortName"),
+            "concept-id": self.concept_id,
+            "version": self.version,
+            "file-type": self.data_type,
+            "get-data": self.data_links,
+        }
+        if "Region" in self.s3_bucket:
+            summary_dict["cloud-info"] = self.s3_bucket
 
         return summary_dict
 
@@ -133,20 +228,13 @@ class DataCollection(CustomDict):
         """
         return self["umm"].get(umm_field, "")
 
+    @property
     def doi(self) -> str | None:
         """Retrieve the Digital Object Identifier (DOI) for this collection.
 
         Returns:
             This collection's DOI information, or `None`, if it has none.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.doi` will be accessed as an "
-            "attribute; e.g. use `DataCollection.doi` **not** "
-            "`DataCollection.doi()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         doi = self["umm"].get("DOI", {})
         if isinstance(doi, dict):
             return doi.get("DOI", None)
@@ -169,140 +257,84 @@ class DataCollection(CustomDict):
         """
         return (
             None
-            if not (doi := self.doi())
+            if not (doi := self.doi)
             else _citation(doi=doi, format_=format, language=language)
         )
 
+    @property
     def concept_id(self) -> str:
         """Return the collection concept ID.
 
         Returns:
             A collection's `concept_id`.This id is the most relevant search field on granule queries.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.concept_id` will be accessed as an "
-            "attribute; e.g. use `DataCollection.concept_id` **not** "
-            "`DataCollection.concept_id()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["meta"]["concept-id"]
 
+    @property
     def data_type(self) -> str:
         """Return the collection file distribution type.
 
         Returns:
             The collection data type, i.e. HDF5, CSV etc., if available.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.data_type` will be accessed as an "
-            "attribute; e.g. use `DataCollection.data_type` **not** "
-            "`DataCollection.data_type()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return str(
             self["umm"]
             .get("ArchiveAndDistributionInformation", {})
             .get("FileDistributionInformation", ""),
         )
 
+    @property
     def version(self) -> str:
         """Return the collection version.
 
         Returns:
             The collection's version.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.version` will be accessed as an "
-            "attribute; e.g. use `DataCollection.version` **not** "
-            "`DataCollection.version()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("Version", "")
 
+    @property
     def abstract(self) -> str:
         """Return the collection abstract.
 
         Returns:
             The abstract of a collection.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.abstract` will be accessed as an "
-            "attribute; e.g. use `DataCollection.abstract` **not** "
-            "`DataCollection.abstract()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("Abstract", "")
 
+    @property
     def landing_page(self) -> str:
         """Return the first landing page link for the collection.
 
         Returns:
             The first landing page for the collection (can be many), if available.
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.landing_page` will be accessed as an "
-            "attribute; e.g. use `DataCollection.landing_page` **not** "
-            "`DataCollection.landing_page()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         links = self._filter_related_links("LANDING PAGE")
         return links[0] if len(links) > 0 else ""
 
-    def get_data(self) -> list[str]:
+    @property
+    def data_links(self) -> list[str]:
         """Return the collection GET DATA links.
 
         Returns:
             The GET DATA links (usually a landing page link, a DAAC portal, or an FTP location).
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.get_data` will be accessed as an "
-            "attribute; e.g. use `DataCollection.get_data` **not** "
-            "`DataCollection.get_data()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self._filter_related_links("GET DATA")
 
+    @property
     def s3_bucket(self) -> dict[str, Any]:
         """Return the collection direct distribution information.
 
         Returns:
             The S3 bucket information if the collection has it (**cloud hosted collections only**).
         """
-        warnings.warn(
-            "As of version 1.0, `DataCollection.s3_bucket` will be accessed as an "
-            "attribute; e.g. use `DataCollection.s3_bucket` **not** "
-            "`DataCollection.s3_bucket()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         return self["umm"].get("DirectDistributionInformation", {})
 
+    @property
     def services(self) -> dict[Any, list[dict[str, Any]]]:
         """Return list of services available for this collection."""
-        warnings.warn(
-            "As of version 1.0, `DataCollection.services` will be accessed as an "
-            "attribute; e.g. use `DataCollection.services` **not** "
-            "`DataCollection.services()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         services = self.get("meta", {}).get("associations", {}).get("services", [])
         queries = (
-            DataServices(auth=earthaccess.__auth__).parameters(concept_id=service)
+            DataServicesQuery(auth=earthaccess.__auth__).parameters(concept_id=service)
             for service in services
         )
 
@@ -318,6 +350,44 @@ class DataCollection(CustomDict):
             indent=2,
             separators=(",", ": "),
         )
+
+    @property
+    def __geo_interface__(self) -> dict[str, object]:
+        """A GeoJSON representation of this granule.
+
+        This granule must contain a `dict` value at the path
+        `self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]`.
+        It is assumed that the `dict` contains only a single key-value pair,
+        and this property is the result of converting the value of that pair
+        into an equivalent GeoJSON structure, depending on the key, as follows:
+
+        |Key                   |Value converted to GeoJSON|
+        |:---------------------|:-------------------------|
+        |`"Lines"`             |`"MultiLineString"`       |
+        |`"Points"`            |`"MultiPoint"`            |
+        |`"BoundingRectangles"`|`"MultiPolygon"`          |
+        |`"GPolygons"`         |`"MultiPolygon"`          |
+
+        Raises:
+            ValueError: If this granule does not contain a value at the path
+                `self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]`,
+                or the value there is not a `dict` containing a value for one of
+                `"Points"`, `"Lines"`, `"BoundingRectangles"`, or `"GPolygons"`.
+
+        See Also:
+            - [`__geo_interface__` Specification](https://gist.github.com/sgillies/2217756)
+            - [NASA UMM-G JSON Schema](https://git.earthdata.nasa.gov/projects/EMFD/repos/unified-metadata-model/browse/granule/v1.6.6/umm-g-json-schema.json)
+            - [The GeoJSON Format](https://datatracker.ietf.org/doc/html/rfc7946)
+        """
+        try:
+            geometry = self["umm"]["SpatialExtent"]["HorizontalSpatialDomain"][
+                "Geometry"
+            ]
+        except KeyError:
+            msg = "Granule has no horizontal spatial extent"
+            raise ValueError(msg) from None
+
+        return _geometry_to_geojson(geometry)
 
 
 class DataGranule(CustomDict):
@@ -345,7 +415,7 @@ class DataGranule(CustomDict):
         super().__init__(collection)
         self.cloud_hosted = cloud_hosted
         # TODO: maybe add area, start date and all that as an instance value
-        self["size"] = self.size()
+        self["size"] = self._size
         self.uuid = str(uuid.uuid4())
         self.render_dict: Any
         if fields is None:
@@ -372,7 +442,7 @@ class DataGranule(CustomDict):
         Collection: {self["umm"]["CollectionReference"]}
         Spatial coverage: {self["umm"]["SpatialExtent"]}
         Temporal coverage: {self["umm"]["TemporalExtent"]}
-        Size(MB): {self.size()}
+        Size(MB): {self._size}
         Data: {data_links}\n\n
         """.strip().replace("  ", "")
 
@@ -393,20 +463,13 @@ class DataGranule(CustomDict):
                 return link["URL"]
         return None
 
-    def size(self) -> float:
+    @property
+    def _size(self) -> float:
         """Return the total granule size in MB.
 
         Returns:
             The total size for the granule in MB.
         """
-        warnings.warn(
-            "As of version 1.0, `DataGranule.size` will be accessed as an "
-            "attribute; e.g. use `DataCollection.size` **not** "
-            "`DataCollection.size()`",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-
         try:
             data_granule = self["umm"]["DataGranule"]
             total_size = sum(
@@ -430,6 +493,15 @@ class DataGranule(CustomDict):
                 total_size = 0
         return total_size
 
+    @property
+    def size(self) -> float:
+        """Return the total granule size in MB.
+
+        Returns:
+            The total size for the granule in MB.
+        """
+        return self._size
+
     def _derive_s3_link(self, links: list[str]) -> list[str]:
         s3_links = []
         for link in links:
@@ -438,52 +510,57 @@ class DataGranule(CustomDict):
             elif link.startswith("https://") and (
                 "cumulus" in link or "protected" in link
             ):
-                s3_links.append(f"s3://{link.split('nasa.gov/')[1]}")
+                _, separator, suffix = link.partition("nasa.gov/")
+                if separator:
+                    s3_links.append(f"s3://{suffix}")
         return s3_links
 
     def data_links(
         self,
-        access: str | None = None,
-        in_region: bool = False,  # noqa: FBT001, FBT002
+        access: AccessType | None = None,
+        in_region: bool | None = None,  # noqa: FBT001
     ) -> list[str]:
         """Return data links for the requested granule access mode.
 
         Returns the data links from a granule.
 
         Parameters:
-            access: direct or external.
-                Direct means in-region access for cloud-hosted collections.
-            in_region: True if we are running in us-west-2.
-                It is meant for the store class.
+            access: ``"https"`` (default) or ``"s3"``. Legacy values
+                ``"external"`` and ``"indirect"`` map to HTTPS, and ``"direct"``
+                maps to S3.
+            in_region: Deprecated. Use ``access`` instead.
 
         Returns:
             The data links for the requested access type.
         """
+        if in_region is not None:
+            warnings.warn(
+                "`in_region` is deprecated; use `access='s3'` or "
+                "`access='https'` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if access is None:
+                # Preserve the old in_region behavior for on-prem granules.
+                access = "s3" if in_region and self.cloud_hosted else "https"
+
+        canonical_access = normalize_access(access)
         https_links = self._filter_related_links("GET DATA")
         s3_links = self._filter_related_links("GET DATA VIA DIRECT ACCESS")
-        if in_region:
-            # we are in us-west-2
-            if self.cloud_hosted and access in (None, "direct"):
-                # this is a cloud collection, and we didn't specify the access type
-                # default to S3 links
-                if len(s3_links) == 0 and len(https_links) > 0:
-                    # This is guessing the S3 links for some cloud collections that for
-                    # some reason only offered HTTPS links
-                    return self._derive_s3_link(https_links)
-                # we have the s3 links so we return those
-                return s3_links
-            # Even though we are in us-west-2, the user wants the HTTPS links used in-region.
-            # They are S3 signed links from TEA.
-            # <https://github.com/asfadmin/thin-egress-app>
-            return https_links
-        # we are not in-region
-        if access == "direct":
-            # maybe the user wants to collect S3 links and use them later
-            # from the cloud
-            return s3_links
-        # we are not in us-west-2, even cloud collections have HTTPS links
-        return https_links
 
+        if canonical_access == "https":
+            return https_links
+
+        if s3_links:
+            return s3_links
+
+        if self.cloud_hosted:
+            # This is guessing the S3 links for some cloud collections that for
+            # some reason only offered HTTPS links
+            return self._derive_s3_link(https_links)
+        return []
+
+    @property
     def dataviz_links(self) -> list[str]:
         """Return related visualization links for the granule.
 
@@ -528,84 +605,4 @@ class DataGranule(CustomDict):
             msg = "Granule has no horizontal spatial extent"
             raise ValueError(msg) from None
 
-        if "GPolygons" in geometry:
-            return {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [
-                        # Outer ring (counterclockwise)
-                        [
-                            [point["Longitude"], point["Latitude"]]
-                            for point in poly["Boundary"]["Points"]
-                        ],
-                        # Inner rings (clockwise)
-                        *(
-                            [
-                                [point["Longitude"], point["Latitude"]]
-                                # In UMM-G, boundary points are always counterclockwise,
-                                # but GeoJSON wants inner rings to be clockwise, so we
-                                # must reverse the points in ExclusiveZone Boundaries.
-                                for point in reversed(boundary["Points"])
-                            ]
-                            # In UMM-G, ExclusiveZone is optional.
-                            for boundary in poly.get("ExclusiveZone", {}).get(
-                                "Boundaries",
-                                [],
-                            )
-                        ),
-                    ]
-                    for poly in geometry["GPolygons"]
-                ],
-            }
-
-        if "BoundingRectangles" in geometry:
-            return {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [
-                        [
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["EastBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["EastBoundingCoordinate"],
-                                rect["NorthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["NorthBoundingCoordinate"],
-                            ],
-                            [
-                                rect["WestBoundingCoordinate"],
-                                rect["SouthBoundingCoordinate"],
-                            ],
-                        ],
-                    ]
-                    for rect in geometry["BoundingRectangles"]
-                ],
-            }
-
-        if "Points" in geometry:
-            return {
-                "type": "MultiPoint",
-                "coordinates": [
-                    [p["Longitude"], p["Latitude"]] for p in geometry["Points"]
-                ],
-            }
-
-        if "Lines" in geometry:
-            return {
-                "type": "MultiLineString",
-                "coordinates": [
-                    [[p["Longitude"], p["Latitude"]] for p in line["Points"]]
-                    for line in geometry["Lines"]
-                ],
-            }
-
-        msg = f"Invalid Geometry in granule's horizontal spatial extent: {geometry}"
-        raise ValueError(msg)
+        return _geometry_to_geojson(geometry)

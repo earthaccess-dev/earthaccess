@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling>=1.27.0,<1.28", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -33,6 +33,7 @@ classifiers = [
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development",
   "License :: OSI Approved :: MIT License",
@@ -65,6 +66,7 @@ Changelog = "https://github.com/earthaccess-dev/earthaccess/blob/main/CHANGELOG.
 all = [
   "earthaccess[kerchunk]",
   "earthaccess[virtualizarr]",
+  "earthaccess[geopandas]",
 ]
 
 kerchunk = [
@@ -86,6 +88,9 @@ virtualizarr = [
   "fastparquet >= 2023.4.0",
   "numcodecs >= 0.16.2",
   "xarray",
+]
+geopandas =[
+  "geopandas>=1.0",
 ]
 
 [dependency-groups]
@@ -212,8 +217,6 @@ ignore = [
   "COM812",
   "D1",
   "D205",
-  "D401",
-  "D417",
   "E501",
   "FIX002",
   "PT006",
@@ -237,12 +240,13 @@ combine-as-imports = true
 "*.ipynb" = ["T201", "T203", "N803", "RET504", "ERA001", "PLR2004", "PD002", "PD010", "PD011", "EM", "ARG001", "BLE001", "FBT","TRY003"]
 "tests/**/*.py" = ["PLR2004", "FBT", "INP001", "SLF001", "S101", "S108", "S301", "S603", "S607"]
 "scripts/**/*.py" = ["INP001"]
+"scripts/openscapes_integration.py" = ["PLR0915", "PLR2004", "T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.bumpversion]
-current_version = "0.18.0"
+current_version = "0.19.0"
 commit = false
 tag = true
 allow_dirty = false

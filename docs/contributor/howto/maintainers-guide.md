@@ -50,3 +50,33 @@ The GitHub Actions CI services handle the project's building, testing, and manag
 ## Continuous Documentation
 
 [ReadTheDocs](https://readthedocs.org/projects/earthaccess/) is used to generate and host [our documentation website](https://earthaccess.readthedocs.io/) as well as the preview for documentation changes made in pull requests. This service uses a configuration file in the root of the project, `.readthedocs.yml`.
+
+## Community Automations
+
+We use a few GitHub bots and workflows to keep the community side of the project moving. Their configuration lives in the `.github/` directory.
+
+### Stale bot
+
+We use [Issue Manager](https://github.com/tiangolo/issue-manager) (`issue-manager.yml`) as our "stale" bot. When an issue is labeled `feedback requested` and goes 10 days without a response, the bot closes it and leaves a comment letting the author know they can re-open it, `@` a maintainer, or open a new issue.
+
+The bot runs once a day (midnight UTC), and also responds to issues and pull requests being labeled or commented on.
+
+### Dependency updates
+
+[Dependabot](https://docs.github.com/en/code-security/dependabot) (`dependabot.yml`) opens pull requests to keep our Python and GitHub Actions dependencies up to date on a quarterly schedule.
+
+### Pull request helpers
+
+A few bots make life easier on pull requests:
+
+- **Binder badge** (`binder-badge.yml`): adds a "Launch Binder" link to every pull request, so changes can be tried in a live notebook.
+- **ReadTheDocs preview link** (`pr-rtd-link.yml`): adds a documentation preview link to each pull request description.
+- **Integration test review comment** (`integration-test-review.yml`): when integration tests fail because the author doesn't have permission to run them, this leaves a comment asking a maintainer to do a security review and re-run the tests.
+
+### Issue metrics
+
+The issue metrics workflow (`issue-metrics.yml`) posts a monthly report summarizing issue activity.
+
+### Collaboration Cafe discussions
+
+A manually-triggered workflow (`discussions.yml`) creates a discussion thread for each Collaboration Cafe.

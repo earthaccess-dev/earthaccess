@@ -17,6 +17,12 @@ The are two **access** methods available in `earthaccess`.  The first method is 
 ```python
 filelist = earthaccess.download(results)
 ```
+
+By default, downloads use HTTPS, which works from anywhere. If you are running in the AWS `us-west-2` region, you can opt into direct S3 downloads with `access="s3"`.
+
+```python
+filelist = earthaccess.download(results, access="s3")
+```
 ```
 QUEUEING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 1706.04it/s]
 PROCESSING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  6.89s/it]
@@ -74,6 +80,12 @@ Streaming data with the `open` method is very similar to `download`.
 ```python
 fileobjects = earthaccess.open(results)
 ```
+
+`open` also uses HTTPS by default. Use `access="s3"` for direct S3 access.
+
+```python
+fileobjects = earthaccess.open(results, access="s3")
+```
 ```
 QUEUEING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 1706.04it/s]
 PROCESSING TASKS | : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  6.89s/it]
@@ -108,3 +120,10 @@ Two key parameters control the efficiency of file access; cache type and block-s
 | Small | < 100 MB | 4 MB |
 | Medium | < 1 GB | 8 MB |
 | Large | > 1 GB | 16 MB |
+
+
+## HTTPS or S3 access?
+
+For cloud-hosted data, both options read the same files from NASA's S3 buckets, which are typically in AWS us-west-2. With `access="https"` (the default), earthaccess goes through a distribution service, which checks your Earthdata Login and redirects you to a temporary signed URL for the file. This works from anywhere. With `access="s3"`, earthaccess reads the bucket directly using temporary AWS credentials. This only works from inside the data's region (usually us-west-2), but it skips the redirect step and is usually faster when reading many files or small chunks. Data that is not cloud-hosted is only available over HTTPS.
+
+If you previously relied on earthaccess automatically choosing S3 in us-west-2 (for example, on a cloud JupyterHub), add `access="s3"` to keep that behavior.

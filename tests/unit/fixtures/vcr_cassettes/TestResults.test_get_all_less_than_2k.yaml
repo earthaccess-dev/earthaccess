@@ -2092,4 +2092,43 @@ interactions:
       status:
         code: 200
         message: OK
+  - request:
+      body: null
+      headers:
+        Accept:
+          - "*/*"
+        Accept-Encoding:
+          - gzip, deflate
+        Connection:
+          - keep-alive
+        User-Agent:
+          - python-requests/2.31.0
+        cmr-search-after:
+          - '["pocloud",1495497600000,2658328520]'
+      method: GET
+      uri: https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=TELLUS_GRAC_L3_JPL_RL06_LND_v04&page_size=2000
+    response:
+      body:
+        string: '{"hits":163,"took":1,"items":[]}'
+      headers:
+        Access-Control-Allow-Origin:
+          - "*"
+        CMR-Hits:
+          - "163"
+        CMR-Request-Id:
+          - 00000000-0000-0000-0000-000000000000
+        CMR-Took:
+          - "1"
+        Connection:
+          - keep-alive
+        Content-Type:
+          - application/vnd.nasa.cmr.umm_results+json;version=1.6.5; charset=utf-8
+        Server:
+          - ServerTokens ProductOnly
+        Strict-Transport-Security:
+          - max-age=31536000; includeSubDomains; preload
+      status:
+        code: 200
+        message: OK
+
 version: 1
