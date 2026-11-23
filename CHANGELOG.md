@@ -48,6 +48,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   ([@mfisher87](https://github.com/mfisher87),
   [@JessicaS11](https://github.com/JessicaS11),
   [@danielfromearth](https://github.com/danielfromearth))
+  [@jhkennedy](https://github.com/jhkennedy)
+  [@ebolch](https://github.com/ebolch)
 
 ### Added
 
