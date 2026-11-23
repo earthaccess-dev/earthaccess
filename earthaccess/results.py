@@ -703,6 +703,16 @@ class Results[ResultItem: (DataGranule, DataCollection)](Sequence[ResultItem]):
         return copy.deepcopy(self._query_params)
 
     @property
+    def query_options(self) -> dict[str, Any] | None:
+        """The CMR query arguments of the search, or `None` if not known.
+
+        Pass them back to the same search function to repeat the search. A new
+        copy is returned on each access, so changing it does not change these
+        results.
+        """
+        return copy.deepcopy(self._query_options)
+
+    @property
     def hits(self) -> int | None:
         """The number of matches CMR reported for the search, if known."""
         return self._hits
