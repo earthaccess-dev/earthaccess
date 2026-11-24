@@ -14,6 +14,29 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `DataServicesQuery`.
   ([#1363](https://github.com/earthaccess-dev/earthaccess/issues/1363))
   ([@Sherwin-14](https://github.com/Sherwin-14))
+<<<<<<< Updated upstream
+=======
+- `search_data()` and `search_datasets()` now return `GranuleResults` and
+  `CollectionResults` objects instead of lists. These work like lists (looping,
+  indexing, `len()`) and can still be passed to `download()` and `open()`. If
+  your code needs an actual list, use `list(results)`.
+  ([#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
+  ([@mfisher87](https://github.com/mfisher87),
+  [@JessicaS11](https://github.com/JessicaS11),
+  [@danielfromearth](https://github.com/danielfromearth)
+  [@jhkennedy](https://github.com/jhkennedy)
+  [@ebolch](https://github.com/ebolch))
+
+### Added
+
+- Search results remember the search that produced them, so you can repeat it
+  with `earthaccess.search_data(**results.query_params)`.
+  ([#847](https://github.com/earthaccess-dev/earthaccess/discussions/847),
+  [#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
+- Search results can be converted to a GeoPandas GeoDataFrame with
+  `results.to_gdf()`.
+  ([#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
+>>>>>>> Stashed changes
 
 ## [v0.19.0] - 2026-09-03
 
