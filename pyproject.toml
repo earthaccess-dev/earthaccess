@@ -246,7 +246,7 @@ combine-as-imports = true
 convention = "google"
 
 [tool.bumpversion]
-current_version = "0.19.0"
+current_version = "1.0.0"
 commit = false
 tag = true
 allow_dirty = false
