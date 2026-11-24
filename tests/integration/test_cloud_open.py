@@ -55,7 +55,7 @@ def supported_collection(data_links):
 
 
 @pytest.mark.parametrize("daac", daacs_list)
-def test_earthaccess_can_open_onprem_collection_granules(daac):
+def test_earthaccess_can_open_onprem_collection_granules(daac, access):
     """Tests that we can open cloud collections using HTTPS links."""
     provider = daac["provider_name"]
     n_for_top_collections = daac["n_for_top_collections"]
@@ -103,7 +103,7 @@ def test_earthaccess_can_open_onprem_collection_granules(daac):
         )
         store = Store(Auth().login(strategy="environment"))
         # We are testing this method
-        fileset = store.open(granules_to_open)
+        fileset = store.open(granules_to_open, access=access)
 
         assert isinstance(fileset, list)
 
@@ -115,11 +115,11 @@ def test_earthaccess_can_open_onprem_collection_granules(daac):
                 logger.warning("File could not be open: %s", file)
 
 
-def test_multi_file_granule():
+def test_multi_file_granule(access):
     # Ensure granules that contain multiple files are handled correctly
     granules = earthaccess.search_data(short_name="HLSL30", count=1)
     assert len(granules) == 1
-    urls = granules[0].data_links()
+    urls = granules[0].data_links(access=access)
     assert len(urls) > 1
-    files = earthaccess.open(granules)
-    assert set(urls) == {f.path for f in files}
+    files = earthaccess.open(granules, access=access)
+    assert {url.removeprefix("s3://") for url in urls} == {f.path for f in files}

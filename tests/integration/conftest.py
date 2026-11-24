@@ -31,3 +31,11 @@ def mock_netrc(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch):
         f"machine urs.earthdata.nasa.gov login {username} password {password}\n",
     )
     netrc.chmod(0o600)
+
+
+@pytest.fixture(params=["https", "s3"])
+def access(request: pytest.FixtureRequest) -> str:
+    """Access modes to exercise in the integration suite."""
+    if request.param == "s3" and os.environ.get("EARTHACCESS_TEST_S3") != "1":
+        pytest.skip("S3 integration tests require EARTHACCESS_TEST_S3=1")
+    return str(request.param)

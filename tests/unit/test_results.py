@@ -2,8 +2,10 @@ import contextlib
 import json
 import logging
 import os.path
+import pickle
 
 import earthaccess
+import pytest
 import responses
 from earthaccess.results import DataCollection, DataGranule
 from earthaccess.search import DataCollectionsQuery, DataGranulesQuery
@@ -118,19 +120,9 @@ class TestResults(VCRTestCase):
         )
 
         g = granules[0]
-        # `access` specified
-        assert g.data_links(access="direct")[0].startswith("s3://")
-        assert g.data_links(access="external")[0].startswith("https://")
-        # `in_region` specified
-        assert g.data_links(in_region=True)[0].startswith("s3://")
-        assert g.data_links(in_region=False)[0].startswith("https://")
-        # When `access` and `in_region` are both specified, `access` takes priority
-        assert g.data_links(access="direct", in_region=True)[0].startswith("s3://")
-        assert g.data_links(access="direct", in_region=False)[0].startswith("s3://")
-        assert g.data_links(access="external", in_region=True)[0].startswith("https://")
-        assert g.data_links(access="external", in_region=False)[0].startswith(
-            "https://",
-        )
+        assert g.data_links()[0].startswith("https://")
+        assert g.data_links(access="https")[0].startswith("https://")
+        assert g.data_links(access="s3")[0].startswith("s3://")
 
     def test_get_more_than_2000(self):
         """If we execute a get with a limit of more than 2000
@@ -365,6 +357,44 @@ def test_get_citation_returns_none_when_doi_empty():
     assert collection.citation(format="apa", language="en-US") is None
 
 
+@pytest.mark.parametrize(
+    ("access", "expected_prefix"),
+    [
+        pytest.param(None, "https://", id="default"),
+        pytest.param("https", "https://", id="https"),
+        pytest.param("external", "https://", id="legacy-external"),
+        pytest.param("indirect", "https://", id="legacy-indirect"),
+        pytest.param("s3", "s3://", id="s3"),
+        pytest.param("direct", "s3://", id="legacy-direct"),
+    ],
+)
+def test_data_links_access_aliases(access, expected_prefix):
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {
+                        "URL": "https://data.example.nasa.gov/protected/coll/file.nc",
+                        "Type": "GET DATA",
+                    },
+                    {
+                        "URL": "s3://protected/coll/file.nc",
+                        "Type": "GET DATA VIA DIRECT ACCESS",
+                    },
+                ],
+            },
+            "meta": {},
+        },
+        cloud_hosted=True,
+    )
+
+    kwargs = {} if access is None else {"access": access}
+    links = granule.data_links(**kwargs)
+
+    assert links
+    assert all(link.startswith(expected_prefix) for link in links)
+
+
 def test_derived_s3_links_use_each_link_not_just_the_first():
     """When a cloud granule only offers HTTPS links, each derived S3 link should
     come from its own HTTPS link, not from the first one repeated.
@@ -388,7 +418,7 @@ def test_derived_s3_links_use_each_link_not_just_the_first():
         cloud_hosted=True,
     )
 
-    s3_links = granule.data_links(in_region=True)
+    s3_links = granule.data_links(access="s3")
 
     assert s3_links == [
         "s3://protected/coll/file_a.nc",
@@ -396,3 +426,252 @@ def test_derived_s3_links_use_each_link_not_just_the_first():
     ]
     # Each input link maps to a distinct S3 URL; the first is not duplicated.
     assert len(set(s3_links)) == len(s3_links)
+
+
+def test_data_links_in_region_preserves_https_for_https():
+    url = "https://example.com/data/file.nc"
+    granule = DataGranule(
+        {
+            "umm": {"RelatedUrls": [{"URL": url, "Type": "GET DATA"}]},
+            "meta": {},
+        },
+        cloud_hosted=False,
+    )
+
+    with pytest.deprecated_call():
+        links = granule.data_links(in_region=True)
+
+    assert links == [url]
+
+
+def test_data_links_s3_skips_unrecognized_protected_urls():
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "https://example.com/protected_file.nc", "Type": "GET DATA"}
+                ]
+            },
+            "meta": {},
+        },
+        cloud_hosted=True,
+    )
+
+    assert granule.data_links(access="s3") == []
+
+
+def test_data_links_s3_uses_explicit_links_without_cloud_hosted():
+    granule = DataGranule(
+        {
+            "umm": {
+                "RelatedUrls": [
+                    {"URL": "s3://bucket/file.nc", "Type": "GET DATA VIA DIRECT ACCESS"}
+                ]
+            },
+            "meta": {},
+        },
+        cloud_hosted=False,
+    )
+
+    assert granule.data_links(access="s3") == ["s3://bucket/file.nc"]
+
+
+# --- Results containers -------------------------------------------------------
+
+
+def _granule(n: int) -> DataGranule:
+    return DataGranule(
+        {
+            "meta": {"concept-id": f"G{n}-PROV", "provider-id": "PROV"},
+            "umm": {"GranuleUR": f"granule-{n}"},
+        }
+    )
+
+
+class _CountingSource:
+    """An iterator that records how many items have been taken from it."""
+
+    def __init__(self, items):
+        self._items = iter(items)
+        self.taken = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        item = next(self._items)
+        self.taken += 1
+        return item
+
+
+def test_results_from_list_can_be_iterated_repeatedly():
+    granules = [_granule(n) for n in range(3)]
+    results = earthaccess.GranuleResults(granules)
+
+    assert list(results) == granules
+    assert list(results) == granules
+    assert len(results) == 3
+    assert results[0] is granules[0]
+    assert results[-1] is granules[-1]
+    assert results[1:] == granules[1:]
+    assert bool(results)
+    assert not earthaccess.GranuleResults([])
+
+
+def test_results_from_iterator_load_once_and_only_as_needed():
+    granules = [_granule(n) for n in range(5)]
+    source = _CountingSource(granules)
+    results = earthaccess.GranuleResults(source)
+
+    assert source.taken == 0
+    assert results[1] is granules[1]
+    assert source.taken == 2
+
+    assert list(results) == granules
+    assert list(results) == granules
+    assert source.taken == 5
+
+
+def test_results_all_returns_an_independent_list():
+    granules = [_granule(n) for n in range(2)]
+    results = earthaccess.GranuleResults(iter(granules))
+
+    everything = results.all()
+    everything.clear()
+
+    assert results.all() == granules
+
+
+def test_results_query_params_are_a_snapshot():
+    bounding_box = [-10, 20, 10, 50]
+    results = earthaccess.GranuleResults(
+        [], query_params={"short_name": "ATL06", "bounding_box": bounding_box}
+    )
+
+    bounding_box.append(99)
+    returned = results.query_params
+    assert returned is not None
+    returned["short_name"] = "changed"
+
+    assert results.query_params == {
+        "short_name": "ATL06",
+        "bounding_box": [-10, 20, 10, 50],
+    }
+
+
+def test_results_display_uses_stored_search_details_without_contacting_cmr():
+    results = earthaccess.GranuleResults(
+        [_granule(0)],
+        query_params={"short_name": "ATL06"},
+        query_options={"temporal": {"exclude_boundary": True}},
+        hits=1234,
+    )
+
+    with responses.RequestsMock():  # fails if any HTTP request is made
+        text_repr = repr(results)
+        text_str = str(results)
+        text_html = results._repr_html_()
+
+    assert text_repr == (
+        "GranuleResults(params={'short_name': 'ATL06'}, "
+        "options={'temporal': {'exclude_boundary': True}})"
+    )
+    assert text_str == (
+        "Number of results: 1234\n"
+        "Query parameters:\n"
+        "    {'short_name': 'ATL06'}\n"
+        "Query parameter options:\n"
+        "    {'temporal': {'exclude_boundary': True}}"
+    )
+    for row in [
+        "<td>Query Type</td>",
+        '<td style="text-align: left;">DataGranulesQuery</td>',
+        "<td>Number of Results</td>",
+        '<td style="text-align: left;">1234</td>',
+        "<td>Query parameters</td>",
+        "<td>Query options</td>",
+    ]:
+        assert row in text_html
+
+
+def test_lazy_results_can_be_pickled():
+    granules = [_granule(n) for n in range(3)]
+    results = earthaccess.GranuleResults(iter(granules), query_params={"count": 3})
+
+    restored = pickle.loads(pickle.dumps(results))
+
+    assert [g["meta"]["concept-id"] for g in restored] == [
+        g["meta"]["concept-id"] for g in granules
+    ]
+    assert restored.query_params == {"count": 3}
+
+
+def test_search_data_records_replayable_query_params(monkeypatch):
+    granules = [_granule(n) for n in range(2)]
+    monkeypatch.setattr(DataGranulesQuery, "hits", lambda _self: 40)
+    monkeypatch.setattr(DataGranulesQuery, "get", lambda _self, _limit=0: granules)
+
+    results = earthaccess.search_data(short_name="ATL06", count=2)
+
+    assert isinstance(results, earthaccess.GranuleResults)
+    assert results.query_params == {"count": 2, "short_name": "ATL06"}
+    assert results.hits == 40
+    assert list(results) == granules
+
+    again = earthaccess.search_data(**results.query_params)
+    assert again.query_params == results.query_params
+
+
+def test_each_search_returns_results_with_its_own_query_params(monkeypatch):
+    monkeypatch.setattr(DataGranulesQuery, "hits", lambda _self: 1)
+    monkeypatch.setattr(DataGranulesQuery, "get", lambda _self, _limit=0: [])
+
+    results = earthaccess.search_data(short_name="ATL06", count=1)
+    first = results
+    results = earthaccess.search_data(
+        short_name="ATL03", temporal=("2020-01-01", "2020-02-01", True), count=1
+    )
+
+    assert results.query_params == {
+        "count": 1,
+        "short_name": "ATL03",
+        "temporal": ("2020-01-01", "2020-02-01", True),
+    }
+    assert "{'temporal': {'exclude_boundary': True}}" in repr(results)
+    assert first.query_params == {"count": 1, "short_name": "ATL06"}
+
+
+def test_search_datasets_returns_collection_results(monkeypatch):
+    collections = [DataCollection({"meta": {"concept-id": "C1-PROV"}, "umm": {}})]
+    monkeypatch.setattr(DataCollectionsQuery, "hits", lambda _self: 1)
+    monkeypatch.setattr(
+        DataCollectionsQuery, "get", lambda _self, _limit=0: collections
+    )
+
+    results = earthaccess.search_datasets(short_name="ATL06", count=1)
+
+    assert isinstance(results, earthaccess.CollectionResults)
+    assert results.query_params == {"count": 1, "short_name": "ATL06"}
+    assert results[0] is collections[0]
+
+
+@pytest.mark.parametrize("function", ["download", "open"])
+def test_download_and_open_pass_a_plain_list_to_the_store(monkeypatch, function):
+    received = []
+
+    class FakeStore:
+        def get(self, granules, *_args, **_kwargs):
+            received.append(granules)
+            return []
+
+        def open(self, granules, *_args, **_kwargs):
+            received.append(granules)
+            return []
+
+    monkeypatch.setattr(earthaccess, "__store__", FakeStore(), raising=False)
+    granules = [_granule(n) for n in range(2)]
+
+    getattr(earthaccess, function)(earthaccess.GranuleResults(iter(granules)))
+
+    assert type(received[0]) is list
+    assert received[0] == granules

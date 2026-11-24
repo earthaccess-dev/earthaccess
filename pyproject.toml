@@ -132,12 +132,17 @@ docs = [
   "mkdocs-redirects >=1.2.1",
   "markdown-callouts >=0.2.0",
   "markdown-include >=0.6",
-  "mkdocs-jupyter >=0.19.0",
+  # >=0.26 adds notebook conversion caching (cache/cache_dir options)
+  "mkdocs-jupyter >=0.26.3",
   "mkdocs-mermaid2-plugin >=1.2.1",
   "mkdocs-pandoc >=0.2.0",
   "mkdocstrings[python] >=0.19.0",
   "pymdown-extensions >=9.2",
-  "pygments >=2.11.1",
+  # pygments 2.20.0 crashes with pymdown-extensions when rendering
+  # docstring examples (HtmlFormatter receives filename=None and pygments
+  # calls html.escape() on it -> AttributeError). Keep pygments below 2.20
+  # so the docs build works identically across uv and conda environments.
+  "pygments >=2.11.1,<2.20",
   "xarray",
   "h5netcdf",
   "matplotlib >=3.3",
@@ -235,6 +240,7 @@ combine-as-imports = true
 "*.ipynb" = ["T201", "T203", "N803", "RET504", "ERA001", "PLR2004", "PD002", "PD010", "PD011", "EM", "ARG001", "BLE001", "FBT","TRY003"]
 "tests/**/*.py" = ["PLR2004", "FBT", "INP001", "SLF001", "S101", "S108", "S301", "S603", "S607"]
 "scripts/**/*.py" = ["INP001"]
+"scripts/openscapes_integration.py" = ["PLR0915", "PLR2004", "T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

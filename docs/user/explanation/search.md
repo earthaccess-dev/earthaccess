@@ -25,7 +25,7 @@ results = earthaccess.search_datasets(
     )
 ```
 
-`search_datasets` returns a Python list of results.  We can find the number of datasets using the built-in Python `len()` function.  If there are no matches for the search, the list is empty with length 0.
+`search_datasets` returns the results as a `CollectionResults` object, which works like a Python list.  We can find the number of datasets using the built-in Python `len()` function.  If there are no matches for the search, the results are empty with length 0.
 
 ```python
 print(len(result))
