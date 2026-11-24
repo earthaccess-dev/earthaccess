@@ -7,6 +7,11 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Changed
+
+- Updated PR Guide to redefine scope of changelog.
+  ([#1511](https://github.com/earthaccess-dev/earthaccess/pull/1511)
+
 ## [v1.0.0] - 2026-11-24
 
 ### Breaking changes
