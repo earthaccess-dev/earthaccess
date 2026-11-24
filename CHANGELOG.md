@@ -7,6 +7,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [v1.0.0] - 2026-11-24
+
 ### Breaking changes
 
 - Renamed the query classes `DataCollections`, `DataGranules`, and
@@ -770,4 +772,5 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 [v0.17.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.16.0...v0.17.0
 [v0.18.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.17.0...v0.18.0
 [v0.19.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.18.0...v0.19.0
-[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v0.19.0...HEAD
+[v1.0.0]: https://github.com/earthaccess-dev/earthaccess/compare/v0.19.0...v1.0.0
+[Unreleased]: https://github.com/earthaccess-dev/earthaccess/compare/v1.0.0...HEAD
