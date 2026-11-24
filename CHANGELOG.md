@@ -57,6 +57,32 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   [@chuckwondo](https://github.com/chuckwondo),
   [@andypbarrett](https://github.com/andypbarrett))
 
+### Changed
+
+- Reorganized the user how-to guides into focused, single-task guides:
+  authentication by strategy (`.netrc`, environment variables), data access
+  (download, stream to xarray, get granule URLs, get OPeNDAP links), and search
+  (by time range, polygon, instrument, and keyword).
+  ([#1480](https://github.com/earthaccess-dev/earthaccess/pull/1480),
+  [#1492](https://github.com/earthaccess-dev/earthaccess/pull/1492),
+  [#1496](https://github.com/earthaccess-dev/earthaccess/pull/1496))
+  ([@andypbarrett](https://github.com/andypbarrett))
+- Revised the contributor guide landing page with updated links and an
+  overview of how the documentation is organized.
+  ([#1476](https://github.com/earthaccess-dev/earthaccess/pull/1476))
+  ([@saberbrasher](https://github.com/saberbrasher))
+- Added issue prioritization and a high-level triage workflow to the triaging
+  guide.
+  ([#1308](https://github.com/earthaccess-dev/earthaccess/pull/1308))
+  ([@asteiker](https://github.com/asteiker))
+- Documented community automations in the maintainers guide.
+  ([#1466](https://github.com/earthaccess-dev/earthaccess/pull/1466))
+  ([@Sherwin-14](https://github.com/Sherwin-14))
+- Updated the AI policy to frame contributions as a reciprocal engagement and
+  explain the reasoning behind the policy.
+  ([#1474](https://github.com/earthaccess-dev/earthaccess/pull/1474))
+  ([@danielfromearth](https://github.com/danielfromearth))
+
 ### Added
 
 - Search results remember the search that produced them, so you can repeat it
@@ -74,6 +100,20 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `DataCollection`.
   ([#1461](https://github.com/earthaccess-dev/earthaccess/pull/1461))
   ([@rupesh2](https://github.com/rupesh2))
+- Added a tutorial on streaming data instead of downloading it.
+  ([#1427](https://github.com/earthaccess-dev/earthaccess/pull/1427))
+  ([@betolink](https://github.com/betolink))
+- Added documentation and code style guides for contributors.
+  ([#1470](https://github.com/earthaccess-dev/earthaccess/pull/1470))
+  ([@Sherwin-14](https://github.com/Sherwin-14))
+
+### Removed
+
+- Removed the outdated Earthdata Login how-to notebook and the restricted
+  datasets tutorial.
+  ([#1481](https://github.com/earthaccess-dev/earthaccess/pull/1481),
+  [#1486](https://github.com/earthaccess-dev/earthaccess/pull/1486))
+  ([@saberbrasher](https://github.com/saberbrasher))
 
 
 ## [v0.19.0] - 2026-09-03
@@ -114,6 +154,20 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   ([#1428](https://github.com/earthaccess-dev/earthaccess/pull/1428))
   ([@mfisher87](https://github.com/mfisher87))
 
+### Changed
+
+- Restructured the documentation navigation into how-to, explanation, and
+  reference sections, revised the user guide landing page, and moved the
+  fsspec notebook to the explanation section.
+  ([#1360](https://github.com/earthaccess-dev/earthaccess/pull/1360),
+  [#1364](https://github.com/earthaccess-dev/earthaccess/pull/1364),
+  [#1393](https://github.com/earthaccess-dev/earthaccess/pull/1393))
+  ([@saberbrasher](https://github.com/saberbrasher))
+- Added CI badge, Earthdata Login setup, citation, and related-packages
+  sections to the README.
+  ([#1441](https://github.com/earthaccess-dev/earthaccess/pull/1441))
+  ([@danielfromearth](https://github.com/danielfromearth))
+
 ### Added
 
 - Added an AI policy documenting expectations for AI-assisted contributions,
@@ -128,6 +182,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Python 3.14 is now supported.
   ([#1307](https://github.com/earthaccess-dev/earthaccess/issues/1307))
   ([@danielfromearth](https://github.com/danielfromearth))
+
+### Removed
+
+- Removed obsolete or empty how-to guides (on-prem access, searching
+  collections, storage location) and the outdated tutorial on accessing remote
+  files.
+  ([#1392](https://github.com/earthaccess-dev/earthaccess/pull/1392),
+  [#1452](https://github.com/earthaccess-dev/earthaccess/pull/1452))
+  ([@saberbrasher](https://github.com/saberbrasher))
 
 ### Fixed
 
