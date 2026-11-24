@@ -49,9 +49,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   ([#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
   ([@mfisher87](https://github.com/mfisher87),
   [@JessicaS11](https://github.com/JessicaS11),
-  [@danielfromearth](https://github.com/danielfromearth))
-  [@jhkennedy](https://github.com/jhkennedy)
-  [@ebolch](https://github.com/ebolch)
+  [@danielfromearth](https://github.com/danielfromearth),
+  [@jhkennedy](https://github.com/jhkennedy),
+  [@ebolch](https://github.com/ebolch),
+  [@trey-stafford](https://github.com/trey-stafford),
+  [@julober](https://github.com/julober),
+  [@chuckwondo](https://github.com/chuckwondo),
+  [@andypbarrett](https://github.com/andypbarrett))
 
 ### Added
 
@@ -59,9 +63,17 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   with `earthaccess.search_data(**results.query_params)`.
   ([#847](https://github.com/earthaccess-dev/earthaccess/discussions/847),
   [#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
+  ([@danielfromearth](https://github.com/danielfromearth))
 - Search results can be converted to a GeoPandas GeoDataFrame with
   `results.to_gdf()`.
   ([#1298](https://github.com/earthaccess-dev/earthaccess/pull/1298))
+  ([@danielfromearth](https://github.com/danielfromearth))
+- Added `DataGranulesQuery.to_geopandas()` and
+  `DataCollectionsQuery.to_geopandas()` to convert lists of granules or
+  collections to a GeoPandas GeoDataFrame, and `__geo_interface__` support on
+  `DataCollection`.
+  ([#1461](https://github.com/earthaccess-dev/earthaccess/pull/1461))
+  ([@rupesh2](https://github.com/rupesh2))
 
 
 ## [v0.19.0] - 2026-09-03
@@ -99,12 +111,20 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `DataGranule.data_links()` has arguments, so it was **not** changed to a property at
   this time).
 
+  ([#1428](https://github.com/earthaccess-dev/earthaccess/pull/1428))
+  ([@mfisher87](https://github.com/mfisher87))
+
 ### Added
 
 - Added an AI policy documenting expectations for AI-assisted contributions,
   including disclosure, code quality, copyright, and communication, along with
   an AI usage disclosure prompt in the pull request template.
   ([#1419](https://github.com/earthaccess-dev/earthaccess/pull/1419))
+  ([@danielfromearth](https://github.com/danielfromearth))
+- Documented how to get OPeNDAP URLs from granule search results.
+  ([#287](https://github.com/earthaccess-dev/earthaccess/issues/287),
+  [#1448](https://github.com/earthaccess-dev/earthaccess/pull/1448))
+  ([@svsam](https://github.com/svsam))
 - Python 3.14 is now supported.
   ([#1307](https://github.com/earthaccess-dev/earthaccess/issues/1307))
   ([@danielfromearth](https://github.com/danielfromearth))
@@ -113,14 +133,23 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - `search_services` now respects the authenticated system (UAT vs PROD) instead
   of always querying PROD.
-  ([#1223](https://github.com/earthaccess-dev/earthaccess/issues/1223))
+  ([#1223](https://github.com/earthaccess-dev/earthaccess/issues/1223),
+  [#1343](https://github.com/earthaccess-dev/earthaccess/pull/1343))
+  ([@mvanhorn](https://github.com/mvanhorn))
 - For cloud granules that only offer HTTPS links, `data_links(in_region=True)`
   now derives each S3 link from its own HTTPS link instead of repeating the
   first one, so multi-file granules no longer drop their other files.
   ([#1373](https://github.com/earthaccess-dev/earthaccess/pull/1373))
+  ([@arpitjain099](https://github.com/arpitjain099))
 - `DataGranule.size` is now backed by a private `_size` field, so the
   deprecated size accessor no longer emits a warning.
   ([#1420](https://github.com/earthaccess-dev/earthaccess/pull/1420))
+  ([@andypbarrett](https://github.com/andypbarrett))
+- `search_data()` and `search_datasets()` no longer stop paging early and
+  return too few results when CMR returns a partial page.
+  ([#1445](https://github.com/earthaccess-dev/earthaccess/issues/1445),
+  [#1444](https://github.com/earthaccess-dev/earthaccess/pull/1444))
+  ([@rupesh2](https://github.com/rupesh2))
 
 ## [v0.18.0] - 2026-05-12
 
