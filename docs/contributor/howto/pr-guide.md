@@ -58,7 +58,7 @@ version(s), how you used them, and which parts are AI-generated. See our
 
 ### Update documentation
 
-* **`CHANGELOG.md`**: If you change the software (docs changes don't need a changelog
+* **`CHANGELOG.md`**: If you change the software and update user-facing documentation (minor typos or other small changes don't need a changelog
   entry), add details about your change in a section titled `## Unreleased`.
   If such a section does not exist, please create one at the top of the file.
   Follow [Common Changelog](https://common-changelog.org/) for your additions.
