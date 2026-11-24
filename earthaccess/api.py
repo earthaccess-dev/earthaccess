@@ -116,7 +116,10 @@ def search_datasets(count: int = -1, **kwargs: Any) -> CollectionResults:
             * **temporal**: (tuple) A tuple representing temporal bounds in the form
               `(date_from, date_to)`.  Dates can be `datetime` objects or ISO 8601
               formatted strings.  Date strings can be full timestamps; e.g. YYYY-MM-DD HH:mm:ss
-              or truncated YYYY-MM-DD
+              or truncated YYYY-MM-DD.  A truncated `date_to` (`"2026-04-04"`, `"2026-04"`
+              or `"2026"`) or a `datetime.date` includes that whole day, month or year,
+              but a `datetime.datetime` is an exact time: `datetime.datetime(2026, 4, 4)`
+              ends the range at `2026-04-04T00:00:00`
             * **bounding_box**: (tuple) Filter collection by those that intersect bounding box.
               A tuple representing spatial bounds in the form
               `(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat)`
@@ -238,7 +241,10 @@ def search_data(count: int = -1, **kwargs: Any) -> GranuleResults:
             * **temporal**: (tuple) A tuple representing temporal bounds in the form
               `(date_from, date_to)`.  Dates can be `datetime` objects or ISO 8601
               formatted strings.  Date strings can be full timestamps; e.g. YYYY-MM-DD HH:mm:ss
-              or truncated YYYY-MM-DD
+              or truncated YYYY-MM-DD.  A truncated `date_to` (`"2026-04-04"`, `"2026-04"`
+              or `"2026"`) or a `datetime.date` includes that whole day, month or year,
+              but a `datetime.datetime` is an exact time: `datetime.datetime(2026, 4, 4)`
+              ends the range at `2026-04-04T00:00:00`
             * **bounding_box**: (tuple) Filter collection by those that intersect bounding box.
               A tuple representing spatial bounds in the form
               `(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat)`

@@ -45,6 +45,31 @@ def test_query_can_parse_single_dates(start, end, expected):
     assert granules.params["temporal"][0] == expected
 
 
+# A date-only end (a truncated string or a datetime.date) includes the whole day,
+# month or year, while a datetime.datetime is an exact time (#1494).
+end_of_range_dates = [
+    ("2026-04-01", "2026-04-04", "2026-04-01T00:00:00Z,2026-04-04T23:59:59Z"),
+    (
+        dt.date(2026, 4, 1),
+        dt.date(2026, 4, 4),
+        "2026-04-01T00:00:00Z,2026-04-04T23:59:59Z",
+    ),
+    (
+        dt.datetime(2026, 4, 1, tzinfo=dt.UTC),
+        dt.datetime(2026, 4, 4, tzinfo=dt.UTC),
+        "2026-04-01T00:00:00Z,2026-04-04T00:00:00Z",
+    ),
+    ("2026-03", "2026-04", "2026-03-01T00:00:00Z,2026-04-30T23:59:59Z"),
+    ("2026", "2026", "2026-01-01T00:00:00Z,2026-12-31T23:59:59Z"),
+]
+
+
+@pytest.mark.parametrize("start,end,expected", end_of_range_dates)
+def test_query_end_of_range(start, end, expected):
+    granules = DataGranulesQuery().short_name("ATL03").temporal(start, end)
+    assert granules.params["temporal"][0] == expected
+
+
 @pytest.mark.parametrize("start,end,expected", invalid_single_dates)
 def test_query_can_handle_invalid_dates(start, end, expected):  # noqa: ARG001
     granules = DataGranulesQuery().short_name("MODIS")
