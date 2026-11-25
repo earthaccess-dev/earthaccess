@@ -9,6 +9,8 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: manics/action-binderbadge@99560b89939071823821e105afc83aaa87927e03 # v3.0.0
         with:
